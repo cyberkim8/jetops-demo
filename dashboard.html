@@ -216,18 +216,21 @@ const $=s=>document.querySelector(s);
 /* ================= WEATHER (live, fallback sample) ================= */
 let WX={live:false,wind:16,gust:22,wave:1.2,rain:0.2,cls:"warn"};
 function wxClass(wave,wind){ if(wave>=1.8||wind>=20)return"bad"; if(wave>=1.1||wind>=15)return"warn"; return"ok"; }
-const WX_SCEN={ ok:{live:false,scen:"🟢 штиль",wind:9,gust:13,wave:0.5,rain:0,cls:"ok"},
-  warn:{live:false,scen:"🟡 на грани",wind:16,gust:23,wave:1.3,rain:0.4,cls:"warn"},
-  bad:{live:false,scen:"🔴 шторм",wind:24,gust:34,wave:2.1,rain:4.2,cls:"bad"} };
+const WX_SCEN={ ok:{live:false,scen:"🟢 штиль",wind:9,gust:13,wave:0.5,rain:0,cls:"ok",lowTide:"12:12 (−0.8 м)"},
+  warn:{live:false,scen:"🟡 на грани",wind:16,gust:23,wave:1.3,rain:0.4,cls:"warn",lowTide:"12:12 (−0.8 м)"},
+  bad:{live:false,scen:"🔴 шторм",wind:24,gust:34,wave:2.1,rain:4.2,cls:"bad",lowTide:"12:12 (−0.8 м)"} };
 const WX_OVERRIDE=new URLSearchParams(location.search).get("wx");
 async function loadWXLive(){
   try{
     const f=await fetch("https://api.open-meteo.com/v1/forecast?latitude=8.06&longitude=98.47&current=wind_speed_10m,wind_gusts_10m,precipitation&wind_speed_unit=kn&timezone=Asia%2FBangkok").then(r=>r.json());
-    const m=await fetch("https://marine-api.open-meteo.com/v1/marine?latitude=8.06&longitude=98.47&hourly=wave_height&timezone=Asia%2FBangkok&forecast_days=1").then(r=>r.json());
+    const m=await fetch("https://marine-api.open-meteo.com/v1/marine?latitude=8.06&longitude=98.47&hourly=wave_height,sea_level_height_msl&timezone=Asia%2FBangkok&forecast_days=1").then(r=>r.json());
     const i=Math.max(0,m.hourly.time.indexOf(f.current.time));
     WX={live:true,wind:Math.round(f.current.wind_speed_10m),gust:Math.round(f.current.wind_gusts_10m),
         wave:m.hourly.wave_height[i>=0?i:0],rain:f.current.precipitation,cls:null};
     WX.cls=wxClass(WX.wave,WX.wind);
+    const sl=m.hourly.sea_level_height_msl||[];
+    if(sl.length){ let lo=5; for(let h=5;h<=21;h++) if(sl[h]<sl[lo]) lo=h;
+      WX.lowTide=`${String(lo).padStart(2,"0")}:00 (${sl[lo].toFixed(1)} м)`; }
   }catch(e){ /* keep sample */ }
   renderWX();
 }
@@ -243,7 +246,7 @@ function renderWX(){
      <span class="chip">🌊 ${WX.wave.toFixed(1)} м</span>
      <span class="chip">${WX.rain>0.2?"🌧 дождь":"☀️ без осадков"}</span>
      <span class="chip">${WX.live?"● live Open-Meteo":(WX.scen?"сценарий: "+WX.scen:"демо-данные (офлайн)")}</span>
-     <span class="chip">🌊 отлив ~11:30 · Naka</span>`;
+     <span class="chip">🌊 отлив ${WX.lowTide||"~12:00"} · гейты: Monkey·фото·мангры·Naka</span>`;
 }
 
 /* ================= MAP ================= */
@@ -384,7 +387,7 @@ function buildSchedule(){
       feed("weather",10*60+25,gr.skip?`${gr.g.emoji} <b>${gr.g.name}: NO MONKEY</b> — big waves, поворот у Grand Marina`:`${gr.g.emoji} <b>${gr.g.name}:</b> Monkey OK ✓`);});});
   add(10*60+40,()=>{sim.counters.inc++;$("#kInc").textContent=sim.counters.inc;$("#kInc").parentElement.className="kpi alert";
     feed("incident",10*60+40,`🚑 <b>Инцидент · Pink · Rang Yai:</b> клиент упал на волне — ушиб, обработан на месте, спидбот не требуется. <span style="color:var(--muted)">Занесено в журнал (защита при претензии)</span>`);});
-  add(11*60+5,()=>feed("weather",11*60+5,`🌊 <b>Отлив у Naka Yai</b> (~11:30): парковка ограничена — снорклинг с гидриков <span style="color:var(--muted)">· автонапоминание</span>`));
+  add(11*60+5,()=>feed("weather",11*60+5,`🌊 <b>Отлив ${WX.lowTide||"~12:00"}:</b> Naka — парковка ограничена (снорклинг с гидриков); дневной волне — внимание на высадку Monkey и заход в мангры <span style="color:var(--muted)">· авто из таблицы приливов</span>`));
   add(11*60+35,()=>feed("shift",11*60+35,`👥 <b>Дневная смена:</b> не хватает 1 гида (болезнь) — запрос в Standby`));
   add(12*60+5,()=>{SHIFT.a="6/6 ✓ (standby подтверждён)";renderShift();
     feed("shift",12*60+5,`👥 <b>Standby подтверждён</b> — дневная волна укомплектована 6/6 ✓`);});
@@ -429,7 +432,7 @@ function genEOD(){
 WEATHER & ROUTE  ${WX.cls==="bad"?"🔴":WX.cls==="warn"?"🟡":"🟢"}
   Wind ${WX.wind} kn (gusts ${WX.gust}) · waves ${WX.wave.toFixed(1)} m ${WX.live?"(live)":"(sample)"}
   Monkey Island: ${d.skipped}/${d.total} groups skipped · ${WX.cls==="bad"?"Inside Program used":"regular route"}
-  Low tide ~11:30 — Naka parking limited (snorkel from skis)
+  Low tide ${WX.lowTide||"~12:00"} — gates: Monkey landing / Rang Yai photos / mangrove entry / Naka parking
 
 CLIENTS & SAFETY
   Clients today: ${d.clients} · Incidents: ${d.inc}
@@ -460,7 +463,7 @@ auto-generated from work chats + uploader + weather API · full log in dashboard
 ПОГОДА И МАРШРУТ  ${WX.cls==="bad"?"🔴":WX.cls==="warn"?"🟡":"🟢"}
   Ветер ${WX.wind} уз (порывы ${WX.gust}) · волна ${WX.wave.toFixed(1)} м ${WX.live?"(live)":"(демо)"}
   Monkey: пропустили ${d.skipped}/${d.total} групп · ${WX.cls==="bad"?"Inside Program":"обычный маршрут"}
-  Отлив ~11:30 — парковка у Naka ограничена
+  Отлив ${WX.lowTide||"~12:00"} — гейты: высадка Monkey / фото Rang Yai / заход в мангры / парковка Naka
 
 КЛИЕНТЫ И БЕЗОПАСНОСТЬ
   Клиентов: ${d.clients} · Инцидентов: ${d.inc}

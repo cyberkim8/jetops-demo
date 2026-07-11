@@ -88,6 +88,13 @@
     </div>
 
     <div class="card">
+      <div class="label">🌊 Приливные окна дня <span style="text-transform:none;letter-spacing:0">— вода у берега (100% предсказуемо, из таблицы приливов)</span></div>
+      <div id="tideHead" style="font-size:14px;font-weight:700;margin-bottom:10px">…</div>
+      <div id="tideGates"></div>
+      <div class="hint">Уровень — к среднему морю (MSL). Время прибытия групп — из расписания (настраивается). Пороги по точкам калибруем с лидом. Идея: при плохом окне — <b>переставить порядок точек</b> под воду, а не отменять.</div>
+    </div>
+
+    <div class="card">
       <div class="label">Утренняя сводка команде (в группу WhatsApp/LINE)</div>
       <pre class="msg" id="crewMsg">…</pre>
       <button class="btn ghost" id="copyCrew">📋 Скопировать сводку</button>
@@ -127,6 +134,27 @@ const SCENARIOS = {
 };
 const WX_OVERRIDE = new URLSearchParams(location.search).get("wx");
 
+/* ---- приливные гейты (вводные клиента): Monkey — мель/травмы ног; Rang Yai — платные фото у воды;
+   мангры — заход только по высокой воде; Naka — парковка/обед. Пороги — стартовые, калибруем с лидом. ---- */
+const DEP={m:8*60+20, a:12*60+30}; // выходы волн
+const TIDE_GATES=[
+  {name:"🐒 Monkey — высадка",        risk:"мель · травмы ног",        thr:-0.30, arr:200},
+  {name:"📸 Rang Yai — платные фото", risk:"вода уходит от берега",    thr:-0.40, arr:50},
+  {name:"🌿 Мангры — заход внутрь",   risk:"не пройти по низкой воде", thr:+0.30, arr:170},
+  {name:"🍜 Naka — парковка·обед",    risk:"парковка ограничена",      thr:-0.40, arr:110}
+];
+let TIDE=null; // {live, series:[{h,lv}×24]}
+function synthTide(){ // офлайн/сценарий: полусуточный цикл, отлив ~12:12
+  const s=[]; for(let h=0;h<24;h++) s.push({h, lv:+(0.35+1.15*Math.cos(2*Math.PI*(h-6)/12.42)).toFixed(2)});
+  return {live:false, series:s};
+}
+function tideAt(min){ // уровень в момент (минуты дня), линейная интерполяция
+  const h=Math.min(23,Math.max(0,min/60)), i=Math.floor(h), f=h-i;
+  const a=TIDE.series[i].lv, b=TIDE.series[Math.min(23,i+1)].lv;
+  return a+(b-a)*f;
+}
+function fmtM(min){return String(Math.floor(min/60)).padStart(2,"0")+":"+String(Math.round(min%60)).padStart(2,"0");}
+
 function verdict(wave, wind){
   if(wave>=THRESH.wave.bad || wind>=THRESH.wind.bad)
     return {cls:"bad", emoji:"🔴", word:"NO MONKEY — сегодня нет", route:"🚨 Inside Program (укрытый маршрут)"};
@@ -139,7 +167,7 @@ function dotColor(wave,wind){var v=verdict(wave,wind);return v.cls==="bad"?"#e54
 async function loadLive(){
   try{
     const f = `https://api.open-meteo.com/v1/forecast?latitude=${SPOT.lat}&longitude=${SPOT.lon}&current=wind_speed_10m,wind_gusts_10m,precipitation,weather_code&hourly=wind_speed_10m,wind_gusts_10m,precipitation,visibility&wind_speed_unit=kn&timezone=Asia%2FBangkok&forecast_days=1`;
-    const m = `https://marine-api.open-meteo.com/v1/marine?latitude=${SPOT.lat}&longitude=${SPOT.lon}&hourly=wave_height,wave_period,swell_wave_height&timezone=Asia%2FBangkok&forecast_days=1`;
+    const m = `https://marine-api.open-meteo.com/v1/marine?latitude=${SPOT.lat}&longitude=${SPOT.lon}&hourly=wave_height,wave_period,swell_wave_height,sea_level_height_msl&timezone=Asia%2FBangkok&forecast_days=1`;
     const [F,M] = await Promise.all([fetch(f).then(r=>r.json()), fetch(m).then(r=>r.json())]);
     const t = F.current.time;
     let fi = F.hourly.time.indexOf(t); if(fi<0) fi=0;
@@ -151,11 +179,14 @@ async function loadLive(){
     DATA = { live:true, wind:Math.round(F.current.wind_speed_10m), gust:Math.round(F.current.wind_gusts_10m),
       rain:F.current.precipitation, vis:F.hourly.visibility[fi], wave:M.hourly.wave_height[mi],
       swell:M.hourly.swell_wave_height[mi], period:M.hourly.wave_period[mi], hours };
-  }catch(e){ DATA = SAMPLE; }
+    TIDE = (M.hourly.sea_level_height_msl||[]).length
+      ? {live:true, series:M.hourly.time.slice(0,24).map((t,i)=>({h:parseInt(t.slice(11,13),10), lv:M.hourly.sea_level_height_msl[i]}))}
+      : synthTide();
+  }catch(e){ DATA = SAMPLE; TIDE = synthTide(); }
   render();
 }
 function load(){
-  if(WX_OVERRIDE && SCENARIOS[WX_OVERRIDE]){ DATA=SCENARIOS[WX_OVERRIDE]; render(); return; }
+  if(WX_OVERRIDE && SCENARIOS[WX_OVERRIDE]){ DATA=SCENARIOS[WX_OVERRIDE]; TIDE=synthTide(); render(); return; }
   loadLive();
 }
 
@@ -174,20 +205,46 @@ function render(){
     <div class="metric"><div class="k">Волна / зыбь</div><div class="v">${d.wave.toFixed(1)} <span class="s">м</span></div><div class="s">swell ${(+d.swell||0).toFixed(1)} м · ${Math.round(d.period)} с</div></div>
     <div class="metric"><div class="k">Дождь</div><div class="v">${(+d.rain||0).toFixed(1)} <span class="s">мм</span></div><div class="s">${d.rain>0.2?'осадки есть':'сухо'}</div></div>
     <div class="metric"><div class="k">Видимость</div><div class="v">${Math.round((d.vis||0)/1000)} <span class="s">км</span></div><div class="s">${(d.vis||0)<6000?'пониженная':'норм'}</div></div>
-    <div class="metric tide"><div class="k">Отлив у Naka Yai (парковка/снорклинг)</div><div class="v" style="font-size:15px">⏳ подключим WorldTides API</div><div class="s">предсказуемо по таблице; ломает парковку при «water very low»</div></div>`;
+    <div class="metric tide"><div class="k">Отлив (низкая вода)</div><div class="v" id="tideTileV" style="font-size:18px">…</div><div class="s" id="tideTileS">…</div></div>`;
+  renderTide();
   $("#timeline").innerHTML = d.hours.map(h=>`<div class="h"><div class="t">${String(h[0]).padStart(2,'0')}:00</div><div class="w">${(+h[1]).toFixed(1)}м</div><div class="g">${h[2]} уз</div><div class="dot" style="background:${dotColor(h[1],h[2])}"></div></div>`).join("");
   // crew message
   const today = (d.live? "сегодня":"demo");
+  if(!TIDE) TIDE=synthTide();
+  const gm=gateStatus("a",TIDE_GATES[0]), gg=gateStatus("a",TIDE_GATES[2]); // дневная волна: Monkey высадка + мангры
   $("#crewMsg").textContent =
 `☀️ Morning brief · Sirey → Ao Por
 Ветер ${d.wind} уз (порывы ${d.gust}) · волна ${d.wave.toFixed(1)} м · ${d.rain>0.2?'дождь':'без осадков'}
 ${v.emoji} MONKEY: ${v.word}
 Маршрут: ${v.route}
+🌊 Вода: дневная волна — Monkey высадка ${gm.word} (${gm.lv.toFixed(1)} м), мангры ${gg.word}
 Напомнить клиентам на брифинге: Monkey зависит от погоды, запасная обезьяна — Rang Yai.`;
   renderBrief();
   $("#src").innerHTML = (d.live?"Данные: Open-Meteo Marine + Forecast, точка перехода к Monkey Island (live). ":"Открой на сервере/онлайн — подтянутся LIVE-данные. ")+"Пороги (волна/ветер) — конфиг, калибруем с лидом на сезоне.";
 }
 
+function gateStatus(w,g){ // волна ("m"/"a") × гейт → {t,lv,cls,word}
+  const t=DEP[w]+g.arr, lv=tideAt(t);
+  const st=lv>=g.thr+0.2?["ok","✓ ок"]:lv>=g.thr?["warn","⚠ на грани"]:["bad","✗ пропуск/перенос"];
+  return {t,lv,cls:st[0],word:st[1]};
+}
+const TG_COLOR={ok:"var(--ok)",warn:"#a86a00",bad:"var(--red)"};
+function renderTide(){
+  if(!TIDE) TIDE=synthTide();
+  const s=TIDE.series;
+  let lo=s[5],hi=s[5];
+  for(let h=5;h<=21;h++){const p=s[h];if(p.lv<lo.lv)lo=p;if(p.lv>hi.lv)hi=p;}
+  const hh=n=>String(n).padStart(2,"0")+":00";
+  $("#tideHead").innerHTML=`Отлив <b>${hh(lo.h)}</b> (${lo.lv.toFixed(1)} м) · Прилив <b>${hh(hi.h)}</b> (+${hi.lv.toFixed(1)} м) <span class="badge ${TIDE.live?"live":"demo"}" style="margin-left:6px">${TIDE.live?"● live таблица":"демо-кривая"}</span>`;
+  const head=`<tr style="color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.4px"><td style="padding:4px"></td><td style="padding:4px">Утро · выход 08:20</td><td style="padding:4px">День · выход 12:30</td></tr>`;
+  const rows=TIDE_GATES.map(g=>{
+    const cells=["m","a"].map(w=>{const r=gateStatus(w,g);
+      return `<td style="padding:7px 4px;border-top:1px solid var(--line)"><span style="color:var(--muted);font-size:11px">${fmtM(r.t)}</span> · ${r.lv.toFixed(1)} м<br><b style="color:${TG_COLOR[r.cls]}">${r.word}</b></td>`;}).join("");
+    return `<tr><td style="padding:7px 4px;border-top:1px solid var(--line)"><b style="font-size:12.5px">${g.name}</b><div style="color:var(--muted);font-size:10.5px">${g.risk} · порог ${g.thr>0?"+":""}${g.thr} м</div></td>${cells}</tr>`;
+  }).join("");
+  $("#tideGates").innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12.5px">${head}${rows}</table>`;
+  const vt=$("#tideTileV"); if(vt){vt.textContent=`${hh(lo.h)} · ${lo.lv.toFixed(1)} м`; $("#tideTileS").textContent=`прилив ${hh(hi.h)} (+${hi.lv.toFixed(1)} м) · окна по точкам ниже`;}
+}
 function renderBrief(){
   const d=DATA, v=verdict(d.wave,d.wind);
   const rough = v.cls!=="ok";
