@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0aa1dd">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>JetSki Phuket — Photo Delivery (Build 1 demo)</title>
+<style>
+  :root{
+    --accent:#0aa1dd; --accent2:#f5a623; --ink:#0e1b26; --muted:#5b7080;
+    --bg:#eef4f8; --card:#ffffff; --line:#dbe6ee; --ok:#2fa84f; --red:#e5484d;
+    --shadow:0 6px 22px rgba(14,40,60,.10); --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans Thai",sans-serif;
+    background:var(--bg); color:var(--ink); -webkit-font-smoothing:antialiased;
+  }
+  #app{max-width:460px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;
+    box-shadow:0 0 40px rgba(0,0,0,.06)}
+  /* top bar */
+  header.top{position:sticky;top:0;z-index:20;background:linear-gradient(135deg,var(--accent),#0784b8);
+    color:#fff;padding:12px 16px 10px;box-shadow:0 2px 12px rgba(7,132,184,.35)}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:800;letter-spacing:.2px}
+  .brand .logo{width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,.18);
+    display:grid;place-items:center;font-size:17px}
+  .brand small{display:block;font-weight:600;opacity:.85;font-size:10.5px;letter-spacing:.6px;text-transform:uppercase}
+  .tabs{display:flex;gap:6px;margin-top:11px}
+  .tabs button{flex:1;border:0;border-radius:10px;padding:8px 6px;font-size:12.5px;font-weight:700;
+    background:rgba(255,255,255,.16);color:#fff;cursor:pointer;transition:.15s}
+  .tabs button.active{background:#fff;color:var(--accent)}
+  main{padding:16px 16px 90px}
+  section{display:none;animation:fade .25s ease}
+  section.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2{font-size:19px;margin:2px 0 4px}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 16px;line-height:1.5}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
+  .label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+  .pillrow{display:flex;flex-wrap:wrap;gap:8px}
+  .pill{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:9px 15px;font-size:14px;
+    font-weight:700;cursor:pointer;transition:.15s;color:var(--ink)}
+  .pill:active{transform:scale(.96)}
+  .pill.sel{border-color:var(--accent);background:var(--accent);color:#fff}
+  .pill.color{padding-left:12px}
+  .pill.color .dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:7px;vertical-align:-1px}
+  .pill.sel.color{color:#fff}
+  .numrow{display:flex;align-items:center;gap:10px}
+  .numrow button{width:44px;height:44px;border-radius:12px;border:1.5px solid var(--line);background:#fff;
+    font-size:22px;font-weight:800;color:var(--accent);cursor:pointer}
+  .numrow input{width:88px;height:44px;text-align:center;font-size:22px;font-weight:800;border:1.5px solid var(--line);
+    border-radius:12px;color:var(--ink)}
+  .btn{display:block;width:100%;border:0;border-radius:13px;padding:15px;font-size:16px;font-weight:800;
+    cursor:pointer;transition:.15s;text-align:center}
+  .btn:active{transform:scale(.98)}
+  .btn.primary{background:linear-gradient(135deg,var(--accent),#0784b8);color:#fff;box-shadow:0 6px 16px rgba(7,132,184,.35)}
+  .btn.accent2{background:linear-gradient(135deg,#ffb43d,var(--accent2));color:#3d2600}
+  .btn.ghost{background:#fff;border:1.5px solid var(--line);color:var(--ink)}
+  .btn.sm{padding:11px;font-size:14px}
+  .hint{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5}
+  .hidden{display:none!important}
+  /* grid */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .ph{position:relative;border-radius:12px;overflow:hidden;background:#cfe0ea;aspect-ratio:4/3;cursor:pointer;
+    border:1px solid var(--line)}
+  .ph img{width:100%;height:100%;object-fit:cover;display:block}
+  .ph .tag{position:absolute;left:6px;top:6px;background:rgba(14,27,38,.72);color:#fff;font-size:10.5px;
+    font-weight:800;padding:3px 7px;border-radius:6px}
+  .empty{text-align:center;color:var(--muted);padding:30px 12px;font-size:13.5px;line-height:1.6}
+  .count{font-size:13px;color:var(--muted);margin:2px 0 12px}
+  .count b{color:var(--ink)}
+  /* auto-check */
+  .checkline{display:flex;align-items:center;gap:9px;font-size:14px;padding:6px 0;color:var(--muted)}
+  .checkline .bx{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;
+    font-size:13px;flex:none}
+  .checkline.ok{color:var(--ink)} .checkline.ok .bx{border-color:var(--ok);background:var(--ok);color:#fff}
+  /* toast */
+  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(30px);opacity:0;
+    background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:700;
+    z-index:60;transition:.3s;box-shadow:0 8px 24px rgba(0,0,0,.3);max-width:88%;text-align:center}
+  #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+  /* modal / lightbox */
+  .overlay{position:fixed;inset:0;background:rgba(8,20,30,.78);z-index:50;display:none;align-items:center;
+    justify-content:center;padding:18px}
+  .overlay.on{display:flex}
+  .sheet{background:#fff;border-radius:18px;max-width:420px;width:100%;padding:20px;box-shadow:var(--shadow)}
+  .sheet h3{margin:0 0 6px;font-size:18px}
+  .sheet p{color:var(--muted);font-size:14px;line-height:1.6;margin:0 0 16px}
+  .lb img{width:100%;border-radius:12px;display:block;background:#cfe0ea}
+  .badge{display:inline-flex;align-items:center;gap:6px;background:#eaf6fc;color:#0784b8;font-size:11.5px;
+    font-weight:800;padding:5px 10px;border-radius:999px;border:1px solid #cfe9f6}
+  .badge.prem{background:#fff5e2;color:#a86a00;border-color:#ffe1a8}
+  .beforeafter{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+  .ba{border-radius:12px;padding:12px;font-size:12.5px;line-height:1.5}
+  .ba.now{background:#fdecec;border:1px solid #f7c9c9}
+  .ba.new{background:#e9f8ee;border:1px solid #bfe8cd}
+  .ba h4{margin:0 0 6px;font-size:13px}
+  .ba.now h4{color:var(--red)} .ba.new h4{color:var(--ok)}
+  .rolebtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+  .rolebtns .btn{padding:18px 12px}
+  .qr{width:120px;height:120px;margin:6px auto 2px;display:block}
+  .footnote{text-align:center;color:var(--muted);font-size:11.5px;padding:14px}
+  .lang{display:flex;gap:4px;justify-content:flex-end;margin:-6px 0 10px}
+  .lang button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:4px 10px;font-size:12px;
+    font-weight:700;color:var(--muted);cursor:pointer}
+  .lang button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .kv{font-size:13px;color:var(--muted);line-height:1.7}
+  .kv b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div class="brand">
+      <span class="logo" id="brandLogo">🌊</span>
+      <span id="brandName">PHUKET JETSKI CLUB
+        <small>Photo delivery · Build 1 demo</small>
+      </span>
+    </div>
+    <div class="tabs">
+      <button data-view="home" class="active">ℹ️ О демо</button>
+      <button data-view="guide">📸 Гид</button>
+      <button data-view="client">🏖️ Клиент</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============ HOME (для Алекса) ============ -->
+    <section id="view-home" class="on">
+      <h2>Демо: доставка фото за минуты, не за 1–3 дня</h2>
+      <p class="sub">Билд 1 «Мгновенный HD-пайплайн». Фото остаются <b>бесплатными</b>. Открой две вкладки сверху: <b>Гид</b> загружает фото → <b>Клиент</b> тут же видит их в галерее по своему номеру гидроцикла.</p>
+
+      <div class="card">
+        <div class="label">Что чиним</div>
+        <div class="beforeafter">
+          <div class="ba now"><h4>Сейчас</h4>гид → WhatsApp → админ → вручную в Google Drive. Задержка <b>1–3 дня</b>, WhatsApp режет качество, всё на одном человеке.</div>
+          <div class="ba new"><h4>Билд 1</h4>гид → аплоадер → авто-проверка → галерея. <b>Минуты</b>, оригинал, без админа-горлышка.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="label">Что показывает демо</div>
+        <div class="kv">
+          • <b>Гид:</b> простой тайский аплоадер (2–3 тапа: рейс + цвет + номер), грузит оригиналы с iPhone.<br>
+          • <b>Авто-проверка:</b> рейс/цвет/количество/качество — без ручной раскладки.<br>
+          • <b>Клиент:</b> тот же общий QR → выбирает день/рейс/цвет → вводит <b>номер гидроцикла</b> → видит свои фото. Номер виден на борде в кадре.<br>
+          • <b>✨ AI-поиск по лицу</b> — тизер премиум-фичи (Билд 2).
+        </div>
+      </div>
+
+      <div class="card" style="text-align:center">
+        <div class="label" style="text-align:left">Браслет клиента → один общий QR</div>
+        <img class="qr" id="homeQr" alt="QR">
+        <div class="hint">В реале QR ведёт в клиентскую галерею. Здесь — кнопка ниже.</div>
+        <div class="rolebtns" style="margin-top:12px">
+          <button class="btn primary" data-goto="guide">📸 Я гид — загрузить</button>
+          <button class="btn ghost" data-goto="client">🏖️ Я клиент — фото</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="label">🌦️ Модуль B — погодный борт (демо)</div>
+        <div class="hint" style="margin-top:0">Гиперлокальный прогноз коридора Sirey → Monkey Island + вердикт «идём / на грани / нет» + готовый брифинг клиенту. Live-данные Open-Meteo.</div>
+        <a class="btn accent2 sm" href="weather.html" style="margin-top:11px;text-decoration:none">Открыть погодный борт →</a>
+      </div>
+
+      <div class="card">
+        <div class="label">🖥️ Модуль D — Ops Dashboard (демо)</div>
+        <div class="hint" style="margin-top:0">Живой операционный борт для бэкофиса: карта маршрута с группами, лента событий из рабочих чатов, доска тех.отдела, фото-комплаенс, смены, авто-отчёт дня. Симуляция дня из реальных паттернов чата.</div>
+        <a class="btn primary sm" href="dashboard.html" style="margin-top:11px;text-decoration:none;color:#fff">Открыть ops-дашборд →</a>
+      </div>
+
+      <div class="card">
+        <div class="label">🤖 Модуль D — LINE Ops-Bot (витрина)</div>
+        <div class="hint" style="margin-top:0">Бот читает рабочие LINE-группы: сообщение → событие → авто-алерт при проблеме → вечерний отчёт офису и тех.отделу. Реальный вывод работающего кода.</div>
+        <a class="btn ghost sm" href="bot.html" style="margin-top:11px;text-decoration:none;display:block;text-align:center">Открыть витрину бота →</a>
+      </div>
+
+      <div class="card">
+        <div class="label">Заметки</div>
+        <div class="hint" style="margin-top:0">
+          Плейсхолдерные фото сгенерированы (с видимым номером на борде) — заменим на реальные. Данные демо хранятся локально в браузере. Загрузить можно и <b>настоящие фото с телефона</b> («Выбрать фото»). OCR-номера и AI-лицо здесь — тизеры, в проде это Билд 1/Билд 2.
+          <br><br><button class="btn ghost sm" id="resetBtn">↺ Сбросить демо-данные</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ GUIDE (тайский UI) ============ -->
+    <section id="view-guide">
+      <h2>อัปโหลดรูปภาพ <span style="font-size:13px;color:var(--muted);font-weight:600">(Гид · загрузка)</span></h2>
+      <p class="sub">เลือกรอบ ทีมสี และหมายเลขเจ็ตสกี แล้วอัปโหลดรูป — เข้าแกลเลอรีทันที<br><span style="font-size:12px">Рейс → цвет → номер → фото. Появляется у клиента сразу.</span></p>
+
+      <div class="card">
+        <div class="label">รอบ / Рейс — <span id="gDate"></span></div>
+        <div class="pillrow" id="gSession"></div>
+      </div>
+      <div class="card">
+        <div class="label">ทีมสี / Цвет команды</div>
+        <div class="pillrow" id="gColor"></div>
+      </div>
+      <div class="card">
+        <div class="label">หมายเลขเจ็ตสกี / Номер гидроцикла</div>
+        <div class="numrow">
+          <button id="gMinus">−</button>
+          <input id="gSki" type="number" value="7" inputmode="numeric">
+          <button id="gPlus">+</button>
+          <span class="hint" id="gSkiHint" style="margin:0 0 0 6px"></span>
+        </div>
+      </div>
+
+      <div class="card" id="gCheckCard" style="display:none">
+        <div class="label">ตรวจสอบอัตโนมัติ / Авто-проверка</div>
+        <div id="gChecks"></div>
+      </div>
+
+      <input id="gFile" type="file" accept="image/*" multiple class="hidden">
+      <button class="btn ghost sm" id="gPickReal">🖼️ เลือกรูปจากเครื่อง / Выбрать реальные фото</button>
+      <div style="height:10px"></div>
+      <button class="btn primary" id="gAddDemo">⬆️ อัปโหลด 8 รูปเดโม / Загрузить 8 демо-фото</button>
+      <p class="hint" id="gTodayCount"></p>
+    </section>
+
+    <!-- ============ CLIENT ============ -->
+    <section id="view-client">
+      <div class="lang" id="cLang">
+        <button data-lang="en" class="on">EN</button>
+        <button data-lang="ru">RU</button>
+      </div>
+      <h2 id="cTitle">Your ride photos 🏖️</h2>
+      <p class="sub" id="cSub">Scanned your wristband? Pick your day, round and team colour, then enter your jet ski number.</p>
+
+      <div class="card">
+        <div class="label" id="cLblSession">Round</div>
+        <div class="pillrow" id="cSession"></div>
+        <div class="label" id="cLblColor" style="margin-top:14px">Team colour</div>
+        <div class="pillrow" id="cColor"></div>
+        <div class="label" id="cLblSki" style="margin-top:14px">Your jet ski number</div>
+        <div class="numrow">
+          <input id="cSki" type="number" placeholder="#" inputmode="numeric">
+          <button class="btn ghost sm" id="cAll" style="width:auto;padding:11px 14px">Show all group</button>
+        </div>
+        <button class="btn accent2 sm" id="cAI" style="margin-top:12px">✨ <span id="cAILbl">AI: find all photos of me (selfie)</span></button>
+      </div>
+
+      <div class="count" id="cCount"></div>
+      <div class="grid" id="cGrid"></div>
+      <div class="empty hidden" id="cEmpty"></div>
+
+      <div style="height:12px"></div>
+      <button class="btn ghost sm" id="cSend">📲 <span id="cSendLbl">Send gallery link to my phone</span></button>
+    </section>
+  </main>
+
+  <div class="footnote">Demo · JetSki Phuket Photo Delivery · Build 1 — placeholder data, stored locally</div>
+</div>
+
+<div id="toast"></div>
+<div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
+
+<!-- real photos (gitignored; absent on GitHub → falls back to placeholders) -->
+<script src="sample_photos/manifest.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* ---------- CONFIG (замени под бренд клиента) ---------- */
+const BRAND = { name:"PHUKET JETSKI CLUB", logo:"🌊", accent:"#0aa1dd" };
+const SESSIONS = [
+  {key:"morning",   th:"รอบเช้า", ru:"Утро",  en:"Morning"},
+  {key:"afternoon", th:"รอบบ่าย", ru:"День",  en:"Afternoon"}
+];
+const COLORS = [
+  {key:"red",   hex:"#e5484d", th:"แดง",     ru:"Красный", en:"Red",   range:[1,7]},
+  {key:"blue",  hex:"#0091d5", th:"น้ำเงิน", ru:"Синий",   en:"Blue",  range:[8,14]},
+  {key:"green", hex:"#2fa84f", th:"เขียว",   ru:"Зелёный", en:"Green", range:[15,21]}
+];
+const STOPS = ["Coconut Is.","Rang Yai","Rang Noi","Naka Yai","Monkey Is."]; // реальные острова маршрута (восточное побережье)
+const KEY = "jetski_demo_v3";
+const todayStr = new Date().toLocaleDateString("en-CA"); // локальная дата (не UTC — в Бангкоке утром UTC ещё «вчера»)
+
+/* ---------- STATE ---------- */
+let _id=0;
+let state = load();
+let ui = { view:"home", lang:"en",
+  g:{session:"afternoon", color:"blue", ski:9},
+  c:{session:"morning", color:"blue", ski:null, ai:false} };
+
+function load(){
+  // пересидируем при смене дня: иначе после полуночи галерея «сегодня» пуста (демо вчера работало, сегодня — пустой экран)
+  try{ const s=JSON.parse(localStorage.getItem(KEY)); if(s&&s.photos&&s.seededAt===todayStr) return s; }catch(e){}
+  return seed();
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+function seed(){
+  // real sample photos (from sample_photos/manifest.js if present) override placeholders for their ski
+  const real = Array.isArray(window.DEMO_PHOTOS) ? window.DEMO_PHOTOS : [];
+  const realKeys = new Set(real.map(r=>(r.session||"morning")+"|"+r.color+"|"+r.ski));
+  const photos=[];
+  // seed MORNING only (afternoon starts empty → guide fills it live)
+  COLORS.forEach(c=>{
+    for(let ski=c.range[0]; ski<=c.range[1]; ski++){
+      if(realKeys.has("morning|"+c.key+"|"+ski)) continue; // covered by real photos
+      STOPS.forEach((stop,si)=>{
+        for(let n=0;n<2;n++){
+          photos.push(mk({day:todayStr,session:"morning",color:c.key,ski,stop}));
+        }
+      });
+    }
+  });
+  real.forEach(r=>photos.push(mk({day:todayStr,session:r.session||"morning",color:r.color,ski:r.ski,stop:r.stop||STOPS[0],src:"sample_photos/"+encodeURIComponent(r.file)})));
+  const s={photos, seededAt:todayStr};
+  try{ localStorage.setItem(KEY, JSON.stringify(s)); }catch(e){}
+  return s;
+}
+function mk(o){ return Object.assign({id:"p"+(Date.now().toString(36))+(_id++)+Math.floor(Math.random()*1e4)}, o); }
+function colorOf(k){ return COLORS.find(c=>c.key===k); }
+function skiColor(ski){ const c=COLORS.find(c=>ski>=c.range[0]&&ski<=c.range[1]); return c?c.key:null; }
+
+/* ---------- SVG placeholder photo (виден номер на борде) ---------- */
+function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function rng(seed){let a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function svgFor(p,opts){
+  opts=opts||{}; const wm=opts.wm!==false;
+  const r=rng(hash(p.id)); const W=400,H=300;
+  const c=colorOf(p.color)||{hex:"#0091d5"};
+  const skyPals=[["#bfe3ff","#8ecbf5"],["#cdeafe","#ffe6bf"],["#b9e6ff","#7fc4ee"]];
+  const sky=skyPals[hash(p.id)%skyPals.length];
+  const jx=70+Math.floor(r()*170), jy=182+Math.floor(r()*24);
+  const sunX=50+Math.floor(r()*300), sunY=40+Math.floor(r()*36);
+  const wave=196+Math.floor(r()*10);
+  const svg=
+`<svg xmlns='http://www.w3.org/2000/svg' width='${W}' height='${H}' viewBox='0 0 ${W} ${H}'>
+<defs>
+<linearGradient id='s' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='${sky[0]}'/><stop offset='1' stop-color='${sky[1]}'/></linearGradient>
+<linearGradient id='w' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#2f9fd6'/><stop offset='1' stop-color='#0b6fa3'/></linearGradient>
+</defs>
+<rect width='${W}' height='${H}' fill='url(#s)'/>
+<circle cx='${sunX}' cy='${sunY}' r='24' fill='#fff2c2' opacity='.9'/>
+<path d='M0 ${wave} Q100 ${wave-14} 200 ${wave} T400 ${wave} V300 H0 Z' fill='url(#w)'/>
+<path d='M0 ${wave+16} Q120 ${wave+4} 240 ${wave+16} T400 ${wave+14} V300 H0 Z' fill='#0b6fa3' opacity='.55'/>
+<g transform='translate(${jx},${jy})'>
+<ellipse cx='34' cy='44' rx='60' ry='11' fill='#063b57' opacity='.30'/>
+<path d='M-6 30 Q34 8 92 26 Q96 40 78 46 L4 46 Q-12 42 -6 30 Z' fill='${c.hex}'/>
+<path d='M6 30 Q40 18 74 28 L70 36 L14 36 Z' fill='#ffffff' opacity='.9'/>
+<rect x='40' y='12' width='16' height='14' rx='3' fill='#0e1b26'/>
+<circle cx='30' cy='8' r='8' fill='#f1c27d'/>
+<rect x='24' y='14' width='14' height='16' rx='6' fill='#12384f'/>
+<rect x='60' y='20' width='26' height='16' rx='3' fill='#fff' stroke='#0e1b26' stroke-width='1.5'/>
+<text x='73' y='32' font-family='Arial' font-size='13' font-weight='bold' text-anchor='middle' fill='#0e1b26'>${p.ski}</text>
+<path d='M78 40 q18 6 30 2' stroke='#dff1fb' stroke-width='4' fill='none' opacity='.8' stroke-linecap='round'/>
+</g>
+<rect x='8' y='${H-26}' width='auto' height='18' rx='9' fill='#0e1b26' opacity='.55'/>
+<text x='14' y='${H-13}' font-family='Arial' font-size='11' fill='#fff'>📍 ${p.stop} · ${(colorOf(p.color)||{}).en||''} #${p.ski}</text>
+${wm?`<text x='${W/2}' y='${H/2}' font-family='Arial' font-size='22' font-weight='bold' fill='#ffffff' opacity='.28' text-anchor='middle' transform='rotate(-18 ${W/2} ${H/2})'>${BRAND.name}</text>`:''}
+</svg>`;
+  return "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
+}
+function photoSrc(p,wm){ return p.src ? p.src : svgFor(p,{wm:wm}); }
+
+/* ---------- QR (decorative svg) ---------- */
+function qrSvg(){
+  const n=13,cell=8,pad=6; let rects="";
+  const r=rng(20260709);
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){
+    const finder=(x<3&&y<3)||(x>n-4&&y<3)||(x<3&&y>n-4);
+    const on = finder || r()>.45;
+    if(on) rects+=`<rect x='${pad+x*cell}' y='${pad+y*cell}' width='${cell}' height='${cell}' rx='1.5' fill='#0e1b26'/>`;
+  }
+  const S=n*cell+pad*2;
+  return "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' width='${S}' height='${S}'><rect width='${S}' height='${S}' rx='12' fill='#fff'/>${rects}</svg>`);
+}
+
+/* ---------- i18n (client view) ---------- */
+const T={
+  en:{title:"Your ride photos 🏖️", sub:"Scanned your wristband? Pick your day, round and team colour, then enter your jet ski number.",
+    round:"Round", colour:"Team colour", ski:"Your jet ski number", all:"Show all group",
+    ai:"AI: find all photos of me (selfie)", send:"Send gallery link to my phone",
+    count:(n,ski)=> ski? `${n} photo(s) of jet ski #${ski}` : `${n} photo(s) in this group`,
+    emptyGroup:"No photos in this round/colour yet.\nIn the real flow they appear seconds after the guide uploads — open the “Гид” tab and upload to see it.",
+    emptySki:"No photos for that number here.\nCheck your number on the wristband, or tap “Show all group”.",
+    hd:"Full HD · no watermark after download", dl:"Download"},
+  ru:{title:"Ваши фото с катания 🏖️", sub:"Отсканировали браслет? Выберите день, рейс и цвет команды, затем введите номер гидроцикла.",
+    round:"Рейс", colour:"Цвет команды", ski:"Ваш номер гидроцикла", all:"Показать всю группу",
+    ai:"AI: найти все фото со мной (селфи)", send:"Прислать ссылку на галерею на телефон",
+    count:(n,ski)=> ski? `${n} фото гидроцикла №${ski}` : `${n} фото в этой группе`,
+    emptyGroup:"В этом рейсе/цвете пока нет фото.\nВ реальном потоке они появляются через секунды после загрузки гидом — откройте вкладку «Гид» и загрузите.",
+    emptySki:"Нет фото по этому номеру.\nПроверьте номер на браслете или нажмите «Показать всю группу».",
+    hd:"Полное HD · без водяного знака после скачивания", dl:"Скачать"}
+};
+function t(k){ return T[ui.lang][k]; }
+
+/* ---------- RENDER ---------- */
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+function setView(v){
+  ui.view=v;
+  $$(".tabs button").forEach(b=>b.classList.toggle("active",b.dataset.view===v));
+  $$("main section").forEach(s=>s.classList.remove("on"));
+  $("#view-"+v).classList.add("on");
+  if(v==="guide") renderGuide();
+  if(v==="client") renderClient();
+  window.scrollTo(0,0);
+}
+function pills(container,items,selKey,onPick,opts){
+  opts=opts||{}; container.innerHTML="";
+  items.forEach(it=>{
+    const b=document.createElement("button");
+    b.className="pill"+(opts.color?" color":"")+(it.key===selKey?" sel":"");
+    if(opts.color){ b.innerHTML=`<span class='dot' style='background:${it.hex}'></span>${it[opts.lang]||it.en}`; }
+    else b.textContent = it[opts.lang]||it.en||it.label;
+    if(it.key===selKey&&opts.color) b.style.background=it.hex, b.style.borderColor=it.hex;
+    b.onclick=()=>onPick(it.key);
+    container.appendChild(b);
+  });
+}
+
+/* ----- GUIDE ----- */
+function renderGuide(){
+  $("#gDate").textContent = todayStr;
+  pills($("#gSession"), SESSIONS, ui.g.session, k=>{ui.g.session=k;renderGuide();}, {lang:"th"});
+  pills($("#gColor"), COLORS, ui.g.color, k=>{ui.g.color=k; const c=colorOf(k); ui.g.ski=c.range[0]+1; renderGuide();}, {color:true,lang:"th"});
+  $("#gSki").value = ui.g.ski;
+  const c=colorOf(ui.g.color);
+  $("#gSkiHint").textContent = `(${c.en} ${c.range[0]}–${c.range[1]})`;
+  const n = state.photos.filter(p=>p.day===todayStr).length;
+  $("#gTodayCount").innerHTML = `วันนี้อัปโหลดแล้ว / Загружено сегодня: <b>${n}</b> — ผ่านคุณ ไม่ต้องผ่านแอดมิน / без админа, без WhatsApp, качество оригинала.`;
+}
+function clampSki(){ let v=parseInt($("#gSki").value||"0",10); if(isNaN(v)||v<1)v=1; if(v>99)v=99; ui.g.ski=v; $("#gSki").value=v;
+  const ck=skiColor(v); if(ck&&ck!==ui.g.color){ui.g.color=ck; pills($("#gColor"),COLORS,ui.g.color,k=>{ui.g.color=k;renderGuide();},{color:true,lang:"th"});}
+}
+function runAutoCheck(count, done){
+  const card=$("#gCheckCard"), box=$("#gChecks"); card.style.display="block";
+  const c=colorOf(ui.g.color), sess=SESSIONS.find(s=>s.key===ui.g.session);
+  const items=[`รอบ/รหัสสี: ${sess.th} · ${c.th} #${ui.g.ski}`,`จำนวนรูป / Кол-во: ${count}`,`คุณภาพ/รูปแบบ / Качество·формат: OK`,`บันทึกเข้าแกลเลอรี / В галерею`];
+  box.innerHTML=""; const rows=items.map(txt=>{const d=document.createElement("div");d.className="checkline";d.innerHTML=`<span class='bx'>…</span><span>${txt}</span>`;box.appendChild(d);return d;});
+  let i=0; (function step(){ if(i<rows.length){ rows[i].classList.add("ok"); rows[i].querySelector(".bx").textContent="✓"; i++; setTimeout(step,340);} else setTimeout(done,260); })();
+}
+function addPhotos(list){
+  runAutoCheck(list.length, ()=>{
+    list.forEach(o=>state.photos.push(mk(o)));
+    save(); renderGuide();
+    toast(`✅ อัปโหลดสำเร็จ ${list.length} รูป — อยู่ในแกลเลอรีแล้ว`);
+    setTimeout(()=>{$("#gCheckCard").style.display="none";},1400);
+  });
+}
+function addDemoBatch(){
+  clampSki();
+  const list=[];
+  STOPS.forEach(stop=>{ for(let n=0;n<2;n++) list.push({day:todayStr,session:ui.g.session,color:ui.g.color,ski:ui.g.ski,stop}); });
+  addPhotos(list.slice(0,8));
+}
+function pickReal(files){
+  clampSki(); const arr=Array.from(files).slice(0,8); if(!arr.length) return;
+  let loaded=[], done=0;
+  arr.forEach((f,idx)=>{ const rd=new FileReader(); rd.onload=e=>{ loaded.push({day:todayStr,session:ui.g.session,color:ui.g.color,ski:ui.g.ski,stop:STOPS[idx%STOPS.length],src:e.target.result}); if(++done===arr.length) addPhotos(loaded); }; rd.readAsDataURL(f); });
+}
+
+/* ----- CLIENT ----- */
+function renderClient(){
+  const L=ui.lang;
+  $$("#cLang button").forEach(b=>b.classList.toggle("on",b.dataset.lang===L));
+  $("#cTitle").textContent=t("title"); $("#cSub").textContent=t("sub");
+  $("#cLblSession").textContent=t("round"); $("#cLblColor").textContent=t("colour"); $("#cLblSki").textContent=t("ski");
+  $("#cAll").textContent=t("all"); $("#cAILbl").textContent=t("ai"); $("#cSendLbl").textContent=t("send");
+  pills($("#cSession"), SESSIONS, ui.c.session, k=>{ui.c.session=k;renderClient();}, {lang:L});
+  pills($("#cColor"), COLORS, ui.c.color, k=>{ui.c.color=k;renderClient();}, {color:true,lang:L});
+  $("#cSki").value = ui.c.ski==null?"":ui.c.ski;
+  renderGrid();
+}
+function renderGrid(){
+  const L=ui.lang, grid=$("#cGrid"), empty=$("#cEmpty");
+  let list=state.photos.filter(p=>p.day===todayStr && p.session===ui.c.session && p.color===ui.c.color);
+  const groupCount=list.length;
+  if(ui.c.ski!=null && ui.c.ski!=="" && !ui.c.all){ list=list.filter(p=>String(p.ski)===String(ui.c.ski)); }
+  $("#cCount").innerHTML = t("count")(list.length, (ui.c.all?null:(ui.c.ski||null)));
+  grid.innerHTML="";
+  if(!list.length){
+    grid.classList.add("hidden"); empty.classList.remove("hidden");
+    empty.textContent = groupCount? t("emptySki") : t("emptyGroup");
+    return;
+  }
+  grid.classList.remove("hidden"); empty.classList.add("hidden");
+  list.slice(0,60).forEach(p=>{
+    const d=document.createElement("div"); d.className="ph";
+    d.innerHTML=`<img loading="lazy" src="${photoSrc(p,true)}" alt=""><span class="tag">#${p.ski}</span>`;
+    d.onclick=()=>lightbox(p); grid.appendChild(d);
+  });
+}
+function lightbox(p){
+  const L=ui.lang;
+  openSheet(`<div class="lb"><img src="${photoSrc(p,true)}" alt=""></div>
+    <div style="margin-top:12px" class="badge">🔓 ${t("hd")}</div>
+    <div style="height:14px"></div>
+    <button class="btn primary" id="dlBtn">⬇️ ${t("dl")}</button>
+    <div style="height:8px"></div>
+    <button class="btn ghost sm" id="closeBtn">✕</button>`);
+  $("#dlBtn").onclick=()=>download(p);
+  $("#closeBtn").onclick=closeSheet;
+}
+function download(p){
+  const a=document.createElement("a");
+  if(p.src){ a.href=p.src; }
+  else{ const svg=decodeURIComponent(svgFor(p,{wm:false}).replace("data:image/svg+xml;charset=utf-8,","")); const blob=new Blob([svg],{type:"image/svg+xml"}); a.href=URL.createObjectURL(blob); }
+  a.download=`${BRAND.name.replace(/\s+/g,"_")}_${p.color}_ski${p.ski}_${p.stop.replace(/\s+/g,"")}.svg`;
+  document.body.appendChild(a); a.click(); a.remove();
+  toast(ui.lang==="ru"?"⬇️ Скачивание начато (демо)":"⬇️ Download started (demo)");
+}
+
+/* ---------- modal/toast ---------- */
+function openSheet(html){ $("#sheet").innerHTML=html; $("#overlay").classList.add("on"); }
+function closeSheet(){ $("#overlay").classList.remove("on"); }
+$("#overlay").onclick=e=>{ if(e.target.id==="overlay") closeSheet(); };
+let toastT; function toast(msg){ const el=$("#toast"); el.textContent=msg; el.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("show"),2600); }
+
+function premiumSheet(kind){
+  const ru=ui.lang==="ru";
+  const body = kind==="ai"
+    ? (ru?`<span class="badge prem">✨ Премиум · Билд 2</span><h3 style="margin-top:12px">AI-поиск по лицу</h3><p>Клиент делает селфи → система находит <b>все его фото</b> по всей группе и дню, даже с чужих кадров. Это премиум-продукт (продаётся отдельно, база остаётся бесплатной).</p><button class="btn accent2" id="ok">Понятно</button>`
+         :`<span class="badge prem">✨ Premium · Build 2</span><h3 style="margin-top:12px">AI face search</h3><p>Customer takes a selfie → the system finds <b>all their photos</b> across the whole group and day, even from other riders' shots. A premium add-on — base photos stay free.</p><button class="btn accent2" id="ok">Got it</button>`)
+    : (ru?`<span class="badge prem">📲 Билд 2</span><h3 style="margin-top:12px">Ссылка + контакт</h3><p>Здесь клиент оставляет LINE/WhatsApp/email — галерея уходит ему <b>сразу</b>, пока он ещё на месте. Так восстанавливается контакт и окно для enhanced-апселла.</p><button class="btn primary" id="ok">Ок</button>`
+         :`<span class="badge prem">📲 Build 2</span><h3 style="margin-top:12px">Send link + capture contact</h3><p>Customer drops their LINE/WhatsApp/email — the gallery is sent <b>instantly</b>, while they're still on site. That restores contact and the window for the enhanced upsell.</p><button class="btn primary" id="ok">Ok</button>`);
+  openSheet(body); $("#ok").onclick=closeSheet;
+}
+
+/* ---------- WIRE ---------- */
+$$(".tabs button").forEach(b=>b.onclick=()=>setView(b.dataset.view));
+$$("[data-goto]").forEach(b=>b.onclick=()=>setView(b.dataset.goto));
+$("#gMinus").onclick=()=>{ui.g.ski=Math.max(1,ui.g.ski-1);$("#gSki").value=ui.g.ski;clampSki();};
+$("#gPlus").onclick=()=>{ui.g.ski=Math.min(99,ui.g.ski+1);$("#gSki").value=ui.g.ski;clampSki();};
+$("#gSki").onchange=clampSki;
+$("#gAddDemo").onclick=addDemoBatch;
+$("#gPickReal").onclick=()=>$("#gFile").click();
+$("#gFile").onchange=e=>pickReal(e.target.files);
+$("#cSki").oninput=e=>{ ui.c.ski=e.target.value===""?null:e.target.value; ui.c.all=false; renderGrid(); };
+$("#cAll").onclick=()=>{ ui.c.all=true; renderGrid(); };
+$("#cAI").onclick=()=>premiumSheet("ai");
+$("#cSend").onclick=()=>premiumSheet("send");
+$$("#cLang button").forEach(b=>b.onclick=()=>{ui.lang=b.dataset.lang;renderClient();});
+$("#resetBtn").onclick=()=>{ localStorage.removeItem(KEY); state=seed(); toast("↺ Демо-данные сброшены"); if(ui.view!=="home"){renderGuide();renderClient();} };
+
+/* ---------- INIT ---------- */
+$("#brandName").childNodes[0].nodeValue = BRAND.name+" ";
+$("#brandLogo").textContent = BRAND.logo;
+$("#homeQr").src = qrSvg();
+document.documentElement.style.setProperty("--accent", BRAND.accent);
+setView("home");
+})();
+</script>
+</body>
+</html>

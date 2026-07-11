@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b141b">
+<title>Phuket Jetski Club — LINE Ops-Bot (showcase)</title>
+<style>
+  :root{--bg:#0b141b;--panel:#121e27;--panel2:#0f1922;--line:#1f3242;--ink:#e8f3fa;--muted:#7d95a6;
+    --accent:#22b8f0;--ok:#3ddc78;--warn:#ffb43d;--bad:#ff5d63;--lineGreen:#06c755;
+    --shadow:0 10px 30px rgba(0,0,0,.35);--r:14px}
+  *{box-sizing:border-box}html,body{margin:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans Thai",sans-serif;background:var(--bg);color:var(--ink)}
+  #app{max-width:760px;margin:0 auto;padding:0 14px 50px}
+  header.top{display:flex;align-items:center;gap:10px;padding:16px 2px 10px}
+  .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#06c755,#04a344);display:grid;place-items:center;font-size:18px}
+  .brand{font-weight:800}.brand small{display:block;font-weight:600;color:var(--muted);font-size:10.5px;letter-spacing:1.1px;text-transform:uppercase}
+  .frame{background:#0e2231;border:1px solid #1d425c;color:#9fd2ec;font-size:13px;border-radius:12px;padding:12px 14px;margin:8px 0 18px;line-height:1.6}
+  .pipe{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 20px;font-size:12.5px;font-weight:700}
+  .pipe .st{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 13px}
+  .pipe .ar{color:var(--muted)}
+  h2{font-size:16px;margin:26px 0 12px;letter-spacing:.3px}
+  h2 .n{color:var(--muted);font-weight:600;font-size:12.5px}
+  .pair{display:grid;grid-template-columns:minmax(0,1.1fr) 26px minmax(0,1fr);gap:8px;align-items:center;margin-bottom:10px}
+  @media(max-width:640px){.pair{grid-template-columns:1fr;gap:4px}.pair .ar{display:none}}
+  .bubble{background:#15242f;border:1px solid var(--line);border-radius:14px 14px 14px 4px;padding:10px 12px;font-size:13px;line-height:1.5}
+  .bubble .meta{display:flex;gap:8px;font-size:10.5px;color:var(--muted);margin-bottom:4px;font-weight:700}
+  .bubble .who{color:var(--lineGreen)}
+  .ar{color:var(--muted);text-align:center;font-size:15px}
+  .event{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:9px 11px;font-size:12px}
+  .event.breakdown{border-left-color:var(--warn)} .event.incident{border-left-color:var(--bad)}
+  .event.shift{border-left-color:#5bd8c5} .event.photo_status{border-left-color:#8e5bd8}
+  .event.client_issue{border-left-color:#ff8fb3} .event.office_notice{border-left-color:#7d95a6}
+  .event b{font-size:12.5px}
+  .chip{display:inline-block;font-size:10px;font-weight:800;padding:1.5px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);margin:3px 4px 0 0}
+  .chip.high{color:var(--bad);border-color:rgba(255,93,99,.5)} .chip.medium{color:var(--warn);border-color:rgba(255,180,61,.4)}
+  .phone{max-width:420px;background:#000;border-radius:22px;padding:10px;border:1px solid #26343f;box-shadow:var(--shadow)}
+  .notif{background:rgba(28,38,46,.96);border-radius:14px;padding:11px 13px;color:#fff}
+  .notif .head{display:flex;align-items:center;gap:7px;font-size:10.5px;color:#b9c8d3;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
+  .notif .head .ic{width:16px;height:16px;border-radius:4px;background:var(--lineGreen);display:grid;place-items:center;font-size:9px}
+  .notif .t{font-size:13px;font-weight:700;margin-bottom:2px}
+  .notif .b{font-size:12.5px;color:#d7e3ec;line-height:1.45}
+  pre.eod{background:#0a1219;border:1px solid var(--line);color:#dcebf5;border-radius:12px;padding:14px;font-size:11.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,Menlo,monospace;margin:0;overflow-x:auto}
+  .note{font-size:12px;color:var(--muted);line-height:1.6;margin-top:8px}
+  a.back{color:var(--accent);text-decoration:none;font-size:12.5px;font-weight:700}
+  .badge{display:inline-block;font-size:10.5px;font-weight:800;padding:3px 10px;border-radius:999px;background:rgba(61,220,120,.1);color:var(--ok);border:1px solid rgba(61,220,120,.35);margin-left:8px}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <span class="logo">🤖</span>
+    <span class="brand">PHUKET JETSKI CLUB<small>LINE Ops-Bot · сообщения → события → отчёт · showcase</small></span>
+  </header>
+  <div><a class="back" href="index.html">← фото</a> · <a class="back" href="weather.html">погода</a> · <a class="back" href="dashboard.html">дашборд</a></div>
+
+  <div class="frame">Бот-наблюдатель состоит в рабочих LINE-группах (тай-гиды и капитаны/стафф) и <b>молча</b> превращает переписку в операционные события: критичное мгновенно улетает лиду, вечером офис и тех.отдел получают готовый отчёт. Ниже — <b>реальный вывод работающего кода</b> (`line-bot/`, 38 автотестов), сообщения — образцы на основе реального лексикона команды.<span class="badge">официальный LINE API</span></div>
+
+  <div class="pipe">
+    <span class="st">💬 группы LINE</span><span class="ar">→</span>
+    <span class="st">🤖 классификатор TH/EN/RU</span><span class="ar">→</span>
+    <span class="st">⚡ алерт лиду</span><span class="ar">→</span>
+    <span class="st">📋 отчёт 18:00</span><span class="ar">→</span>
+    <span class="st">🖥 дашборд</span>
+  </div>
+
+  <h2>1 · Сообщение в группе → событие <span class="n">(живая классификация)</span></h2>
+
+  <div class="pair">
+    <div class="bubble"><div class="meta"><span class="who">гид · тай-группа</span><span>08:30</span></div>วันนี้ไม่ไป monkey คลื่นใหญ่มาก 💙 ลูกค้าขับช้า</div>
+    <div class="ar">→</div>
+    <div class="event"><b>🌊 погодный рапорт</b><br><span class="chip">team: blue</span><span class="chip">место: Monkey</span><span class="chip">info</span></div>
+  </div>
+  <div class="pair">
+    <div class="bubble"><div class="meta"><span class="who">гид · тай-группа</span><span>09:36</span></div>K18 เสีย พวงมาลัยหนักมาก ต้องซ่อมด่วน</div>
+    <div class="ar">→</div>
+    <div class="event breakdown"><b>🔧 поломка → тикет тех.отделу</b><br><span class="chip">машина: K18</span><span class="chip high">HIGH · срочно</span></div>
+  </div>
+  <div class="pair">
+    <div class="bubble"><div class="meta"><span class="who">гид · тай-группа</span><span>10:42</span></div>ลูกค้าเมาเรือ เรียก speedboat มารับที่ Monkey ด่วน</div>
+    <div class="ar">→</div>
+    <div class="event incident"><b>🚑 инцидент · эвакуация</b><br><span class="chip">место: Monkey</span><span class="chip medium">medium</span></div>
+  </div>
+  <div class="pair">
+    <div class="bubble"><div class="meta"><span class="who">гид · тай-группа</span><span>11:04</span></div>ลืมถ่ายรูปที่ Monkey 🙈 ขอโทษครับ</div>
+    <div class="ar">→</div>
+    <div class="event photo_status"><b>📸 фото: пропуск точки</b><br><span class="chip">место: Monkey</span><span class="chip">→ напоминание гиду</span></div>
+  </div>
+  <div class="pair">
+    <div class="bubble"><div class="meta"><span class="who">гид · тай-группа</span><span>11:48</span></div>พรุ่งนี้ขอลา ป่วยครับ ใครแทนได้บ้าง</div>
+    <div class="ar">→</div>
+    <div class="event shift"><b>👥 смены: нужна замена завтра</b><br><span class="chip">болезнь</span><span class="chip">→ Standby?</span></div>
+  </div>
+  <div class="pair">
+    <div class="bubble"><div class="meta"><span class="who">офис · капитаны</span><span>12:54</span></div>Morning Program Change Due to High Waves and Wind — inside program today</div>
+    <div class="ar">→</div>
+    <div class="event"><b>🌊 режим дня: Inside Program</b><br><span class="chip">официально</span><span class="chip">→ дашборд: все группы</span></div>
+  </div>
+  <div class="pair">
+    <div class="bubble"><div class="meta"><span class="who">капитан · капитаны</span><span>13:16</span></div>ลูกค้าขอ refund บอกฝนตกทำไมไม่ยกเลิก ร้องเรียนที่ office</div>
+    <div class="ar">→</div>
+    <div class="event client_issue"><b>💬 претензия: возврат за погоду</b><br><span class="chip medium">→ брифинг-текст + перенос</span></div>
+  </div>
+  <div class="pair">
+    <div class="bubble"><div class="meta"><span class="who">капитан · капитаны</span><span>13:38</span></div>P11 hood broken again, flew off in the wind, hit near customer head — second time!</div>
+    <div class="ar">→</div>
+    <div class="event breakdown"><b>🔧 поломка, задела клиента</b><br><span class="chip">машина: P11</span><span class="chip high">HIGH · повтор №2</span></div>
+  </div>
+  <div class="pair">
+    <div class="bubble"><div class="meta"><span class="who">гид · рус-группа*</span><span>14:22</span></div>Клиент упал на волне у Rang Yai, порез ноги, кровь остановили, спидбот не нужен</div>
+    <div class="ar">→</div>
+    <div class="event incident"><b>🚑 инцидент · травма</b><br><span class="chip">место: Rang Yai</span><span class="chip high">HIGH · в журнал</span></div>
+  </div>
+
+  <h2>2 · Автосообщение при проблеме <span class="n">(улетает лиду в момент события)</span></h2>
+  <div class="phone">
+    <div class="notif">
+      <div class="head"><span class="ic">🤖</span> LINE · JetOps Bot · сейчас</div>
+      <div class="t">⚠️ ALERT (тай-гиды)</div>
+      <div class="b">P11 hood broken again, flew off in the wind, hit near customer head — second time!<br>#breakdown · P11 · HIGH → замена борта + приоритет тех.отделу</div>
+    </div>
+  </div>
+  <p class="note">Алертится только критичное (кровь/госпиталь/эвакуация/срочная поломка/повторная угроза клиенту). Всё остальное копится молча до вечернего отчёта — никто не задолбан уведомлениями.</p>
+
+  <h2>3 · Вечерний отчёт (18:00 · офис + тех.отдел) <span class="n">— реальный вывод <code>node simulate.js</code></span></h2>
+  <pre class="eod">PHUKET JETSKI CLUB — ОТЧЁТ ДНЯ · 2026-07-11
+──────────────────────────────────────────
+20 событий из чатов
+
+⚠️ КРИТИЧНОЕ (3)
+  09:36 [K18] K18 เสีย พวงมาลัยหนักมาก ต้องซ่อมด่วน
+  13:38 [P11] P11 hood broken again, flew off in the wind, hit near customer head — second time!
+  14:22 [Rang Yai] Клиент упал на волне у Rang Yai, порез ноги, кровь остановили, спидбот не нужен
+
+🌊 ПОГОДА / МАРШРУТ (5)
+  08:30 [blue · Monkey] วันนี้ไม่ไป monkey คลื่นใหญ่มาก 💙 ลูกค้าขับช้า
+  08:52 [Rang Yai] ฝนตกหนักที่ Rang Yai รอก่อนครับ หมอกลงด้วย
+  09:14 [Naka Yai] น้ำลงมากที่ Naka Yai จอดยาก ให้ลูกค้า snorkel จากเจ็ตสกี
+  12:54 Morning Program Change Due to High Waves and Wind — inside program today
+  14:44 [Monkey] big waves после grand marina, no monkey сегодня, все группы inside
+
+🚑 ИНЦИДЕНТЫ (3)
+  10:20 [Rang Yai] ลูกค้าล้มที่ Rang Yai บาดเจ็บนิดหน่อย ทำแผลแล้ว
+  10:42 [Monkey] ลูกค้าเมาเรือ เรียก speedboat มารับที่ Monkey ด่วน
+  14:22 [Rang Yai] Клиент упал на волне у Rang Yai, порез ноги — обработано
+
+🔧 ТЕХНИКА — тех.отделу (5)
+  09:36 [K18] руль тяжёлый после контакта — срочный ремонт
+  09:58 [H100] เครื่องดับกลางทะเล สตาร์ทไม่ติด (заглох в море)
+  12:32 [Y62] น้ำมันรั่ว — течь топлива, в мастерскую
+  13:38 [P11] срыв капота, задел клиента — ПОВТОР №2, приоритет
+  14:00 [H29] не едет быстрее 65, датчик сигналит
+
+📸 ФОТО (3)
+  11:04 [Monkey] пропуск фото-точки («forget» 🙈) — гиду ушло напоминание
+  11:26 напоминание офиса: прислать фото до 21:00
+  15:28 [yellow] загрузка полная — Coconut и Rang Yai по 40 шт.
+
+👥 СМЕНЫ (3)
+  11:48 завтра нужна замена (болезнь) → запрос в Standby
+  12:10 Standby: 1 человек подтверждён на пирсе
+  15:06 вечер: нужна подмена (личный байк гида сломался)
+
+💬 КЛИЕНТЫ (1)
+  13:16 запрос refund за дождь → выдан брифинг, предложен перенос на утро
+──────────────────────────────────────────
+сформировано автоматически LINE-ботом · полный лог в дашборде</pre>
+
+  <h2>4 · Как устроено <span class="n">(честно)</span></h2>
+  <p class="note">
+    <b>LINE подключается официально</b> (Messaging API: бот приглашается в группу как участник) — покрывает обе тайские группы сразу и без рисков. <b>WhatsApp рус-гидов</b> — следующий шаг через выделенный номер-мост (read-only). Классификатор — словари на реальном лексиконе команды + опциональное AI-дообогащение нераспознанного; критичность (кровь/эвакуация/повторная угроза) поднимается автоматически. Данные остаются на сервере компании; в группах бот молчит. Эти же события в реальном времени питают <a class="back" href="dashboard.html">операционный дашборд →</a>
+  </p>
+  <p class="note" style="opacity:.7">* рус-группа показана для полноты картины — её подключение через WhatsApp-мост, вторая очередь.</p>
+</div>
+</body>
+</html>

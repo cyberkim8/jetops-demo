@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b141b">
+<title>Phuket Jet Ski Club — Ops Dashboard (demo)</title>
+<style>
+  :root{
+    --bg:#0b141b; --panel:#121e27; --panel2:#0f1922; --line:#1f3242; --ink:#e8f3fa; --muted:#7d95a6;
+    --accent:#22b8f0; --ok:#3ddc78; --warn:#ffb43d; --bad:#ff5d63; --violet:#8e5bd8;
+    --shadow:0 10px 30px rgba(0,0,0,.35); --r:14px;
+  }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans Thai",sans-serif;
+    background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  #app{max-width:1180px;margin:0 auto;padding:0 14px 40px}
+  ::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:#22384a;border-radius:4px}
+
+  header.top{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:14px 2px 10px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.3px}
+  .brand .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#0aa1dd,#0784b8);
+    display:grid;place-items:center;font-size:18px}
+  .brand small{display:block;font-weight:600;color:var(--muted);font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase}
+  .live{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;color:var(--ok);
+    border:1px solid rgba(61,220,120,.35);background:rgba(61,220,120,.08);padding:4px 10px;border-radius:999px}
+  .live .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .clock{margin-left:auto;text-align:right}
+  .clock .t{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+  .clock .d{font-size:11px;color:var(--muted)}
+  .simbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--r);padding:9px 12px;margin-bottom:14px}
+  .simbar .lbl{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.6px}
+  .simbar .stime{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--accent);min-width:52px}
+  .sbtn{border:1px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:9px;
+    padding:6px 12px;font-size:12.5px;font-weight:700;cursor:pointer}
+  .sbtn:hover{border-color:var(--accent)} .sbtn.on{background:var(--accent);color:#04222f;border-color:var(--accent)}
+  .note{font-size:11px;color:var(--muted);margin-left:auto}
+
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+  .kpi .k{font-size:10.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.6px}
+  .kpi .v{font-size:24px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums}
+  .kpi .s{font-size:11px;color:var(--muted)}
+  .kpi.alert .v{color:var(--bad)} .kpi.warn .v{color:var(--warn)} .kpi.good .v{color:var(--ok)}
+
+  .cols{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);gap:14px;margin-bottom:14px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+  .panel .head{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--line)}
+  .panel .head .ttl{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}
+  .panel .head .right{margin-left:auto;font-size:11px;color:var(--muted)}
+  .panel .body{padding:12px 14px}
+
+  /* map */
+  #map{width:100%;display:block;background:
+    radial-gradient(1200px 500px at 75% -10%, rgba(34,184,240,.10), transparent 60%),
+    linear-gradient(180deg,#0d1c28,#0b1720)}
+  .wstrip{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 14px;border-top:1px solid var(--line);font-size:12.5px}
+  .chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 11px;font-weight:700;font-size:12px;
+    border:1px solid var(--line);background:var(--panel2);color:var(--ink)}
+  .chip.ok{color:var(--ok);border-color:rgba(61,220,120,.4)}
+  .chip.warn{color:var(--warn);border-color:rgba(255,180,61,.4)}
+  .chip.bad{color:var(--bad);border-color:rgba(255,93,99,.4)}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;padding:0 14px 12px;font-size:11px;color:var(--muted)}
+  .legend b{color:var(--ink)}
+
+  /* feed */
+  #feedwrap{max-height:520px;overflow-y:auto}
+  .ev{display:flex;gap:10px;padding:9px 14px;border-bottom:1px solid rgba(31,50,66,.55);font-size:13px;line-height:1.45;
+    border-left:3px solid transparent;animation:slidein .3s ease}
+  @keyframes slidein{from{opacity:0;transform:translateY(-6px)}to{opacity:1}}
+  .ev .t{color:var(--muted);font-variant-numeric:tabular-nums;font-size:11.5px;padding-top:2px;min-width:38px}
+  .ev.weather{border-left-color:var(--accent)} .ev.breakdown{border-left-color:var(--warn)}
+  .ev.incident{border-left-color:var(--bad)} .ev.photo{border-left-color:var(--violet)}
+  .ev.shift{border-left-color:#5bd8c5} .ev.office{border-left-color:#7d95a6} .ev.client{border-left-color:#ff8fb3}
+  .ev b{font-weight:700}
+
+  .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:14px}
+  table.mini{width:100%;border-collapse:collapse;font-size:12.5px}
+  table.mini td{padding:7px 4px;border-bottom:1px solid rgba(31,50,66,.5);vertical-align:top}
+  .badge{display:inline-block;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;border:1px solid var(--line)}
+  .badge.open{color:var(--warn);border-color:rgba(255,180,61,.45)}
+  .badge.shop{color:var(--bad);border-color:rgba(255,93,99,.45)}
+  .badge.watch{color:var(--accent);border-color:rgba(34,184,240,.45)}
+  .badge.done{color:var(--ok);border-color:rgba(61,220,120,.45)}
+  .miss{color:var(--bad);font-weight:700} .okt{color:var(--ok);font-weight:700}
+  .dotc{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:0}
+
+  pre.eod{background:#0a1219;border:1px solid var(--line);color:#dcebf5;border-radius:12px;padding:14px;
+    font-size:12px;line-height:1.55;white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,Menlo,monospace;margin:0;
+    max-height:420px;overflow:auto}
+  .btn{border:0;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:800;cursor:pointer;background:var(--accent);color:#04222f}
+  .btn.ghost{background:var(--panel2);border:1px solid var(--line);color:var(--ink)}
+  .foot{font-size:11.5px;color:var(--muted);line-height:1.6;padding:8px 2px}
+  a.backlink{color:var(--accent);text-decoration:none;font-size:12px;font-weight:700}
+  @media (max-width:940px){ .cols{grid-template-columns:1fr} .grid3{grid-template-columns:1fr} .kpis{grid-template-columns:repeat(2,1fr)} #feedwrap{max-height:320px} }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div class="brand">
+      <span class="logo">🌊</span>
+      <span>PHUKET JETSKI CLUB<small>Ops Dashboard · операционный борт · demo</small></span>
+    </div>
+    <span class="live"><span class="dot"></span> LIVE</span>
+    <div class="clock"><div class="t" id="rtClock">--:--</div><div class="d" id="rtDate">Asia/Bangkok</div></div>
+  </header>
+  <div style="margin:-4px 0 10px"><a class="backlink" href="index.html">← фото-демо</a> · <a class="backlink" href="weather.html">погодный борт</a> · <a class="backlink" href="bot.html">LINE-бот →</a></div>
+
+  <div class="simbar">
+    <span class="lbl">Симуляция дня</span>
+    <span class="stime" id="simClock">07:45</span>
+    <button class="sbtn on" id="btnPlay">⏸ пауза</button>
+    <button class="sbtn" id="btnX1">×1</button>
+    <button class="sbtn on" id="btnX2">×2</button>
+    <button class="sbtn" id="btnEOD">⏭ к вечеру</button>
+    <button class="sbtn" id="btnReset">↺ заново</button>
+    <span class="note">сценарий погоды:
+      <button class="sbtn scenbtn" data-scen="ok" style="color:var(--ok);padding:3px 8px">🟢</button>
+      <button class="sbtn scenbtn" data-scen="warn" style="color:var(--warn);padding:3px 8px">🟡</button>
+      <button class="sbtn scenbtn" data-scen="bad" style="color:var(--bad);padding:3px 8px">🔴</button>
+      <button class="sbtn scenbtn" data-scen="live" style="color:var(--accent);padding:3px 8px">⟳live</button>
+      · день перезапустится · в проде — события из чат-бота, аплоадера и погодного API</span>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="k">Групп на воде</div><div class="v" id="kGroups">0</div><div class="s" id="kGroupsS">ожидание выхода</div></div>
+    <div class="kpi"><div class="k">Клиентов сегодня</div><div class="v" id="kClients">0</div><div class="s" id="kClientsS">утро + день</div></div>
+    <div class="kpi"><div class="k">Фото загружено</div><div class="v" id="kPhotos">0</div><div class="s" id="kPhotosS">аплоадер · live</div></div>
+    <div class="kpi warn"><div class="k">Открытые дефекты</div><div class="v" id="kIssues">2</div><div class="s">доска тех.отдела</div></div>
+    <div class="kpi good"><div class="k">Инциденты</div><div class="v" id="kInc">0</div><div class="s" id="kIncS">за сегодня</div></div>
+  </div>
+
+  <div class="cols">
+    <div class="panel">
+      <div class="head"><span class="ttl">Карта маршрута · Sirey → Ao Por → Monkey</span><span class="right">позиции: расписание + рапорты (v2 — гео-пинги)</span></div>
+      <svg id="map" viewBox="0 0 820 470" aria-label="route map"></svg>
+      <div class="wstrip" id="wstrip"><span class="chip">погода: загрузка…</span></div>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="panel">
+      <div class="head"><span class="ttl">Лента событий</span><span class="right" id="feedCount">0</span></div>
+      <div id="feedwrap"></div>
+    </div>
+  </div>
+
+  <div class="grid3">
+    <div class="panel">
+      <div class="head"><span class="ttl">🔧 Тех.отдел — дефекты</span><span class="right">из чата → тикеты</span></div>
+      <div class="body"><table class="mini" id="techTable"></table></div>
+    </div>
+    <div class="panel">
+      <div class="head"><span class="ttl">📸 Фото-комплаенс</span><span class="right">аплоадер · по группам</span></div>
+      <div class="body"><table class="mini" id="photoTable"></table></div>
+    </div>
+    <div class="panel">
+      <div class="head"><span class="ttl">👥 Смены</span><span class="right">08:20 / 12:30</span></div>
+      <div class="body"><table class="mini" id="shiftTable"></table></div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:14px">
+    <div class="head"><span class="ttl">📋 EOD — отчёт дня (авто в 17:30)</span>
+      <span class="right"><button class="sbtn" id="eodLang">EN / RU</button> <button class="btn ghost" id="eodCopy">📋 копировать</button></span></div>
+    <div class="body"><pre class="eod" id="eodText">Отчёт сформируется к вечеру симуляции (или нажми «⏭ к вечеру»).</pre></div>
+  </div>
+
+  <div class="foot">
+    <b>Откуда данные в проде:</b> ① бот-монитор рабочих чатов (WhatsApp гидов / LINE стаффа) — рапорты, поломки, инциденты, смены; ② аплоадер фото (модуль A) — счётчики фото + гео-пинг на каждой загрузке; ③ погодный API (модуль B) — коридор Sirey→Monkey. Симуляция собрана из реальных паттернов 20 месяцев рабочего чата (обезличено). GPS-трекеры — опция фазы 2, для демо не требуются.
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+/* ================= CONFIG ================= */
+const TZ="Asia/Bangkok";
+/* Реальная география (WGS84). Monkey — из ссылки клиента (maps.app.goo.gl/ZP2MXqEUGiFL3WvS7 → 8.115825,98.423385);
+   Rang Yai 7.9547/98.4479 и Naka Yai 8.0509/98.4659 — верифицированы; остальные — по карте клиента.
+   Та же проекция отрисует живые GPS-точки (Traccar) в проде без переделки. */
+const GEO={latMin:7.868,latMax:8.135,lonMin:98.398,lonMax:98.565}; // окно карты
+function prj(lat,lon){ // equirect → viewBox 820×470
+  const x=60+(lon-GEO.lonMin)/(GEO.lonMax-GEO.lonMin)*720;
+  const y=18+(GEO.latMax-lat)/(GEO.latMax-GEO.latMin)*430;
+  return {x:Math.round(x),y:Math.round(y)};
+}
+const STOPS=[
+  {lat:7.886,lon:98.428,name:"Pier · Koh Sirey",icon:"⚓"},
+  {lat:7.906,lon:98.437,name:"Laem Nga",icon:"📸"},
+  {lat:7.927,lon:98.443,name:"Coconut Is. (Maphrao)",icon:"📸"},
+  {lat:7.955,lon:98.448,name:"Rang Yai",icon:"⛱",sub:"укрытие · запасная 🐒"},
+  {lat:7.974,lon:98.443,name:"Rang Noi",icon:"📸"},
+  {lat:8.051,lon:98.466,name:"Naka Yai",icon:"🍜",sub:"обед · чувств. к отливу"},
+  {lat:8.066,lon:98.470,name:"Naka Noi",icon:"📸"},
+  {lat:8.068,lon:98.427,name:"Ao Po · Grand Marina",icon:"🛥"},
+  {lat:8.1158,lon:98.4234,name:"Monkey Is.",icon:"🐒"}
+].map(s=>Object.assign(s,prj(s.lat,s.lon)));
+// t по кумулятивной дистанции вдоль маршрута
+(function(){let d=0;const ds=[0];
+  for(let i=1;i<STOPS.length;i++){d+=Math.hypot(STOPS[i].x-STOPS[i-1].x,STOPS[i].y-STOPS[i-1].y);ds.push(d);}
+  STOPS.forEach((s,i)=>s.t=+(ds[i]/d).toFixed(4));})();
+const AOPOR_IDX=7, T_AOPOR=STOPS[AOPOR_IDX].t, MONKEY_CAP=Math.min(T_AOPOR+0.03,0.99);
+const GROUPS=[
+  {id:"Y",name:"Yellow",emoji:"💛",hex:"#f5c518"},
+  {id:"P",name:"Purple",emoji:"💜",hex:"#8e5bd8"},
+  {id:"B",name:"Blue",emoji:"💙",hex:"#3f8ef7"},
+  {id:"K",name:"Pink",emoji:"🩷",hex:"#ef7fb3"},
+  {id:"O",name:"Orange",emoji:"🧡",hex:"#f08c2e"},
+  {id:"G",name:"Green",emoji:"💚",hex:"#3ddc78"}
+];
+const TRIP_MIN=235, START_M=8*60+20, START_A=12*60+30, STAGGER=4;
+const $=s=>document.querySelector(s);
+
+/* ================= WEATHER (live, fallback sample) ================= */
+let WX={live:false,wind:16,gust:22,wave:1.2,rain:0.2,cls:"warn"};
+function wxClass(wave,wind){ if(wave>=1.8||wind>=20)return"bad"; if(wave>=1.1||wind>=15)return"warn"; return"ok"; }
+const WX_SCEN={ ok:{live:false,scen:"🟢 штиль",wind:9,gust:13,wave:0.5,rain:0,cls:"ok"},
+  warn:{live:false,scen:"🟡 на грани",wind:16,gust:23,wave:1.3,rain:0.4,cls:"warn"},
+  bad:{live:false,scen:"🔴 шторм",wind:24,gust:34,wave:2.1,rain:4.2,cls:"bad"} };
+const WX_OVERRIDE=new URLSearchParams(location.search).get("wx");
+async function loadWXLive(){
+  try{
+    const f=await fetch("https://api.open-meteo.com/v1/forecast?latitude=8.06&longitude=98.47&current=wind_speed_10m,wind_gusts_10m,precipitation&wind_speed_unit=kn&timezone=Asia%2FBangkok").then(r=>r.json());
+    const m=await fetch("https://marine-api.open-meteo.com/v1/marine?latitude=8.06&longitude=98.47&hourly=wave_height&timezone=Asia%2FBangkok&forecast_days=1").then(r=>r.json());
+    const i=Math.max(0,m.hourly.time.indexOf(f.current.time));
+    WX={live:true,wind:Math.round(f.current.wind_speed_10m),gust:Math.round(f.current.wind_gusts_10m),
+        wave:m.hourly.wave_height[i>=0?i:0],rain:f.current.precipitation,cls:null};
+    WX.cls=wxClass(WX.wave,WX.wind);
+  }catch(e){ /* keep sample */ }
+  renderWX();
+}
+async function loadWX(){
+  if(WX_OVERRIDE&&WX_SCEN[WX_OVERRIDE]){WX=WX_SCEN[WX_OVERRIDE];renderWX();return;}
+  await loadWXLive();
+}
+function renderWX(){
+  const v=WX.cls, lbl=v==="bad"?"🔴 NO MONKEY":v==="warn"?"🟡 Monkey на грани":"🟢 Monkey OK";
+  $("#wstrip").innerHTML=
+    `<span class="chip ${v}">${lbl}</span>
+     <span class="chip">💨 ${WX.wind} уз <span style="color:var(--muted)">(порывы ${WX.gust})</span></span>
+     <span class="chip">🌊 ${WX.wave.toFixed(1)} м</span>
+     <span class="chip">${WX.rain>0.2?"🌧 дождь":"☀️ без осадков"}</span>
+     <span class="chip">${WX.live?"● live Open-Meteo":(WX.scen?"сценарий: "+WX.scen:"демо-данные (офлайн)")}</span>
+     <span class="chip">🌊 отлив ~11:30 · Naka</span>`;
+}
+
+/* ================= MAP ================= */
+const NS="http://www.w3.org/2000/svg";
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);(parent||$("#map")).appendChild(e);return e;}
+let routePath, routeLen;
+function buildMap(){
+  const map=$("#map"); map.innerHTML="";
+  const P=(lat,lon)=>prj(lat,lon);
+  // Пхукет — восточный берег (стилизовано по опорным точкам реального берега)
+  const shore=[[8.135,98.418],[8.108,98.413],[8.093,98.412],[8.068,98.424],[8.030,98.420],[8.010,98.430],[7.960,98.418],[7.920,98.424],[7.886,98.418],[7.868,98.424]].map(a=>P(a[0],a[1]));
+  el("path",{d:`M0,0 L${shore[0].x},0 `+shore.map(p=>`L${p.x},${p.y}`).join(" ")+` L${shore[shore.length-1].x},470 L0,470 Z`,
+    fill:"#122530",stroke:"#1d3a4c","stroke-width":"1.5"},map);
+  el("text",{x:26,y:250,fill:"#37596e","font-size":"13","font-weight":"700",transform:"rotate(-90 26 250)"},map).textContent="PHUKET · восточный берег";
+  // Koh Yao Yai — восточный край окна (по карте клиента)
+  const yao=[[8.135,98.545],[8.090,98.532],[8.040,98.538],[7.985,98.548],[7.930,98.556],[7.868,98.550]].map(a=>P(a[0],a[1]));
+  el("path",{d:`M820,0 L${yao[0].x},0 `+yao.map(p=>`L${p.x},${p.y}`).join(" ")+` L${yao[yao.length-1].x},470 L820,470 Z`,
+    fill:"#122530",stroke:"#1d3a4c","stroke-width":"1.5"},map);
+  el("text",{x:790,y:250,fill:"#37596e","font-size":"12","font-weight":"700",transform:"rotate(90 790 250)"},map).textContent="KOH YAO YAI";
+  // берег-лейблы (по карте клиента)
+  [[8.093,98.412,"Bang Rong Pier"],[8.108,98.413,"Laem Khat"]].forEach(a=>{
+    const p=P(a[0],a[1]); el("text",{x:p.x-6,y:p.y+3,"text-anchor":"end",fill:"#54788e","font-size":"9.5"},map).textContent=a[2];});
+  // Khai Nai (восточнее, к Yao Yai — по карте клиента)
+  const khai=P(7.908,98.530);
+  el("circle",{cx:khai.x,cy:khai.y,r:10,fill:"#16303f",stroke:"#27506a","stroke-width":"1"},map);
+  el("text",{x:khai.x,y:khai.y+22,"text-anchor":"middle",fill:"#54788e","font-size":"9.5"},map).textContent="Khai Nai";
+  // маршрут: полилиния Sirey → … → Ao Po
+  const main=STOPS.slice(0,AOPOR_IDX+1);
+  routePath=el("path",{d:"M"+main.map(s=>`${s.x},${s.y}`).join(" L"),fill:"none",stroke:"#2a4a60","stroke-width":"2.5","stroke-dasharray":"1 7","stroke-linecap":"round","stroke-linejoin":"round"},map);
+  routeLen=routePath.getTotalLength();
+  // открытый переход Ao Po → Monkey
+  const ap=STOPS[AOPOR_IDX], mk=STOPS[STOPS.length-1];
+  el("path",{d:`M${ap.x},${ap.y} L${mk.x},${mk.y}`,fill:"none",stroke:"#5a4a2a","stroke-width":"2.5","stroke-dasharray":"6 6"},map);
+  el("text",{x:(ap.x+mk.x)/2+10,y:(ap.y+mk.y)/2,fill:"#c9a35a","font-size":"10.5","font-weight":"700"},map).textContent="открытый переход · swell";
+  // стопы
+  STOPS.forEach((s,i)=>{
+    const last=i===STOPS.length-1;
+    el("circle",{cx:s.x,cy:s.y,r:last?19:16,fill:last?"#1c2f24":"#16303f",stroke:last?"#3a6b4e":"#27506a","stroke-width":"1.3",opacity:".9"},map);
+    el("text",{x:s.x,y:s.y+4,"text-anchor":"middle","font-size":"12"},map).textContent=s.icon;
+    el("text",{x:s.x,y:s.y+30,"text-anchor":"middle",fill:"#8fb0c4","font-size":"10","font-weight":"700"},map).textContent=s.name;
+    if(s.sub) el("text",{x:s.x,y:s.y+42,"text-anchor":"middle",fill:"#54788e","font-size":"9"},map).textContent=s.sub;
+  });
+  // groups layer
+  el("g",{id:"gdots"},map);
+  // legend
+  $("#legend").innerHTML = GROUPS.map(g=>`<span><span class="dotc" style="background:${g.hex}"></span>${g.name}</span>`).join("")+
+    `<span style="margin-left:auto"><b>кольцо</b> = дневная волна · <b>⚓</b> в порту</span>`+
+    `<span style="flex-basis:100%;margin-top:2px">координаты реальные (Monkey — по ссылке клиента); рабочие точки гидов Mali/Flower/Lipi/Phrae привяжем при внедрении</span>`;
+}
+function posAt(t){ // t 0..1 по всему маршруту, включая открытый переход
+  if(t<=T_AOPOR){ return routePath.getPointAtLength(routeLen*(t/T_AOPOR)); }
+  const u=(t-T_AOPOR)/(1-T_AOPOR);
+  const ap=STOPS[AOPOR_IDX], mk=STOPS[STOPS.length-1];
+  return {x:ap.x+(mk.x-ap.x)*u, y:ap.y+(mk.y-ap.y)*u};
+}
+
+/* ================= SIM STATE ================= */
+let sim={min:7*60+45, speed:2, playing:true, fired:new Set(), feed:[], counters:{clients:0,photos:0,inc:0,issues:2}, waves:[]};
+function makeWaves(){
+  const skipAll=WX.cls==="bad";
+  const skipHalf=WX.cls==="warn";
+  sim.waves=[];
+  ["m","a"].forEach((w,wi)=>{
+    GROUPS.forEach((g,i)=>{
+      let skip=skipAll||(skipHalf&&i%2===0)||(WX.cls==="ok"&&w==="m"&&g.id==="P"); // Purple: локальный swell даже в зелёный день
+      sim.waves.push({wave:w,g,dep:(w==="m"?START_M:START_A)+i*STAGGER,skis:6+(i%2),clients:9+((i*3)%4),skip,reported:false});
+    });
+  });
+}
+function groupT(gr){
+  const e=sim.min-gr.dep; if(e<=0||e>=TRIP_MIN) return null;
+  const u=e/TRIP_MIN; let t=u<=0.5?u*2:(1-u)*2;
+  const cap=gr.skip?MONKEY_CAP:1.0;
+  return Math.min(t,cap)* (gr.skip? 1:1);
+}
+function drawGroups(){
+  const layer=$("#gdots"); while(layer.firstChild)layer.removeChild(layer.firstChild);
+  let onWater=0;
+  sim.waves.forEach(gr=>{
+    const t=groupT(gr); if(t===null)return;
+    onWater++;
+    const p=posAt(t);
+    const c=el("circle",{cx:p.x,cy:p.y,r:8,fill:gr.g.hex,stroke:gr.wave==="a"?"#ffffff":"#0b141b","stroke-width":gr.wave==="a"?"2.5":"1.5"},layer);
+    el("title",{},c).textContent=`${gr.g.name} · ${gr.skis} гидриков · ${gr.clients} клиентов${gr.skip?" · no monkey":""}`;
+  });
+  $("#kGroups").textContent=onWater;
+  $("#kGroupsS").textContent=onWater?`${sim.waves.filter(g=>groupT(g)!==null&&g.wave==="m").length} утро · ${sim.waves.filter(g=>groupT(g)!==null&&g.wave==="a").length} день`:"все в порту";
+}
+
+/* ================= EVENTS ================= */
+function fmt(min){const h=Math.floor(min/60),m=Math.round(min%60);return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0");}
+function feed(type,min,html){
+  sim.feed.unshift({type,min,html});
+  const w=$("#feedwrap");
+  const d=document.createElement("div");d.className="ev "+type;
+  d.innerHTML=`<span class="t">${fmt(min)}</span><span>${html}</span>`;
+  w.insertBefore(d,w.firstChild);
+  $("#feedCount").textContent=sim.feed.length+" событий";
+}
+const TECH=[
+  {id:"Y62",issue:"защёлка капота — срыв на ветру (повтор №2!)",st:"shop",days:3},
+  {id:"H29",issue:"датчик — постоянный сигнал",st:"watch",days:1}
+];
+function renderTech(){
+  $("#techTable").innerHTML=`<tr><td style="color:var(--muted)">машина</td><td style="color:var(--muted)">дефект</td><td style="color:var(--muted)">статус</td></tr>`+
+    TECH.map(t=>`<tr><td><b>${t.id}</b></td><td>${t.issue}<div style="color:var(--muted);font-size:11px">${t.days} дн. открыт</div></td>
+    <td><span class="badge ${t.st}">${t.st==="shop"?"🛑 мастерская":t.st==="open"?"🔧 в работе":t.st==="watch"?"👁 наблюдаем":"✓ закрыт"}</span></td></tr>`).join("");
+  $("#kIssues").textContent=TECH.filter(t=>t.st!=="done").length;
+}
+const PHOTO=[]; // {g, up, exp, missing:[]}
+function renderPhoto(){
+  const rows=PHOTO.length?PHOTO.map(p=>`<tr><td><span class="dotc" style="background:${p.g.hex}"></span><b>${p.g.name}</b> ${p.wave==="a"?"(день)":""}</td>
+    <td>${p.up}/${p.exp} ${p.missing.length?`<div class="miss">⚠ нет: ${p.missing.join(", ")}</div>`:`<span class="okt">✓ полный</span>`}</td></tr>`).join("")
+    :`<tr><td style="color:var(--muted)">группы ещё в море — счётчики растут по мере загрузок…</td></tr>`;
+  $("#photoTable").innerHTML=rows;
+}
+let SHIFT={m:"6/6 ✓",a:"5/6 ⚠ (ищем 1)",tomorrow:"5/6 ⚠ нужен 1 гид"};
+function renderShift(){
+  $("#shiftTable").innerHTML=
+   `<tr><td>Утро 08:20</td><td><b>${SHIFT.m}</b></td></tr>
+    <tr><td>День 12:30</td><td><b>${SHIFT.a}</b></td></tr>
+    <tr><td>Завтра</td><td><b>${SHIFT.tomorrow}</b></td></tr>
+    <tr><td>Standby</td><td>1 гид + 1 фрилансер</td></tr>`;
+}
+
+function buildSchedule(){
+  const S=[]; const add=(min,fn)=>S.push({min,fn,key:min+"_"+S.length});
+  const wxWord=WX.cls==="bad"?"HIGH WAVES AND WIND":"waves "+WX.wave.toFixed(1)+" m, wind "+WX.wind+" kn";
+  add(7*60+50,()=>feed("office",7*60+50,`🏢 <b>Офис:</b> утренняя сводка — ${wxWord}. ${WX.cls==="bad"?"<b>🚨 Inside Program</b>, Monkey отменён":WX.cls==="warn"?"Monkey под вопросом — решение на воде":"полный маршрут 9 islands"} <span style="color:var(--muted)">(автопост из погодного модуля)</span>`));
+  add(8*60+20,()=>{const cl=sim.waves.filter(g=>g.wave==="m").reduce((s,g)=>s+g.clients,0);sim.counters.clients+=cl;$("#kClients").textContent=sim.counters.clients;
+    feed("shift",8*60+20,`🚤 <b>Утренняя волна вышла:</b> 6 групп · ${sim.waves.filter(g=>g.wave==="m").reduce((s,g)=>s+g.skis,0)} гидриков · ${cl} клиентов`);});
+  add(9*60+5,()=>{sim.counters.photos+=38;$("#kPhotos").textContent=sim.counters.photos;
+    feed("photo",9*60+5,`📸 <b>Yellow</b> · Coconut Is.: 38 фото загружено <span style="color:var(--muted)">· гео-пинг ✓</span>`);});
+  add(9*60+40,()=>{TECH.push({id:"H100",issue:"не едет быстрее 65 км/ч — жалоба гида",st:"open",days:0});renderTech();
+    feed("breakdown",9*60+40,`🔧 <b>H100:</b> «не едет быстрее 65» → тикет тех.отделу создан из сообщения в чате`);});
+  add(10*60+10,()=>feed("weather",10*60+10,`🌊 <b>Purple</b> (с воды): за Grand Marina волна растёт, зыбь боком <span style="color:var(--muted)">· рапорт из чата</span>`));
+  add(10*60+25,()=>{sim.waves.filter(g=>g.wave==="m").forEach(gr=>{
+      feed("weather",10*60+25,gr.skip?`${gr.g.emoji} <b>${gr.g.name}: NO MONKEY</b> — big waves, поворот у Grand Marina`:`${gr.g.emoji} <b>${gr.g.name}:</b> Monkey OK ✓`);});});
+  add(10*60+40,()=>{sim.counters.inc++;$("#kInc").textContent=sim.counters.inc;$("#kInc").parentElement.className="kpi alert";
+    feed("incident",10*60+40,`🚑 <b>Инцидент · Pink · Rang Yai:</b> клиент упал на волне — ушиб, обработан на месте, спидбот не требуется. <span style="color:var(--muted)">Занесено в журнал (защита при претензии)</span>`);});
+  add(11*60+5,()=>feed("weather",11*60+5,`🌊 <b>Отлив у Naka Yai</b> (~11:30): парковка ограничена — снорклинг с гидриков <span style="color:var(--muted)">· автонапоминание</span>`));
+  add(11*60+35,()=>feed("shift",11*60+35,`👥 <b>Дневная смена:</b> не хватает 1 гида (болезнь) — запрос в Standby`));
+  add(12*60+5,()=>{SHIFT.a="6/6 ✓ (standby подтверждён)";renderShift();
+    feed("shift",12*60+5,`👥 <b>Standby подтверждён</b> — дневная волна укомплектована 6/6 ✓`);});
+  add(12*60+20,()=>{sim.counters.photos+=214;$("#kPhotos").textContent=sim.counters.photos;
+    sim.waves.filter(g=>g.wave==="m").forEach((gr,i)=>{const exp=gr.skis*18;const miss=gr.g.id==="G"?["Monkey"]:(gr.g.id==="O"?["Rang Noi"]:[]);
+      PHOTO.push({g:gr.g,wave:"m",up:exp-(miss.length?14:0)-(i%3),exp,missing:miss});});
+    renderPhoto();
+    feed("photo",12*60+20,`📸 <b>Утро финишировало:</b> фото-комплаенс — <span class="okt">4/6 групп полные</span>, <span class="miss">Green: нет Monkey («forget» 🙈)</span>, <span class="miss">Orange: нет Rang Noi</span> → авто-пинок гидам <span style="color:var(--muted)">(раньше это делал админ вручную)</span>`);});
+  add(12*60+30,()=>{const cl=sim.waves.filter(g=>g.wave==="a").reduce((s,g)=>s+g.clients,0);sim.counters.clients+=cl;$("#kClients").textContent=sim.counters.clients;
+    feed("shift",12*60+30,`🚤 <b>Дневная волна вышла:</b> 6 групп · ${cl} клиентов`);});
+  add(13*60+15,()=>{TECH.push({id:"K18",issue:"тяжёлый руль после контакта K18↔K24 — на осмотр",st:"shop",days:0});renderTech();
+    feed("breakdown",13*60+15,`🔧 <b>K18:</b> руль после столкновения → <b>в мастерскую</b>, замена на резервный борт`);});
+  if(WX.cls!=="ok") add(13*60+40,()=>feed("client",13*60+40,`💬 <b>Претензия (день):</b> «почему не отменили из-за дождя?» → гид выдал брифинг-текст, предложен перенос на утро <span style="color:var(--muted)">· шаблон из погодного модуля</span>`));
+  add(14*60+20,()=>{sim.counters.inc++;$("#kInc").textContent=sim.counters.inc;
+    feed("incident",14*60+20,`🤢 <b>Морская болезнь · Blue:</b> спидбот вызван к ${WX.cls==="bad"?"Rang Yai":"Monkey"}, клиент эвакуирован — ок`);});
+  add(14*60+35,()=>{sim.waves.filter(g=>g.wave==="a").forEach(gr=>{
+      feed("weather",14*60+35,gr.skip?`${gr.g.emoji} <b>${gr.g.name} (день): NO MONKEY</b> — разворот у Grand Marina`:`${gr.g.emoji} <b>${gr.g.name} (день):</b> Monkey OK ✓`);});});
+  add(14*60+50,()=>{sim.counters.photos+=176;$("#kPhotos").textContent=sim.counters.photos;
+    feed("photo",14*60+50,`📸 Дневные группы: +176 фото (Coconut, Rang Yai, Rang Noi) · гео-пинги ✓`);});
+  add(16*60+35,()=>{sim.counters.photos+=182;$("#kPhotos").textContent=sim.counters.photos;
+    sim.waves.filter(g=>g.wave==="a").forEach((gr,i)=>{const exp=gr.skis*18;PHOTO.push({g:gr.g,wave:"a",up:exp-(i%2),exp,missing:[]});});
+    renderPhoto();
+    feed("photo",16*60+35,`📸 <b>День финишировал:</b> 6/6 групп — фото полные ✓ (напоминания сработали)`);});
+  add(17*60+30,()=>{genEOD();feed("office",17*60+30,`📋 <b>EOD-отчёт сформирован</b> и отправлен: офис + тех.отдел + лид (панель ниже)`);});
+  return S;
+}
+let SCHEDULE=[];
+
+/* ================= EOD ================= */
+let eodLang="en";
+function eodData(){
+  const skipped=sim.waves.filter(g=>g.skip).length, total=sim.waves.length;
+  return {skipped,total,
+    tech:TECH.filter(t=>t.st!=="done").map(t=>`• ${t.id} — ${t.issue} [${t.st==="shop"?"WORKSHOP":"OPEN"}]`).join("\n"),
+    photos:sim.counters.photos, clients:sim.counters.clients, inc:sim.counters.inc};
+}
+function genEOD(){
+  const d=eodData(), date=new Date().toLocaleDateString("en-GB",{timeZone:TZ});
+  const en=
+`PHUKET JETSKI CLUB — DAILY OPS REPORT · ${date}
+──────────────────────────────────────────
+WEATHER & ROUTE  ${WX.cls==="bad"?"🔴":WX.cls==="warn"?"🟡":"🟢"}
+  Wind ${WX.wind} kn (gusts ${WX.gust}) · waves ${WX.wave.toFixed(1)} m ${WX.live?"(live)":"(sample)"}
+  Monkey Island: ${d.skipped}/${d.total} groups skipped · ${WX.cls==="bad"?"Inside Program used":"regular route"}
+  Low tide ~11:30 — Naka parking limited (snorkel from skis)
+
+CLIENTS & SAFETY
+  Clients today: ${d.clients} · Incidents: ${d.inc}
+  1) Fall on wave near Rang Yai (Pink) — bruise, treated on site, logged
+  2) Seasickness (Blue) — speedboat evac OK
+  → both logged with time/place/outcome (refund-dispute protection)
+
+TECH / MAINTENANCE — action required
+${d.tech}
+  ⚠ Y62 hood latch = REPEAT case (2nd time) — priority fix
+
+PHOTOS (uploader)
+  Uploaded today: ${d.photos} · morning 4/6 groups complete
+  Missing: Green — Monkey stop; Orange — Rang Noi stop (guides auto-reminded)
+  Afternoon: 6/6 complete ✓
+
+SHIFTS
+  Morning 6/6 ✓ · Afternoon 6/6 ✓ (standby used)
+  Tomorrow: 5/6 — 1 guide needed (illness) → confirm standby tonight
+
+CLIENT FLAGS
+  1 weather complaint (rain) — briefing text issued, morning reschedule offered
+──────────────────────────────────────────
+auto-generated from work chats + uploader + weather API · full log in dashboard`;
+  const ru=
+`PHUKET JETSKI CLUB — ОТЧЁТ ДНЯ · ${date}
+──────────────────────────────────────────
+ПОГОДА И МАРШРУТ  ${WX.cls==="bad"?"🔴":WX.cls==="warn"?"🟡":"🟢"}
+  Ветер ${WX.wind} уз (порывы ${WX.gust}) · волна ${WX.wave.toFixed(1)} м ${WX.live?"(live)":"(демо)"}
+  Monkey: пропустили ${d.skipped}/${d.total} групп · ${WX.cls==="bad"?"Inside Program":"обычный маршрут"}
+  Отлив ~11:30 — парковка у Naka ограничена
+
+КЛИЕНТЫ И БЕЗОПАСНОСТЬ
+  Клиентов: ${d.clients} · Инцидентов: ${d.inc}
+  1) Падение на волне у Rang Yai (Pink) — ушиб, обработан, в журнале
+  2) Укачивание (Blue) — эвакуация спидботом, ок
+  → оба в журнале: время/место/исход (защита от претензий)
+
+ТЕХ.ОТДЕЛ — требует действий
+${d.tech}
+  ⚠ Y62 защёлка капота — ПОВТОРНЫЙ случай (2-й раз) — приоритет
+
+ФОТО (аплоадер)
+  Загружено: ${d.photos} · утро: 4/6 групп полные
+  Пропуски: Green — Monkey; Orange — Rang Noi (гидам ушло авто-напоминание)
+  День: 6/6 полные ✓
+
+СМЕНЫ
+  Утро 6/6 ✓ · День 6/6 ✓ (standby)
+  Завтра: 5/6 — нужен 1 гид (болезнь) → подтвердить standby сегодня
+
+КЛИЕНТСКИЕ ФЛАГИ
+  1 погодная претензия (дождь) — выдан брифинг, предложен перенос
+──────────────────────────────────────────
+сформировано автоматически: чаты + аплоадер + погодный API · полный лог в дашборде`;
+  $("#eodText").textContent = eodLang==="en"?en:ru;
+}
+
+/* ================= ENGINE ================= */
+function tick(){
+  if(!sim.playing)return;
+  sim.min+=sim.speed*1.5;
+  if(sim.min>18*60+30){sim.min=18*60+30;sim.playing=false;$("#btnPlay").textContent="▶ play";}
+  $("#simClock").textContent=fmt(sim.min);
+  SCHEDULE.forEach(s=>{if(s.min<=sim.min&&!sim.fired.has(s.key)){sim.fired.add(s.key);s.fn();}});
+  drawGroups();
+}
+function reset(){
+  sim={min:7*60+45,speed:sim.speed,playing:true,fired:new Set(),feed:[],counters:{clients:0,photos:0,inc:0,issues:2},waves:[]};
+  TECH.length=2;PHOTO.length=0;SHIFT={m:"6/6 ✓",a:"5/6 ⚠ (ищем 1)",tomorrow:"5/6 ⚠ нужен 1 гид"};
+  $("#feedwrap").innerHTML="";$("#feedCount").textContent="0";
+  ["kClients","kPhotos","kInc"].forEach(id=>$("#"+id).textContent="0");
+  $("#kInc").parentElement.className="kpi good";
+  $("#eodText").textContent="Отчёт сформируется к вечеру симуляции (или нажми «⏭ к вечеру»).";
+  makeWaves();SCHEDULE=buildSchedule();renderTech();renderPhoto();renderShift();
+  $("#btnPlay").textContent="⏸ пауза";
+}
+
+/* ================= WIRE ================= */
+$("#btnPlay").onclick=()=>{sim.playing=!sim.playing;$("#btnPlay").textContent=sim.playing?"⏸ пауза":"▶ play";};
+$("#btnX1").onclick=()=>{sim.speed=1;$("#btnX1").classList.add("on");$("#btnX2").classList.remove("on");};
+$("#btnX2").onclick=()=>{sim.speed=2;$("#btnX2").classList.add("on");$("#btnX1").classList.remove("on");};
+$("#btnEOD").onclick=()=>{while(sim.min<17*60+31){sim.min+=5;SCHEDULE.forEach(s=>{if(s.min<=sim.min&&!sim.fired.has(s.key)){sim.fired.add(s.key);s.fn();}});}$("#simClock").textContent=fmt(sim.min);drawGroups();};
+$("#btnReset").onclick=reset;
+document.querySelectorAll(".scenbtn").forEach(b=>b.onclick=async()=>{const k=b.dataset.scen;
+  if(k==="live"){await loadWXLive();} else {WX=WX_SCEN[k];renderWX();}
+  reset();});
+$("#eodLang").onclick=()=>{eodLang=eodLang==="en"?"ru":"en";if($("#eodText").textContent.length>120)genEOD();};
+$("#eodCopy").onclick=e=>{const t=$("#eodText").textContent;
+  const done=()=>{e.target.textContent="✓";setTimeout(()=>e.target.textContent="📋 копировать",1200);};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(done,done);else done();};
+function rtClock(){const n=new Date();
+  $("#rtClock").textContent=n.toLocaleTimeString("en-GB",{timeZone:TZ,hour:"2-digit",minute:"2-digit"});
+  $("#rtDate").textContent=n.toLocaleDateString("ru-RU",{timeZone:TZ,weekday:"short",day:"numeric",month:"short"})+" · Asia/Bangkok";}
+
+/* ================= INIT ================= */
+buildMap();
+loadWX().then(()=>{reset();});
+renderTech();renderPhoto();renderShift();renderWX();
+rtClock();setInterval(rtClock,30000);
+setInterval(tick,250);
+})();
+</script>
+</body>
+</html>
