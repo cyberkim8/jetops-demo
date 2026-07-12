@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
@@ -45,6 +45,9 @@
   .lang{display:flex;gap:4px;margin:0 0 10px}
   .lang button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:4px 12px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer}
   .lang button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .lang.hdr{margin:8px 0 0}
+  .lang.hdr button{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.35);color:#fff}
+  .lang.hdr button.on{background:#fff;color:var(--accent);border-color:#fff}
   .src{font-size:11px;color:var(--muted);text-align:center;padding:8px;line-height:1.5}
   .badge{display:inline-block;font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#eaf6fc;color:#0784b8;border:1px solid #cfe9f6}
   .badge.live{background:#e9f8ee;color:#1f8f49;border-color:#bfe8cd}
@@ -59,52 +62,53 @@
   <header class="top">
     <div class="brand">
       <img class="logo" src="assets/logo.png" alt="Phuket Jetski Club" style="width:auto;height:28px;background:#fff;padding:4px 8px;border-radius:8px;box-sizing:content-box">
-      <span><small>Crew Weather Board · Погодный борт · demo</small></span>
+      <span><small data-i18n="brand">Crew Weather Board · demo</small></span>
     </div>
-    <div style="margin-top:8px"><a class="back" href="index.html">← фото-демо</a> · <a class="back" href="dashboard.html">ops-дашборд</a> · <a class="back" href="bot.html">LINE-бот →</a></div>
+    <div style="margin-top:8px"><a class="back" href="index.html" data-i18n="navPhoto">← photo demo</a> · <a class="back" href="dashboard.html" data-i18n="navOps">ops dashboard</a> · <a class="back" href="bot.html" data-i18n="navBot">LINE bot →</a></div>
+    <div class="lang hdr" id="uiLang"><button data-l="en">EN</button><button data-l="th">ไทย</button><button data-l="ru">RU</button></div>
   </header>
   <main>
-    <div class="frame">⚓ Не про отмену — выход в море как обычно. Это про <b>осведомлённость и подготовку клиента</b>: пройдём ли сегодня открытый переход <b>Grand Marina → Monkey Island</b>, и что сказать клиентам ДО старта.</div>
+    <div class="frame" data-i18n="frame">⚓ Not about cancelling — we go out as usual. This is about <b>awareness and preparing the client</b>: will today's open crossing <b>Grand Marina → Monkey Island</b> go ahead, and what to tell clients BEFORE the start.</div>
 
-    <div id="statusRow" style="margin-bottom:10px"><span class="badge" id="dataBadge">загрузка…</span> <span class="muted" id="spot"></span></div>
-    <div class="muted" style="margin:-4px 0 10px;font-size:11.5px">Сценарии для показа:
-      <button class="scen" data-scen="ok" style="color:var(--ok)">🟢 штиль</button> ·
-      <button class="scen" data-scen="warn" style="color:#a86a00">🟡 на грани</button> ·
-      <button class="scen" data-scen="bad" style="color:var(--bad)">🔴 шторм</button> ·
+    <div id="statusRow" style="margin-bottom:10px"><span class="badge" id="dataBadge">loading…</span> <span class="muted" id="spot"></span></div>
+    <div class="muted" style="margin:-4px 0 10px;font-size:11.5px"><span data-i18n="scenLabel">Demo scenarios:</span>
+      <button class="scen" data-scen="ok" style="color:var(--ok)" data-i18n="scenOk">🟢 calm</button> ·
+      <button class="scen" data-scen="warn" style="color:#a86a00" data-i18n="scenWarn">🟡 borderline</button> ·
+      <button class="scen" data-scen="bad" style="color:var(--bad)" data-i18n="scenBad">🔴 storm</button> ·
       <button class="scen" data-scen="live" style="color:var(--accent)">⟳ live</button>
       <style>.scen{background:none;border:0;padding:0;font:inherit;font-weight:700;cursor:pointer}</style>
     </div>
 
-    <div id="verdict" class="verdict warn"><div class="big">…</div><div class="why">Тяну прогноз для коридора Sirey → Ao Por…</div></div>
+    <div id="verdict" class="verdict warn"><div class="big">…</div><div class="why">Fetching the forecast for the Sirey → Ao Por corridor…</div></div>
 
     <div class="card">
-      <div class="label">Условия на переходе к Monkey (сейчас)</div>
+      <div class="label" data-i18n="condLabel">Conditions on the Monkey crossing (now)</div>
       <div class="grid" id="metrics"></div>
     </div>
 
     <div class="card">
-      <div class="label">Ближайшие часы (волна / ветер)</div>
+      <div class="label" data-i18n="hoursLabel">Next hours (wave / wind)</div>
       <div class="tl" id="timeline"></div>
     </div>
 
     <div class="card">
-      <div class="label">🌊 Приливные окна дня <span style="text-transform:none;letter-spacing:0">— вода у берега (100% предсказуемо, из таблицы приливов)</span></div>
+      <div class="label" data-i18n="tideLabel">🌊 Today's tide windows <span style="text-transform:none;letter-spacing:0">— water at the shore (100% predictable, from tide tables)</span></div>
       <div id="tideHead" style="font-size:14px;font-weight:700;margin-bottom:10px">…</div>
       <div id="tideGates"></div>
-      <div class="hint">Уровень — к среднему морю (MSL). Время прибытия групп — из расписания (настраивается). Пороги по точкам калибруем с лидом. Идея: при плохом окне — <b>переставить порядок точек</b> под воду, а не отменять.</div>
+      <div class="hint" data-i18n="tideHint">Levels are relative to mean sea level (MSL). Group arrival times come from the trip schedule (configurable). Per-stop thresholds are calibrated with the lead guide. The idea: on a bad window, <b>reorder the stops</b> to match the water — don't cancel.</div>
     </div>
 
     <div class="card">
-      <div class="label">Утренняя сводка команде (в группу WhatsApp/LINE)</div>
+      <div class="label" data-i18n="crewLabel">Morning summary for the crew (WhatsApp/LINE group)</div>
       <pre class="msg" id="crewMsg">…</pre>
-      <button class="btn ghost" id="copyCrew">📋 Скопировать сводку</button>
+      <button class="btn ghost" id="copyCrew" data-i18n="copyCrew">📋 Copy summary</button>
     </div>
 
     <div class="card">
-      <div class="label">Брифинг клиенту ДО старта (ставит ожидания → меньше споров о возврате)</div>
-      <div class="lang" id="briefLang"><button data-l="ru" class="on">RU</button><button data-l="en">EN</button></div>
+      <div class="label" data-i18n="briefLabel">Client briefing BEFORE the start (sets expectations → fewer refund disputes)</div>
+      <div class="lang" id="briefLang"><button data-l="en" class="on">EN</button><button data-l="ru">RU</button></div>
       <pre class="msg" id="briefMsg">…</pre>
-      <button class="btn ghost" id="copyBrief">📋 Скопировать брифинг</button>
+      <button class="btn ghost" id="copyBrief" data-i18n="copyBrief">📋 Copy briefing</button>
     </div>
 
     <div class="src" id="src"></div>
@@ -114,41 +118,96 @@
 <script>
 (function(){
 "use strict";
-// Корридор восточного побережья Пхукета. Точка решения — открытый переход к Monkey Island за Grand Marina.
-const SPOT = {name:"Ao Po Grand Marina → Monkey Island (открытый переход)", lat:8.092, lon:98.425}; // середина реального перехода 8.068/98.427 → 8.1158/98.4234 (Monkey — из ссылки клиента)
-const THRESH = { wave:{warn:1.1, bad:1.8}, wind:{warn:15, bad:20} }; // конфиг; калибровать на сезоне с лидом
+// East-coast Phuket corridor. Decision point: the open crossing to Monkey Island beyond Grand Marina.
+const SPOT = {name:"Ao Po Grand Marina → Monkey Island (open crossing)", lat:8.092, lon:98.425}; // midpoint of the actual crossing 8.068/98.427 → 8.1158/98.4234
+const THRESH = { wave:{warn:1.1, bad:1.8}, wind:{warn:15, bad:20} }; // config; calibrate with the lead guide during the season
 const $ = s=>document.querySelector(s);
-let lang="ru", DATA=null;
+let briefLang="en", DATA=null;
 
-// ---- fallback (офлайн-демо): типичный «на грани» день муссона ----
+/* ================= i18n =================
+   EN is the default and complete. TH is an empty skeleton (falls back to EN).
+   RU (Russian guides) — keep all Cyrillic strictly inside I18N.ru below. */
+const I18N = {
+  en: {
+    brand: "Crew Weather Board · demo",
+    navPhoto: "← photo demo", navOps: "ops dashboard", navBot: "LINE bot →",
+    frame: "⚓ Not about cancelling — we go out as usual. This is about <b>awareness and preparing the client</b>: will today's open crossing <b>Grand Marina → Monkey Island</b> go ahead, and what to tell clients BEFORE the start.",
+    scenLabel: "Demo scenarios:",
+    scenOk: "🟢 calm", scenWarn: "🟡 borderline", scenBad: "🔴 storm",
+    condLabel: "Conditions on the Monkey crossing (now)",
+    hoursLabel: "Next hours (wave / wind)",
+    tideLabel: "🌊 Today's tide windows <span style=\"text-transform:none;letter-spacing:0\">— water at the shore (100% predictable, from tide tables)</span>",
+    tideHint: "Levels are relative to mean sea level (MSL). Group arrival times come from the trip schedule (configurable). Per-stop thresholds are calibrated with the lead guide. The idea: on a bad window, <b>reorder the stops</b> to match the water — don't cancel.",
+    crewLabel: "Morning summary for the crew (WhatsApp/LINE group)",
+    copyCrew: "📋 Copy summary",
+    briefLabel: "Client briefing BEFORE the start (sets expectations → fewer refund disputes)",
+    copyBrief: "📋 Copy briefing",
+    copied: "✓ Copied",
+    briefRough: "🌊 Hi! There is noticeable wave and wind today. The tour goes ahead, but the open crossing to Monkey Island may be shortened — it depends on the weather and is decided on the water for safety. You can also see monkeys at the Rang Yai photo stop. Hold on at the turns; we ride calmly in waves. No refund for weather, but you can reschedule to the morning trip (08:20) — just tell your guide in advance. All photos are included 📸",
+    briefGood: "☀️ Hi! The weather is good today — full route (9 islands) including the Monkey Island landing. Hold on at the turns and follow your guide. All ride photos are included 📸"
+  },
+  ru: {
+    brand: "Crew Weather Board · Погодный борт",
+    navPhoto: "← фото-демо", navOps: "ops-дашборд", navBot: "LINE-бот →",
+    frame: "⚓ Не про отмену — выход в море как обычно. Это про <b>осведомлённость и подготовку клиента</b>: пройдём ли сегодня открытый переход <b>Grand Marina → Monkey Island</b>, и что сказать клиентам ДО старта.",
+    scenLabel: "Сценарии для показа:",
+    scenOk: "🟢 штиль", scenWarn: "🟡 на грани", scenBad: "🔴 шторм",
+    condLabel: "Условия на переходе к Monkey (сейчас)",
+    hoursLabel: "Ближайшие часы (волна / ветер)",
+    tideLabel: "🌊 Приливные окна дня <span style=\"text-transform:none;letter-spacing:0\">— вода у берега (100% предсказуемо, из таблицы приливов)</span>",
+    tideHint: "Уровень — к среднему морю (MSL). Время прибытия групп — из расписания (настраивается). Пороги по точкам калибруем с лидом. Идея: при плохом окне — <b>переставить порядок точек</b> под воду, а не отменять.",
+    crewLabel: "Утренняя сводка команде (в группу WhatsApp/LINE)",
+    copyCrew: "📋 Скопировать сводку",
+    briefLabel: "Брифинг клиенту ДО старта (ставит ожидания → меньше споров о возврате)",
+    copyBrief: "📋 Скопировать брифинг",
+    copied: "✓ Скопировано",
+    briefRough: "🌊 Привет! Сегодня на море заметная волна/ветер. Программа состоится, но открытый участок к Monkey Island может быть укорочен — это зависит от погоды и решается на воде для безопасности. Обезьянок можно увидеть и на острове Rang Yai. Держитесь крепче на поворотах, на волне идём спокойнее. Возврата за погоду нет, но поездку можно перенести на утро — просто скажите вашему гиду заранее. Все фото — включены 📸",
+    briefGood: "☀️ Привет! Погода хорошая, идём полный маршрут (9 островов), включая Monkey Island. На поворотах держитесь крепче, слушайте гида. Все фото с поездки — включены 📸"
+  },
+  th: {} // TODO: Thai translations; falls back to EN
+};
+let uiLang = localStorage.getItem("jetops_lang") || "en";
+if(!I18N[uiLang]) uiLang = "en";
+function t(k){ return (I18N[uiLang] && I18N[uiLang][k]) || I18N.en[k] || k; }
+function applyLang(l){
+  uiLang = I18N[l] ? l : "en";
+  try{ localStorage.setItem("jetops_lang", uiLang); }catch(e){}
+  document.documentElement.lang = uiLang;
+  document.querySelectorAll("[data-i18n]").forEach(el=>{ const v=t(el.dataset.i18n); if(v) el.innerHTML=v; });
+  document.querySelectorAll("#uiLang button").forEach(b=>b.classList.toggle("on", b.dataset.l===uiLang));
+}
+document.querySelectorAll("#uiLang button").forEach(b=>b.onclick=()=>applyLang(b.dataset.l));
+/* ============== end i18n ============== */
+
+// ---- fallback (offline demo): a typical borderline monsoon day ----
 const SAMPLE = { live:false, wind:16, gust:22, rain:0.3, vis:11000, wave:1.3, swell:1.1, period:6.4,
   hours:[[9,1.2,15],[10,1.3,16],[11,1.4,18],[12,1.5,19],[13,1.5,20],[14,1.4,19],[15,1.3,18],[16,1.2,16]] };
-// ---- сценарии для показа (?wx=ok|warn|bad): демонстрируем все три состояния независимо от живой погоды ----
+// ---- demo scenarios (?wx=ok|warn|bad): show all three states regardless of the live weather ----
 const SCENARIOS = {
-  ok:  { live:false, scenario:"🟢 штиль", wind:9,  gust:13, rain:0,   vis:24000, wave:0.5, swell:0.4, period:5.2,
+  ok:  { live:false, scenario:"🟢 calm", wind:9,  gust:13, rain:0,   vis:24000, wave:0.5, swell:0.4, period:5.2,
          hours:[[9,0.4,8],[10,0.5,9],[11,0.5,10],[12,0.6,11],[13,0.6,11],[14,0.5,10],[15,0.5,9],[16,0.4,9]] },
-  warn:{ live:false, scenario:"🟡 на грани", wind:16, gust:23, rain:0.4, vis:11000, wave:1.3, swell:1.1, period:6.4,
+  warn:{ live:false, scenario:"🟡 borderline", wind:16, gust:23, rain:0.4, vis:11000, wave:1.3, swell:1.1, period:6.4,
          hours:[[9,1.1,14],[10,1.2,15],[11,1.3,17],[12,1.4,18],[13,1.5,19],[14,1.4,18],[15,1.3,17],[16,1.2,16]] },
-  bad: { live:false, scenario:"🔴 шторм", wind:24, gust:34, rain:4.2, vis:4500,  wave:2.1, swell:1.8, period:7.8,
+  bad: { live:false, scenario:"🔴 storm", wind:24, gust:34, rain:4.2, vis:4500,  wave:2.1, swell:1.8, period:7.8,
          hours:[[9,1.9,22],[10,2.0,23],[11,2.2,25],[12,2.3,26],[13,2.2,25],[14,2.1,24],[15,2.0,23],[16,1.9,22]] }
 };
 const WX_OVERRIDE = new URLSearchParams(location.search).get("wx");
 
-/* ---- приливные гейты (вводные клиента): Monkey — мель/травмы ног; Rang Yai — платные фото у воды;
-   мангры — заход только по высокой воде; Naka — парковка/обед. Пороги — стартовые, калибруем с лидом. ---- */
-const DEP={m:8*60+20, a:12*60+30}; // выходы волн
+/* ---- tide gates: Monkey Island landing — shallow water / foot injuries; Rang Yai photo stop — paid photographers work at the waterline;
+   mangroves — inner entry only on high water; Naka — parking / lunch. Thresholds are starting values, calibrated with the lead guide. ---- */
+const DEP={m:8*60+20, a:12*60+30}; // trip departures: morning trip 08:20, afternoon trip 12:30
 const TIDE_GATES=[
-  {name:"🐒 Monkey — высадка",        risk:"мель · травмы ног",        thr:-0.30, arr:200},
-  {name:"📸 Rang Yai — платные фото", risk:"вода уходит от берега",    thr:-0.40, arr:50},
-  {name:"🌿 Мангры — заход внутрь",   risk:"не пройти по низкой воде", thr:+0.30, arr:170},
-  {name:"🍜 Naka — парковка·обед",    risk:"парковка ограничена",      thr:-0.40, arr:110}
+  {name:"🐒 Monkey Island landing",   risk:"shallow water · foot injuries",              thr:-0.30, arr:200},
+  {name:"📸 Rang Yai photo stop",     risk:"water pulls back from the beach (paid photographers)", thr:-0.40, arr:50},
+  {name:"🌿 Mangroves — inner entry", risk:"no entry at low water",                      thr:+0.30, arr:170},
+  {name:"🍜 Naka — parking · lunch",  risk:"parking is limited",                         thr:-0.40, arr:110}
 ];
 let TIDE=null; // {live, series:[{h,lv}×24]}
-function synthTide(){ // офлайн/сценарий: полусуточный цикл, отлив ~12:12
+function synthTide(){ // offline/scenario: semidiurnal cycle, low water around 12:12
   const s=[]; for(let h=0;h<24;h++) s.push({h, lv:+(0.35+1.15*Math.cos(2*Math.PI*(h-6)/12.42)).toFixed(2)});
   return {live:false, series:s};
 }
-function tideAt(min){ // уровень в момент (минуты дня), линейная интерполяция
+function tideAt(min){ // level at a given moment (minutes of the day), linear interpolation
   const h=Math.min(23,Math.max(0,min/60)), i=Math.floor(h), f=h-i;
   const a=TIDE.series[i].lv, b=TIDE.series[Math.min(23,i+1)].lv;
   return a+(b-a)*f;
@@ -157,10 +216,10 @@ function fmtM(min){return String(Math.floor(min/60)).padStart(2,"0")+":"+String(
 
 function verdict(wave, wind){
   if(wave>=THRESH.wave.bad || wind>=THRESH.wind.bad)
-    return {cls:"bad", emoji:"🔴", word:"NO MONKEY — сегодня нет", route:"🚨 Inside Program (укрытый маршрут)"};
+    return {cls:"bad", emoji:"🔴", word:"NO — reroute, don't cancel", route:"🚨 Inside Program (sheltered storm route) · report \"no monkey\""};
   if(wave>=THRESH.wave.warn || wind>=THRESH.wind.warn)
-    return {cls:"warn", emoji:"🟡", word:"НА ГРАНИ — решает лид на воде", route:"Обычный маршрут, Monkey под вопросом · запас — Rang Yai"};
-  return {cls:"ok", emoji:"🟢", word:"MONKEY OK — идём", route:"Полный маршрут (9 islands)"};
+    return {cls:"warn", emoji:"🟡", word:"CAUTION — lead guide decides on the water", route:"Normal route, Monkey Island landing on hold · backup — Rang Yai photo stop"};
+  return {cls:"ok", emoji:"🟢", word:"GO", route:"Full route (9 islands)"};
 }
 function dotColor(wave,wind){var v=verdict(wave,wind);return v.cls==="bad"?"#e5484d":v.cls==="warn"?"#f5a623":"#2fa84f";}
 
@@ -194,38 +253,37 @@ function render(){
   const d=DATA, v=verdict(d.wave, d.wind);
   $("#dataBadge").outerHTML = d.live
     ? `<span class="badge live" id="dataBadge">● LIVE Open-Meteo</span>`
-    : `<span class="badge demo" id="dataBadge">${d.scenario?("сценарий показа: "+d.scenario):"офлайн-демо данные"}</span>`;
+    : `<span class="badge demo" id="dataBadge">${d.scenario?("demo scenario: "+d.scenario):"offline demo data"}</span>`;
   $("#spot").textContent = SPOT.name;
   const vd=$("#verdict"); vd.className="verdict "+v.cls;
-  vd.innerHTML = `<div class="big">🐒 Monkey сегодня: ${v.emoji} ${v.word}</div>
-    <div class="why">Зыбь/волна ~${d.wave.toFixed(1)} м (период ${Math.round(d.period)} с), ветер ${d.wind} уз (порывы ${d.gust}). ${d.rain>0.2?'Дождь.':'Без осадков.'}</div>
-    <div class="route">Маршрут: ${v.route}</div>`;
+  vd.innerHTML = `<div class="big">🐒 Monkey today: ${v.emoji} ${v.word}</div>
+    <div class="why">Swell/wave ~${d.wave.toFixed(1)} m (period ${Math.round(d.period)} s), wind ${d.wind} kn (gusts ${d.gust}). ${d.rain>0.2?'Rain.':'No rain.'}</div>
+    <div class="route">Route: ${v.route}</div>`;
   $("#metrics").innerHTML = `
-    <div class="metric"><div class="k">Ветер</div><div class="v">${d.wind} <span class="s">уз</span></div><div class="s">порывы ${d.gust} уз</div></div>
-    <div class="metric"><div class="k">Волна / зыбь</div><div class="v">${d.wave.toFixed(1)} <span class="s">м</span></div><div class="s">swell ${(+d.swell||0).toFixed(1)} м · ${Math.round(d.period)} с</div></div>
-    <div class="metric"><div class="k">Дождь</div><div class="v">${(+d.rain||0).toFixed(1)} <span class="s">мм</span></div><div class="s">${d.rain>0.2?'осадки есть':'сухо'}</div></div>
-    <div class="metric"><div class="k">Видимость</div><div class="v">${Math.round((d.vis||0)/1000)} <span class="s">км</span></div><div class="s">${(d.vis||0)<6000?'пониженная':'норм'}</div></div>
-    <div class="metric tide"><div class="k">Отлив (низкая вода)</div><div class="v" id="tideTileV" style="font-size:18px">…</div><div class="s" id="tideTileS">…</div></div>`;
+    <div class="metric"><div class="k">Wind</div><div class="v">${d.wind} <span class="s">kn</span></div><div class="s">gusts ${d.gust} kn</div></div>
+    <div class="metric"><div class="k">Wave / swell</div><div class="v">${d.wave.toFixed(1)} <span class="s">m</span></div><div class="s">swell ${(+d.swell||0).toFixed(1)} m · ${Math.round(d.period)} s</div></div>
+    <div class="metric"><div class="k">Rain</div><div class="v">${(+d.rain||0).toFixed(1)} <span class="s">mm</span></div><div class="s">${d.rain>0.2?'raining':'dry'}</div></div>
+    <div class="metric"><div class="k">Visibility</div><div class="v">${Math.round((d.vis||0)/1000)} <span class="s">km</span></div><div class="s">${(d.vis||0)<6000?'reduced':'normal'}</div></div>
+    <div class="metric tide"><div class="k">Low tide (low water)</div><div class="v" id="tideTileV" style="font-size:18px">…</div><div class="s" id="tideTileS">…</div></div>`;
   renderTide();
-  $("#timeline").innerHTML = d.hours.map(h=>`<div class="h"><div class="t">${String(h[0]).padStart(2,'0')}:00</div><div class="w">${(+h[1]).toFixed(1)}м</div><div class="g">${h[2]} уз</div><div class="dot" style="background:${dotColor(h[1],h[2])}"></div></div>`).join("");
+  $("#timeline").innerHTML = d.hours.map(h=>`<div class="h"><div class="t">${String(h[0]).padStart(2,'0')}:00</div><div class="w">${(+h[1]).toFixed(1)}m</div><div class="g">${h[2]} kn</div><div class="dot" style="background:${dotColor(h[1],h[2])}"></div></div>`).join("");
   // crew message
-  const today = (d.live? "сегодня":"demo");
   if(!TIDE) TIDE=synthTide();
-  const gm=gateStatus("a",TIDE_GATES[0]), gg=gateStatus("a",TIDE_GATES[2]); // дневная волна: Monkey высадка + мангры
+  const gm=gateStatus("a",TIDE_GATES[0]), gg=gateStatus("a",TIDE_GATES[2]); // afternoon trip: Monkey Island landing + mangroves
   $("#crewMsg").textContent =
 `☀️ Morning brief · Sirey → Ao Por
-Ветер ${d.wind} уз (порывы ${d.gust}) · волна ${d.wave.toFixed(1)} м · ${d.rain>0.2?'дождь':'без осадков'}
+Wind ${d.wind} kn (gusts ${d.gust}) · wave ${d.wave.toFixed(1)} m · ${d.rain>0.2?'rain':'no rain'}
 ${v.emoji} MONKEY: ${v.word}
-Маршрут: ${v.route}
-🌊 Вода: дневная волна — Monkey высадка ${gm.word} (${gm.lv.toFixed(1)} м), мангры ${gg.word}
-Напомнить клиентам на брифинге: Monkey зависит от погоды, запасная обезьяна — Rang Yai.`;
+Route: ${v.route}
+🌊 Tide, afternoon trip 12:30 — Monkey Island landing ${gm.word} (${gm.lv.toFixed(1)} m), mangroves ${gg.word}
+Remind clients at the briefing: Monkey Island depends on the weather; backup monkeys — Rang Yai photo stop.`;
   renderBrief();
-  $("#src").innerHTML = (d.live?"Данные: Open-Meteo Marine + Forecast, точка перехода к Monkey Island (live). ":"Открой на сервере/онлайн — подтянутся LIVE-данные. ")+"Пороги (волна/ветер) — конфиг, калибруем с лидом на сезоне.";
+  $("#src").innerHTML = (d.live?"Data: Open-Meteo Marine + Forecast at the Monkey Island crossing point (live). ":"Open this page online to load LIVE data. ")+"Wave/wind thresholds are config — calibrated with the lead guide during the season.";
 }
 
-function gateStatus(w,g){ // волна ("m"/"a") × гейт → {t,lv,cls,word}
+function gateStatus(w,g){ // trip ("m"/"a") × gate → {t,lv,cls,word}
   const t=DEP[w]+g.arr, lv=tideAt(t);
-  const st=lv>=g.thr+0.2?["ok","✓ ок"]:lv>=g.thr?["warn","⚠ на грани"]:["bad","✗ пропуск/перенос"];
+  const st=lv>=g.thr+0.2?["ok","✓ OK"]:lv>=g.thr?["warn","⚠ borderline"]:["bad","✗ skip / reorder"];
   return {t,lv,cls:st[0],word:st[1]};
 }
 const TG_COLOR={ok:"var(--ok)",warn:"#a86a00",bad:"var(--red)"};
@@ -235,38 +293,34 @@ function renderTide(){
   let lo=s[5],hi=s[5];
   for(let h=5;h<=21;h++){const p=s[h];if(p.lv<lo.lv)lo=p;if(p.lv>hi.lv)hi=p;}
   const hh=n=>String(n).padStart(2,"0")+":00";
-  $("#tideHead").innerHTML=`Отлив <b>${hh(lo.h)}</b> (${lo.lv.toFixed(1)} м) · Прилив <b>${hh(hi.h)}</b> (+${hi.lv.toFixed(1)} м) <span class="badge ${TIDE.live?"live":"demo"}" style="margin-left:6px">${TIDE.live?"● live таблица":"демо-кривая"}</span>`;
-  const head=`<tr style="color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.4px"><td style="padding:4px"></td><td style="padding:4px">Утро · выход 08:20</td><td style="padding:4px">День · выход 12:30</td></tr>`;
+  $("#tideHead").innerHTML=`Low tide <b>${hh(lo.h)}</b> (${lo.lv.toFixed(1)} m) · High tide <b>${hh(hi.h)}</b> (+${hi.lv.toFixed(1)} m) <span class="badge ${TIDE.live?"live":"demo"}" style="margin-left:6px">${TIDE.live?"● live tide table":"demo curve"}</span>`;
+  const head=`<tr style="color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.4px"><td style="padding:4px"></td><td style="padding:4px">Morning trip · 08:20</td><td style="padding:4px">Afternoon trip · 12:30</td></tr>`;
   const rows=TIDE_GATES.map(g=>{
     const cells=["m","a"].map(w=>{const r=gateStatus(w,g);
-      return `<td style="padding:7px 4px;border-top:1px solid var(--line)"><span style="color:var(--muted);font-size:11px">${fmtM(r.t)}</span> · ${r.lv.toFixed(1)} м<br><b style="color:${TG_COLOR[r.cls]}">${r.word}</b></td>`;}).join("");
-    return `<tr><td style="padding:7px 4px;border-top:1px solid var(--line)"><b style="font-size:12.5px">${g.name}</b><div style="color:var(--muted);font-size:10.5px">${g.risk} · порог ${g.thr>0?"+":""}${g.thr} м</div></td>${cells}</tr>`;
+      return `<td style="padding:7px 4px;border-top:1px solid var(--line)"><span style="color:var(--muted);font-size:11px">${fmtM(r.t)}</span> · ${r.lv.toFixed(1)} m<br><b style="color:${TG_COLOR[r.cls]}">${r.word}</b></td>`;}).join("");
+    return `<tr><td style="padding:7px 4px;border-top:1px solid var(--line)"><b style="font-size:12.5px">${g.name}</b><div style="color:var(--muted);font-size:10.5px">${g.risk} · threshold ${g.thr>0?"+":""}${g.thr} m</div></td>${cells}</tr>`;
   }).join("");
   $("#tideGates").innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12.5px">${head}${rows}</table>`;
-  const vt=$("#tideTileV"); if(vt){vt.textContent=`${hh(lo.h)} · ${lo.lv.toFixed(1)} м`; $("#tideTileS").textContent=`прилив ${hh(hi.h)} (+${hi.lv.toFixed(1)} м) · окна по точкам ниже`;}
+  const vt=$("#tideTileV"); if(vt){vt.textContent=`${hh(lo.h)} · ${lo.lv.toFixed(1)} m`; $("#tideTileS").textContent=`high tide ${hh(hi.h)} (+${hi.lv.toFixed(1)} m) · per-stop windows below`;}
 }
 function renderBrief(){
   const d=DATA, v=verdict(d.wave,d.wind);
   const rough = v.cls!=="ok";
-  const ru = rough
-    ? `🌊 Привет! Сегодня на море заметная волна/ветер. Программа состоится, но открытый участок к Monkey Island может быть укорочен — это зависит от погоды и решается на воде для безопасности. Обезьянок можно увидеть и на острове Rang Yai. Держитесь крепче на поворотах, на волне идём спокойнее. Возврата за погоду нет, но поездку можно перенести на утро — просто скажите вашему гиду заранее. Все фото — включены 📸`
-    : `☀️ Привет! Погода хорошая, идём полный маршрут (9 островов), включая Monkey Island. На поворотах держитесь крепче, слушайте гида. Все фото с поездки — включены 📸`;
-  const en = rough
-    ? `🌊 Hi! There's noticeable wave and wind today. The tour goes ahead, but the open crossing to Monkey Island may be shortened — it depends on the weather and is decided on the water for safety. You can also see monkeys at Rang Yai island. Hold on at the turns, we ride calmly in waves. No refund for weather, but you can reschedule to a morning — just tell your guide in advance. All photos included 📸`
-    : `☀️ Hi! Weather is good today — full route (9 islands) including Monkey Island. Hold on at the turns and follow your guide. All ride photos included 📸`;
-  $("#briefMsg").textContent = lang==="ru"? ru : en;
+  const dict = (I18N[briefLang] && I18N[briefLang].briefRough) ? I18N[briefLang] : I18N.en;
+  $("#briefMsg").textContent = rough ? dict.briefRough : dict.briefGood;
 }
 function copy(txt, btn){
-  const done=()=>{const o=btn.textContent;btn.textContent="✓ Скопировано";setTimeout(()=>btn.textContent=o,1400);};
+  const done=()=>{const o=btn.textContent;btn.textContent=t("copied");setTimeout(()=>btn.textContent=o,1400);};
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,done);}
   else{const ta=document.createElement("textarea");ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(e){}ta.remove();done();}
 }
-document.querySelectorAll("#briefLang button").forEach(b=>b.onclick=()=>{lang=b.dataset.l;document.querySelectorAll("#briefLang button").forEach(x=>x.classList.toggle("on",x===b));renderBrief();});
+document.querySelectorAll("#briefLang button").forEach(b=>b.onclick=()=>{briefLang=b.dataset.l;document.querySelectorAll("#briefLang button").forEach(x=>x.classList.toggle("on",x===b));renderBrief();});
 document.querySelectorAll(".scen").forEach(b=>b.onclick=()=>{const k=b.dataset.scen;
-  if(k==="live"){DATA=null;$("#verdict").className="verdict warn";$("#verdict").innerHTML="<div class='big'>…</div><div class='why'>Тяну живой прогноз…</div>";loadLive();}
+  if(k==="live"){DATA=null;$("#verdict").className="verdict warn";$("#verdict").innerHTML="<div class='big'>…</div><div class='why'>Fetching the live forecast…</div>";loadLive();}
   else{DATA=SCENARIOS[k];render();}});
 $("#copyCrew").onclick=e=>copy($("#crewMsg").textContent, e.target);
 $("#copyBrief").onclick=e=>copy($("#briefMsg").textContent, e.target);
+applyLang(uiLang);
 load();
 })();
 </script>
