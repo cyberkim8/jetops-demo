@@ -95,7 +95,7 @@
       <div class="label" data-i18n="tideLabel">🌊 Today's tide windows <span style="text-transform:none;letter-spacing:0">— water at the shore (100% predictable, from tide tables)</span></div>
       <div id="tideHead" style="font-size:14px;font-weight:700;margin-bottom:10px">…</div>
       <div id="tideGates"></div>
-      <div class="hint" data-i18n="tideHint">Levels are relative to mean sea level (MSL). Group arrival times come from the trip schedule (configurable). Per-stop thresholds are calibrated with the lead guide. The idea: on a bad window, <b>reorder the stops</b> to match the water — don't cancel.</div>
+      <div class="hint" data-i18n="tideHint">Levels are relative to mean sea level (MSL). Arrival times are calibrated from real guide reports (Monkey ~10:53 morning / ~15:25 afternoon); other stops provisional. Low water rarely cancels a stop — Monkey lands from the <b>sheltered side</b>, mangroves switch to <b>distant viewing (~50–70 m)</b>. On a tight window, reorder the stops to match the water.</div>
     </div>
 
     <div class="card">
@@ -137,7 +137,7 @@ const I18N = {
     condLabel: "Conditions on the Monkey crossing (now)",
     hoursLabel: "Next hours (wave / wind)",
     tideLabel: "🌊 Today's tide windows <span style=\"text-transform:none;letter-spacing:0\">— water at the shore (100% predictable, from tide tables)</span>",
-    tideHint: "Levels are relative to mean sea level (MSL). Group arrival times come from the trip schedule (configurable). Per-stop thresholds are calibrated with the lead guide. The idea: on a bad window, <b>reorder the stops</b> to match the water — don't cancel.",
+    tideHint: "Levels are relative to mean sea level (MSL). Arrival times are calibrated from real guide reports (Monkey ~10:53 morning / ~15:25 afternoon); other stops provisional. Low water rarely cancels a stop — Monkey lands from the <b>sheltered side</b>, mangroves switch to <b>distant viewing (~50–70 m)</b>. On a tight window, reorder the stops to match the water.",
     crewLabel: "Morning summary for the crew (WhatsApp/LINE group)",
     copyCrew: "📋 Copy summary",
     briefLabel: "Client briefing BEFORE the start (sets expectations → fewer refund disputes)",
@@ -155,7 +155,7 @@ const I18N = {
     condLabel: "Условия на переходе к Monkey (сейчас)",
     hoursLabel: "Ближайшие часы (волна / ветер)",
     tideLabel: "🌊 Приливные окна дня <span style=\"text-transform:none;letter-spacing:0\">— вода у берега (100% предсказуемо, из таблицы приливов)</span>",
-    tideHint: "Уровень — к среднему морю (MSL). Время прибытия групп — из расписания (настраивается). Пороги по точкам калибруем с лидом. Идея: при плохом окне — <b>переставить порядок точек</b> под воду, а не отменять.",
+    tideHint: "Уровень — к среднему морю (MSL). Время прибытия откалибровано по реальным отчётам гидов (Monkey ~10:53 утро / ~15:25 день); прочие точки — предварительно. Низкая вода редко отменяет точку — на Monkey высадка с <b>подветренной стороны</b>, мангры — <b>осмотр издалека (~50–70 м)</b>. При узком окне — переставить порядок точек под воду.",
     crewLabel: "Утренняя сводка команде (в группу WhatsApp/LINE)",
     copyCrew: "📋 Скопировать сводку",
     briefLabel: "Брифинг клиенту ДО старта (ставит ожидания → меньше споров о возврате)",
@@ -193,15 +193,26 @@ const SCENARIOS = {
 };
 const WX_OVERRIDE = new URLSearchParams(location.search).get("wx");
 
-/* ---- tide gates: Monkey Island landing — shallow water / foot injuries; Rang Yai photo stop — paid photographers work at the waterline;
-   mangroves — inner entry only on high water; Naka — parking / lunch. Thresholds are starting values, calibrated with the lead guide. ---- */
+/* ---- tide gates (calibrated from real guide reports, Feb–Apr 2026, and lead-guide input):
+   Monkey — landing almost always happens; low water just means landing from the sheltered
+   side, shallower & less comfortable (NOT a skip). Mangroves — distant view (~50–70 m) is
+   always available; low water only blocks close approach / going inside. Rang Yai photo
+   stop / Naka lunch — genuine reorder gates. Arrival times per wave from 179 real Monkey
+   pings (morning ~10:53, afternoon ~15:25); other stops provisional, refine with the lead. */
 const DEP={m:8*60+20, a:12*60+30}; // trip departures: morning trip 08:20, afternoon trip 12:30
+// arrM/arrA = minutes after departure to reach the stop, per wave.
 const TIDE_GATES=[
-  {name:"🐒 Monkey Island landing",   risk:"shallow water · foot injuries",              thr:-0.30, arr:200},
-  {name:"📸 Rang Yai photo stop",     risk:"water pulls back from the beach (paid photographers)", thr:-0.40, arr:50},
-  {name:"🌿 Mangroves — inner entry", risk:"no entry at low water",                      thr:+0.30, arr:170},
-  {name:"🍜 Naka — parking · lunch",  risk:"parking is limited",                         thr:-0.40, arr:110}
+  {name:"🐒 Monkey Island",       kind:"comfort",  risk:"low water → sheltered-side landing, shallower & less comfortable (landing still happens)", thr:-0.30, arrM:153, arrA:175},
+  {name:"📸 Rang Yai photo stop", kind:"gate",     risk:"water pulls back from the beach (paid photographers)",                                      thr:-0.40, arrM:127, arrA:200},
+  {name:"🌿 Mangroves",           kind:"approach", risk:"low water → distant view only (~50–70 m); close approach & inner entry need high water",     thr:+0.30, arrM:162, arrA:170},
+  {name:"🍜 Naka — parking · lunch", kind:"gate",  risk:"parking is limited",                                                                        thr:-0.40, arrM:146, arrA:200}
 ];
+// status words per gate kind — Monkey/mangroves never read as a hard "skip".
+const GATE_WORDS={
+  gate:    {ok:"✓ OK",                          warn:"⚠ borderline",                bad:"✗ skip / reorder"},
+  comfort: {ok:"✓ easy landing (any side)",     warn:"⚠ shallow — sheltered side",  bad:"shallow — sheltered side, less comfortable (still lands)"},
+  approach:{ok:"✓ close approach + inner entry", warn:"⚠ close approach only",       bad:"distant view only (~50–70 m)"}
+};
 let TIDE=null; // {live, series:[{h,lv}×24]}
 function synthTide(){ // offline/scenario: semidiurnal cycle, low water around 12:12
   const s=[]; for(let h=0;h<24;h++) s.push({h, lv:+(0.35+1.15*Math.cos(2*Math.PI*(h-6)/12.42)).toFixed(2)});
@@ -275,16 +286,17 @@ function render(){
 Wind ${d.wind} kn (gusts ${d.gust}) · wave ${d.wave.toFixed(1)} m · ${d.rain>0.2?'rain':'no rain'}
 ${v.emoji} MONKEY: ${v.word}
 Route: ${v.route}
-🌊 Tide, afternoon trip 12:30 — Monkey Island landing ${gm.word} (${gm.lv.toFixed(1)} m), mangroves ${gg.word}
-Remind clients at the briefing: Monkey Island depends on the weather; backup monkeys — Rang Yai photo stop.`;
+🌊 Tide, afternoon trip 12:30 — Monkey ${gm.word} (${gm.lv.toFixed(1)} m) · mangroves ${gg.word}
+Remind clients at the briefing: reaching Monkey depends on the crossing (waves); the landing itself almost always happens. Backup monkeys — Rang Yai photo stop.`;
   renderBrief();
   $("#src").innerHTML = (d.live?"Data: Open-Meteo Marine + Forecast at the Monkey Island crossing point (live). ":"Open this page online to load LIVE data. ")+"Wave/wind thresholds are config — calibrated with the lead guide during the season.";
 }
 
 function gateStatus(w,g){ // trip ("m"/"a") × gate → {t,lv,cls,word}
-  const t=DEP[w]+g.arr, lv=tideAt(t);
-  const st=lv>=g.thr+0.2?["ok","✓ OK"]:lv>=g.thr?["warn","⚠ borderline"]:["bad","✗ skip / reorder"];
-  return {t,lv,cls:st[0],word:st[1]};
+  const t=DEP[w]+(w==="m"?g.arrM:g.arrA), lv=tideAt(t);
+  const cls=lv>=g.thr+0.2?"ok":lv>=g.thr?"warn":"bad";
+  const word=(GATE_WORDS[g.kind]||GATE_WORDS.gate)[cls];
+  return {t,lv,cls,word};
 }
 const TG_COLOR={ok:"var(--ok)",warn:"#a86a00",bad:"var(--red)"};
 function renderTide(){
