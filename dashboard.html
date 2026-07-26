@@ -184,24 +184,28 @@
 "use strict";
 /* ================= CONFIG ================= */
 const TZ="Asia/Bangkok";
-/* Real geography (WGS84). Monkey Island — from the client's map link (maps.app.goo.gl/ZP2MXqEUGiFL3WvS7 → 8.115825,98.423385);
-   Rang Yai 7.9547/98.4479 and Naka Yai 8.0509/98.4659 — verified; the rest follow the client's map.
-   The same projection will render live GPS points (Traccar) in production without rework. */
+/* Real geography (WGS84), verified against OpenStreetMap (2026-07-14):
+   Ko Sireh 7.883/98.428 · Ko Maphrao/Coconut 7.941/98.422 (hugs Phuket's east coast) ·
+   Rang Yai 7.956/98.447 · Rang Noi 7.965/98.452 · Naka Noi 8.027/98.460 (SOUTH, nearer Sirey) ·
+   Naka Yai 8.051/98.466 (NORTH, faces Phang Nga Bay) · Ao Po Grand Marina 8.069/98.425 ·
+   Monkey Island 8.1158/98.4234 (client's map link). Koh Yao Yai is the big island to the east.
+   The same projection renders live GPS points (Traccar) in production without rework. */
 const GEO={latMin:7.868,latMax:8.135,lonMin:98.398,lonMax:98.565}; // map window
 function prj(lat,lon){ // equirect → viewBox 820×470
   const x=60+(lon-GEO.lonMin)/(GEO.lonMax-GEO.lonMin)*720;
   const y=18+(GEO.latMax-lat)/(GEO.latMax-GEO.latMin)*430;
   return {x:Math.round(x),y:Math.round(y)};
 }
+// Route S→N up the channel, then the open crossing from Ao Po to Monkey.
 const STOPS=[
-  {lat:7.886,lon:98.428,name:"Pier · Koh Sirey",icon:"⚓"},
-  {lat:7.906,lon:98.437,name:"Laem Nga",icon:"📸"},
-  {lat:7.927,lon:98.443,name:"Coconut Is. (Maphrao)",icon:"📸"},
-  {lat:7.955,lon:98.448,name:"Rang Yai",icon:"⛱",sub:"shelter · backup 🐒"},
-  {lat:7.974,lon:98.443,name:"Rang Noi",icon:"📸"},
+  {lat:7.883,lon:98.428,name:"Pier · Koh Sirey",icon:"⚓"},
+  {lat:7.906,lon:98.436,name:"Laem Nga",icon:"📸"},
+  {lat:7.941,lon:98.422,name:"Coconut Is. (Maphrao)",icon:"📸"},
+  {lat:7.956,lon:98.447,name:"Rang Yai",icon:"⛱",sub:"shelter · backup 🐒"},
+  {lat:7.965,lon:98.452,name:"Rang Noi",icon:"📸"},
+  {lat:8.027,lon:98.460,name:"Naka Noi",icon:"📸",sub:"nearer Sirey"},
   {lat:8.051,lon:98.466,name:"Naka Yai",icon:"🍜",sub:"lunch · tide-sensitive"},
-  {lat:8.066,lon:98.470,name:"Naka Noi",icon:"📸"},
-  {lat:8.068,lon:98.427,name:"Ao Po · Grand Marina",icon:"🛥"},
+  {lat:8.069,lon:98.425,name:"Ao Po · Grand Marina",icon:"🛥"},
   {lat:8.1158,lon:98.4234,name:"Monkey Is.",icon:"🐒"}
 ].map(s=>Object.assign(s,prj(s.lat,s.lon)));
 // t by cumulative distance along the route
@@ -358,6 +362,9 @@ function buildMap(){
   el("path",{d:`M820,0 L${yao[0].x},0 `+yao.map(p=>`L${p.x},${p.y}`).join(" ")+` L${yao[yao.length-1].x},470 L820,470 Z`,
     fill:"#122530",stroke:"#1d3a4c","stroke-width":"1.5"},map);
   el("text",{x:790,y:250,fill:"#37596e","font-size":"12","font-weight":"700",transform:"rotate(90 790 250)"},map).textContent="KOH YAO YAI";
+  // Phang Nga Bay lies to the NE — the open water Naka Yai faces
+  const png=P(8.100,98.500);
+  el("text",{x:png.x,y:png.y,"text-anchor":"middle",fill:"#3f6478","font-size":"10.5","font-style":"italic"},map).textContent="↗ Phang Nga Bay";
   // shore labels (per client's map)
   [[8.093,98.412,"Bang Rong Pier"],[8.108,98.413,"Laem Khat"]].forEach(a=>{
     const p=P(a[0],a[1]); el("text",{x:p.x-6,y:p.y+3,"text-anchor":"end",fill:"#54788e","font-size":"9.5"},map).textContent=a[2];});
