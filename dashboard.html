@@ -381,9 +381,12 @@ function buildMap(){
   // Phang Nga Bay lies to the NE — the open water Naka Yai faces
   const png=P(8.100,98.500);
   el("text",{x:png.x,y:png.y,"text-anchor":"middle",fill:"#3f6478","font-size":"10.5","font-style":"italic"},map).textContent="↗ Phang Nga Bay";
-  // shore labels (verified: Bang Rong Pier 8.050/98.416, Laem Khat cape just north of it)
-  [[8.050,98.416,"Bang Rong Pier"],[8.066,98.418,"Laem Khat"]].forEach(a=>{
-    const p=P(a[0],a[1]); el("text",{x:p.x-6,y:p.y+3,"text-anchor":"end",fill:"#54788e","font-size":"9.5"},map).textContent=a[2];});
+  // shore labels (verified: Bang Rong Pier 8.050/98.416; Laem Khat cape 8.101/98.427 —
+  // re-verified 2026-07-27, two independent sources agree; it sits NORTH of Bang Rong,
+  // near Ao Po, not south of it as an earlier version had it). Laem Khat's point projects
+  // close to the Monkey Is. stop label, so it gets its own upward offset to clear it.
+  [[8.050,98.416,"Bang Rong Pier",0,3],[8.101,98.427,"Laem Khat",-4,-10]].forEach(a=>{
+    const p=P(a[0],a[1]); el("text",{x:p.x-6+a[3],y:p.y+a[4],"text-anchor":"end",fill:"#54788e","font-size":"9.5"},map).textContent=a[2];});
   // Khai Nai (verified 7.908/98.550) and Ko Li Pe (7.9554/98.5151 — east of Rang Yai,
   // halfway to Yao Yai; client's local name, swiftlet bird's-nest island — see header note.
   // Different island from the tourist "Ko Lipe" in Satun, ~400km south).
