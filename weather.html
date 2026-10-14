@@ -3,119 +3,212 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0aa1dd">
-<title>Phuket Jetski Club — Crew Weather Board (demo)</title>
+<meta name="theme-color" content="#0F2433" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#071219" media="(prefers-color-scheme: dark)">
+<title>Phuket Jetski Club — Weather today (demo)</title>
+<link rel="stylesheet" href="assets/jo/jetops.css">
+<script src="assets/jo/theme.js"></script>
 <style>
-  :root{--accent:#0aa1dd;--ink:#0e1b26;--muted:#5b7080;--bg:#eef4f8;--card:#fff;--line:#dbe6ee;
-    --ok:#2fa84f;--warn:#f5a623;--bad:#e5484d;--shadow:0 6px 22px rgba(14,40,60,.10);--r:16px}
-  *{box-sizing:border-box}html,body{margin:0}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans Thai",sans-serif;background:var(--bg);color:var(--ink)}
-  #app{max-width:460px;margin:0 auto;min-height:100vh;box-shadow:0 0 40px rgba(0,0,0,.06)}
-  header.top{position:sticky;top:0;z-index:10;background:linear-gradient(135deg,var(--accent),#0784b8);color:#fff;padding:12px 16px}
-  .brand{display:flex;align-items:center;gap:9px;font-weight:800}
-  .brand .logo{width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,.18);display:grid;place-items:center;font-size:17px}
-  .brand small{display:block;font-weight:600;opacity:.85;font-size:10.5px;letter-spacing:.5px;text-transform:uppercase}
-  main{padding:16px 16px 40px}
-  .frame{background:#eaf6fc;border:1px solid #cfe9f6;color:#0784b8;font-size:12.5px;font-weight:600;border-radius:12px;padding:10px 12px;margin-bottom:14px;line-height:1.5}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
-  .label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
-  .verdict{border-radius:var(--r);padding:18px;color:#fff;margin-bottom:14px;box-shadow:var(--shadow)}
-  .verdict.ok{background:linear-gradient(135deg,#34b862,#1f8f49)}
-  .verdict.warn{background:linear-gradient(135deg,#ffb43d,#e8951a);color:#3d2600}
-  .verdict.bad{background:linear-gradient(135deg,#ec5b60,#c93b40)}
-  .verdict .big{font-size:26px;font-weight:900;margin:2px 0 4px}
-  .verdict .why{font-size:14px;opacity:.95;line-height:1.5}
-  .verdict .route{margin-top:10px;font-size:13px;font-weight:700;background:rgba(255,255,255,.22);display:inline-block;padding:5px 11px;border-radius:999px}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .metric{background:#f7fbfd;border:1px solid var(--line);border-radius:12px;padding:12px}
-  .metric .k{font-size:11.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
-  .metric .v{font-size:22px;font-weight:800;margin-top:3px}
-  .metric .s{font-size:12px;color:var(--muted)}
-  .metric.tide{grid-column:1 / -1;background:#fff7ea;border-color:#ffe1a8}
-  .tl{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
-  .tl .h{flex:none;width:52px;text-align:center;background:#f7fbfd;border:1px solid var(--line);border-radius:10px;padding:8px 4px}
-  .tl .h .t{font-size:11px;color:var(--muted);font-weight:700}
-  .tl .h .w{font-size:14px;font-weight:800;margin-top:4px}
-  .tl .h .g{font-size:10.5px;color:var(--muted)}
-  .tl .h .dot{width:8px;height:8px;border-radius:50%;margin:5px auto 0}
-  pre.msg{background:#0e1b26;color:#e8f3fa;border-radius:12px;padding:13px;font-size:12.5px;line-height:1.55;white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,Menlo,monospace;margin:0}
-  .btn{display:block;width:100%;border:0;border-radius:12px;padding:13px;font-size:15px;font-weight:800;cursor:pointer;margin-top:10px}
-  .btn.primary{background:linear-gradient(135deg,var(--accent),#0784b8);color:#fff}
-  .btn.ghost{background:#fff;border:1.5px solid var(--line);color:var(--ink)}
-  .lang{display:flex;gap:4px;margin:0 0 10px}
-  .lang button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:4px 12px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer}
-  .lang button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
-  .lang.hdr{margin:8px 0 0}
-  .lang.hdr button{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.35);color:#fff}
-  .lang.hdr button.on{background:#fff;color:var(--accent);border-color:#fff}
-  .src{font-size:11px;color:var(--muted);text-align:center;padding:8px;line-height:1.5}
-  .badge{display:inline-block;font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#eaf6fc;color:#0784b8;border:1px solid #cfe9f6}
-  .badge.live{background:#e9f8ee;color:#1f8f49;border-color:#bfe8cd}
-  .badge.demo{background:#fff5e2;color:#a86a00;border-color:#ffe1a8}
-  a.back{color:#fff;text-decoration:none;font-size:12.5px;font-weight:700;opacity:.9}
-  h2{font-size:19px;margin:2px 0 6px}
-  .muted{color:var(--muted);font-size:12.5px;line-height:1.5}
-  .hint{font-size:12px;color:var(--muted);line-height:1.5;margin-top:8px}
+  /* Weather board — page layout only. Tokens and components (.appbar .seg .btn .card .badge .note .num
+     .footer-note) come from assets/jo/jetops.css; nothing here uses a raw colour. */
+  [hidden] { display: none !important; }
+
+  /* header: one row on a computer, logo row + controls row on a phone */
+  .appbar-in { flex-wrap: wrap; gap: var(--s2) var(--s3); padding-block: var(--s2); }
+  .op-text { min-width: 0; }
+  .ctrls { display: flex; align-items: center; gap: var(--s2); }
+  @media (max-width: 559px) { .appbar .spacer { display: none; } .ctrls { flex-basis: 100%; justify-content: space-between; } }
+
+  /* minmax(0,1fr): the hourly strip scrolls inside itself instead of widening the page */
+  .wrap { max-width: var(--w-page); margin: 0 auto; padding: var(--s4) var(--s4) var(--s5); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s4); }
+  .cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s4); }
+  .col { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s4); align-content: start; min-width: 0; }
+  @media (min-width: 1024px) {
+    .wrap { padding: var(--s5) var(--s5) var(--s5); gap: var(--s5); }
+    .cols { grid-template-columns: minmax(0, 1fr) 380px; gap: var(--s5); }
+  }
+
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s3); }
+  .seg-day button { min-height: 48px; padding: 0 var(--s5); font-size: var(--fs-body-s); }
+  .chip-src { display: inline-flex; align-items: center; gap: 6px; font: 600 var(--fs-caption)/1.3 var(--font); color: var(--muted); }
+  .chip-src .ic { width: 18px; height: 18px; color: var(--ok); }
+  .card-h { display: grid; gap: var(--s1); }
+  .card-h p { color: var(--muted); font-size: var(--fs-body-s); }
+  .note .note-act { margin-top: var(--s3); }
+
+  /* verdict: the hero. Tinted with the status token, never a saturated slab */
+  .verdict { --st: var(--muted); --st-soft: var(--surface); background: var(--st-soft);
+    border: 2px solid color-mix(in srgb, var(--st) 40%, transparent); display: grid; gap: var(--s4); }
+  .verdict.st-ok { --st: var(--ok); --st-soft: var(--ok-soft); }
+  .verdict.st-warn { --st: var(--warn); --st-soft: var(--warn-soft); }
+  .verdict.st-crit { --st: var(--crit); --st-soft: var(--crit-soft); }
+  .v-kick { font-size: var(--fs-body-s); font-weight: 600; color: var(--muted); }
+  .v-head { display: flex; align-items: center; gap: var(--s4); }
+  .v-ic { width: 64px; height: 64px; flex: none; border-radius: 50%; display: grid; place-items: center;
+    background: var(--surface); color: var(--st); box-shadow: 0 0 0 2px color-mix(in srgb, var(--st) 35%, transparent); }
+  .v-ic .ic { width: 40px; height: 40px; }
+  .v-word { font-size: clamp(32px, 8vw, 44px); line-height: 1.1; font-weight: 800; letter-spacing: -0.02em; color: var(--st); }
+  .v-route { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s3); align-items: start;
+    background: color-mix(in srgb, var(--surface) 72%, var(--st-soft)); border-radius: var(--r-md); padding: var(--s3) var(--s4); }
+  .v-route .ic { color: var(--st); margin-top: 2px; }
+  .v-route b { display: block; font-size: var(--fs-caption); color: var(--muted); }
+
+  /* key numbers */
+  .sec-h { font-size: var(--fs-h3); }
+  .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3); margin-top: var(--s3); }
+  @media (min-width: 720px) { .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .tile { padding: var(--s4); display: grid; gap: var(--s1); align-content: start; min-width: 0; }
+  .tile-k { display: flex; align-items: center; gap: var(--s2); font-weight: 700; font-size: var(--fs-body-s); color: var(--muted); }
+  .tile-v { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+  .tile-v .unit { font-weight: 700; color: var(--muted); }
+  .tile-sub { font-size: var(--fs-body-s); font-weight: 600; }
+  .tile-worst { font-size: var(--fs-caption); color: var(--muted); font-weight: 600; }
+  .tile .badge { margin-top: var(--s1); }
+
+  /* tide at the stops: stacked on a phone, three columns on a computer */
+  .tide-sum { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s4); margin-top: var(--s4); font-size: var(--fs-body-s); }
+  .stops { display: grid; margin-top: var(--s3); }
+  .stop { display: grid; gap: var(--s3); padding: var(--s4) 0; border-top: 1px solid var(--line); }
+  .stop-n { display: grid; gap: 2px; align-content: start; }
+  .stop-n h3 { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-body); font-weight: 800; }
+  .stop-n h3 .ic { color: var(--muted); }
+  .stop-n p { font-size: var(--fs-body-s); color: var(--muted); }
+  .stop-n .lim { font-size: var(--fs-caption); font-weight: 600; }
+  .visits { display: grid; gap: var(--s2); }
+  /* each visit: arrival time + trip on one line, status badge + water level under it (badge gets the full width) */
+  .visit { display: grid; gap: var(--s2); padding: var(--s3); border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--line); }
+  .visit-t { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--s3); }
+  .visit-t b { font-size: var(--fs-h3); line-height: 1.25; font-weight: 800; }
+  .visit-t span { font-size: var(--fs-caption); color: var(--muted); font-weight: 600; }
+  .visit-s { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s3); }
+  .visit-s .lv { font-size: var(--fs-caption); color: var(--muted); font-weight: 600; }
+  @media (min-width: 720px) {
+    .stop { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: var(--s4); }
+    .visits { grid-template-columns: 1fr 1fr; }
+    .visit-t { display: grid; }
+  }
+  details.more { margin-top: var(--s2); border-top: 1px solid var(--line); }
+  details.more summary { display: flex; align-items: center; gap: var(--s2); min-height: 48px; cursor: pointer;
+    font-weight: 700; color: var(--primary); list-style: none; }
+  details.more summary::-webkit-details-marker { display: none; }
+  details.more[open] summary .ic { transform: rotate(180deg); }
+  details.more p { font-size: var(--fs-body-s); color: var(--muted); padding-bottom: var(--s2); }
+
+  /* hourly strip: scrolls inside itself on a phone, 5 × 2 grid on a computer */
+  .strip { display: flex; gap: var(--s2); overflow-x: auto; margin-top: var(--s4); padding-bottom: var(--s2);
+    scroll-snap-type: x proximity; overscroll-behavior-x: contain; }
+  .hr { --st: var(--fg); flex: 0 0 108px; scroll-snap-align: start; display: grid; justify-items: center; align-content: start; gap: 2px;
+    padding: var(--s3) var(--s2); border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--line); text-align: center; }
+  .hr.st-ok { --st: var(--ok); } .hr.st-warn { --st: var(--warn); } .hr.st-crit { --st: var(--crit); }
+  .hr-t { font-weight: 700; font-size: var(--fs-body-s); }
+  .hr-now { font-size: var(--fs-caption); font-weight: 800; }
+  .hr-w { font-size: 26px; line-height: 1.2; font-weight: 800; }
+  .hr-w small { font-size: var(--fs-caption); font-weight: 700; color: var(--muted); }
+  .hr-k { font-size: var(--fs-caption); color: var(--muted); font-weight: 600; }
+  .hr-s { display: inline-flex; align-items: center; gap: 6px; margin-top: var(--s1); font-size: var(--fs-caption); font-weight: 800; color: var(--st); }
+  .hr-s::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--st); flex: none; }
+  .hr.now { border: 2px solid var(--fg); }
+  .hr.past { background: transparent; border-style: dashed; }
+  @media (min-width: 720px) { .strip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); overflow: visible; } }
+
+  /* crew summary + client briefing */
+  .msg-card { display: grid; gap: var(--s4); align-content: start; }
+  .msg { white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--fs-body-s); line-height: 1.55; }
+  .brief-lang { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s2) var(--s3); }
+
+  /* demo-only controls, clearly set apart from the product */
+  .demo { border: 1.5px dashed var(--border); border-radius: var(--r-lg); padding: var(--s5); display: grid; gap: var(--s3); justify-items: start; }
+  .demo p { max-width: 68ch; }
+  .demo-links { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--s2); }
+  .demo-links a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--s2); font-weight: 700; }
+  .footer-note { max-width: var(--w-read); margin: 0 auto; padding-top: 0; }
+  .footer-note p + p { margin-top: var(--s2); }
+  .footer-note a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 700; }
+
+  /* loading: grey placeholders in the shape of the content */
+  .sk { background: var(--bg-2); border-radius: var(--r-sm); height: 18px; animation: sk-pulse 1.4s ease-in-out infinite; }
+  .sk-h { height: 44px; width: 72%; } .sk-num { height: 40px; width: 55%; } .sk-short { width: 45%; } .sk-row { height: 64px; }
+  .card .sk { background: var(--bg-2); }
+  @keyframes sk-pulse { 50% { opacity: .55; } }
+  @media (prefers-reduced-motion: reduce) { .sk { animation: none; } }
 </style>
 </head>
 <body>
-<div id="app">
-  <header class="top">
-    <div class="brand">
-      <img class="logo" src="assets/logo.png" alt="Phuket Jetski Club" style="width:auto;height:28px;background:#fff;padding:4px 8px;border-radius:8px;box-sizing:content-box">
-      <span><small data-i18n="brand">Crew Weather Board · demo</small></span>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><!-- Lucide icons (ISC), copied from assets/jo/icons.svg --><symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></symbol><symbol id="i-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></symbol><symbol id="i-circle-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="m9 12 2 2 4-4" /></symbol><symbol id="i-circle-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="m15 9-6 6" /><path d="m9 9 6 6" /></symbol><symbol id="i-cloud-rain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" /><path d="M16 14v6" /><path d="M8 14v6" /><path d="M12 16v6" /></symbol><symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></symbol><symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" /></symbol><symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></symbol><symbol id="i-map-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" /><circle cx="12" cy="10" r="3" /></symbol><symbol id="i-navigation" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11" /></symbol><symbol id="i-refresh-cw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></symbol><symbol id="i-triangle-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /><path d="M12 9v4" /><path d="M12 17h.01" /></symbol><symbol id="i-waves" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" /><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" /><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" /></symbol><symbol id="i-wifi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h.01" /><path d="M2 8.82a15 15 0 0 1 20 0" /><path d="M5 12.859a10 10 0 0 1 14 0" /><path d="M8.5 16.429a5 5 0 0 1 7 0" /></symbol><symbol id="i-wifi-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h.01" /><path d="M8.5 16.429a5 5 0 0 1 7 0" /><path d="M5 12.859a10 10 0 0 1 5.17-2.69" /><path d="M19 12.859a10 10 0 0 0-2.007-1.523" /><path d="M2 8.82a15 15 0 0 1 4.177-2.643" /><path d="M22 8.82a15 15 0 0 0-11.288-3.764" /><path d="m2 2 20 20" /></symbol><symbol id="i-wind" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.8 19.6A2 2 0 1 0 14 16H2" /><path d="M17.5 8a2.5 2.5 0 1 1 2 4H2" /><path d="M9.8 4.4A2 2 0 1 1 11 8H2" /></symbol></svg>
+
+<header class="appbar">
+  <div class="appbar-in">
+    <img class="op-logo" src="assets/logo.png" alt="" width="63" height="36">
+    <div class="op-text"><div class="op-name">Phuket Jetski Club</div><div class="op-sub" data-i18n="opSub">Weather today</div></div>
+    <div class="spacer"></div>
+    <div class="ctrls">
+      <div class="seg" id="uiLang" role="group" aria-label="Language" data-i18n-aria="langLabel"><button type="button" data-l="en" lang="en">EN</button><button type="button" data-l="th" lang="th">ไทย</button><button type="button" data-l="ru" lang="ru">RU</button></div>
+      <button type="button" class="btn btn-quiet btn-s" data-jo-theme-toggle data-label-auto="Auto" data-label-light="Light" data-label-dark="Dark" data-label-title="Theme"></button>
     </div>
-    <div style="margin-top:8px"><a class="back" href="index.html" data-i18n="navPhoto">← photo demo</a> · <a class="back" href="dashboard.html" data-i18n="navOps">ops dashboard</a> · <a class="back" href="bot.html" data-i18n="navBot">LINE bot →</a></div>
-    <div class="lang hdr" id="uiLang"><button data-l="en">EN</button><button data-l="th">ไทย</button><button data-l="ru">RU</button></div>
-  </header>
-  <main>
-    <div class="frame" data-i18n="frame">⚓ Not about cancelling — we go out as usual. This is about <b>awareness and preparing the client</b>: will today's open crossing <b>Grand Marina → Monkey Island</b> go ahead, and what to tell clients BEFORE the start.</div>
+  </div>
+</header>
 
-    <div id="statusRow" style="margin-bottom:10px"><span class="badge" id="dataBadge">loading…</span> <span class="muted" id="spot"></span></div>
-    <div class="muted" style="margin:-4px 0 10px;font-size:11.5px"><span data-i18n="scenLabel">Demo scenarios:</span>
-      <button class="scen" data-scen="ok" style="color:var(--ok)" data-i18n="scenOk">🟢 calm</button> ·
-      <button class="scen" data-scen="warn" style="color:#a86a00" data-i18n="scenWarn">🟡 borderline</button> ·
-      <button class="scen" data-scen="bad" style="color:var(--bad)" data-i18n="scenBad">🔴 storm</button> ·
-      <button class="scen" data-scen="live" style="color:var(--accent)" data-i18n="scenLive">⟳ live</button>
-      <style>.scen{background:none;border:0;padding:0;font:inherit;font-weight:700;cursor:pointer}</style>
-    </div>
-    <div class="lang" id="dayView"><button data-d="0" class="on" data-i18n="dayToday">Today</button><button data-d="1" data-i18n="dayTomorrow">Tomorrow</button></div>
+<main class="wrap">
+  <div class="toolbar">
+    <div class="seg seg-day" id="dayView" role="group" aria-label="Day" data-i18n-aria="dayLabel"><button type="button" data-d="0" aria-pressed="true" data-i18n="dayToday">Today</button><button type="button" data-d="1" aria-pressed="false" data-i18n="dayTomorrow">Tomorrow</button></div>
+    <span id="srcChip"></span>
+  </div>
 
-    <div id="verdict" class="verdict warn"><div class="big">…</div><div class="why">Fetching the forecast for the Sirey → Ao Po corridor…</div></div>
+  <div class="note note-warn" id="offNote" role="status" hidden>
+    <svg class="ic" aria-hidden="true"><use href="#i-wifi-off"/></svg>
+    <div><b data-i18n="offTitle">No live forecast right now</b><span data-i18n="offBody">We couldn't reach the weather service.</span>
+      <div class="note-act"><button type="button" class="btn btn-secondary btn-s" id="retry"><svg class="ic ic-s" aria-hidden="true"><use href="#i-refresh-cw"/></svg><span data-i18n="retry">Try again</span></button></div></div>
+  </div>
 
-    <div class="card">
-      <div class="label" id="condLabel" data-i18n="condLabel">Conditions on the Monkey crossing (now)</div>
-      <div class="grid" id="metrics"></div>
-    </div>
+  <div class="cols">
+    <div class="col">
+      <section id="verdict" class="card verdict" aria-live="polite"></section>
 
-    <div class="card">
-      <div class="label" id="hoursLabel" data-i18n="hoursLabel">Next hours (wave / wind)</div>
-      <div class="tl" id="timeline"></div>
-    </div>
+      <section aria-labelledby="condLabel">
+        <h2 class="sec-h" id="condLabel">On the crossing now</h2>
+        <div class="tiles" id="tiles"></div>
+      </section>
 
-    <div class="card">
-      <div class="label" id="tideLabel" data-i18n="tideLabel">🌊 Today's tide windows <span style="text-transform:none;letter-spacing:0">— water at the shore (predictable — tide model)</span></div>
-      <div id="tideHead" style="font-size:14px;font-weight:700;margin-bottom:10px">…</div>
-      <div id="tideGates"></div>
-      <div class="hint" data-i18n="tideHint">Levels are relative to mean sea level (MSL). Arrival times are calibrated from real guide reports (Monkey ~10:53 morning / ~15:25 afternoon); other stops provisional. Low water rarely cancels a stop — Monkey lands from the <b>sheltered side</b>, mangroves switch to <b>distant viewing (~50–70 m)</b>. On a tight window, reorder the stops to match the water.</div>
-    </div>
+      <section class="card" aria-labelledby="tideLabel">
+        <div class="card-h"><h2 class="h3" id="tideLabel">Tide at the stops today</h2><p data-i18n="tideSub">When each trip arrives and how much water there is at the shore.</p></div>
+        <div class="tide-sum" id="tideSum"></div>
+        <div class="stops" id="stops"></div>
+        <details class="more"><summary><svg class="ic ic-s" aria-hidden="true"><use href="#i-chevron-down"/></svg><span data-i18n="tideMore">How arrival times are worked out</span></summary><p data-i18n="tideHint"></p></details>
+      </section>
 
-    <div class="card">
-      <div class="label" id="crewLabel" data-i18n="crewLabel">Morning summary for the crew (WhatsApp/LINE group)</div>
-      <pre class="msg" id="crewMsg">…</pre>
-      <button class="btn ghost" id="copyCrew" data-i18n="copyCrew">📋 Copy summary</button>
-    </div>
-
-    <div class="card">
-      <div class="label" data-i18n="briefLabel">Client briefing BEFORE the start (sets expectations → fewer refund disputes)</div>
-      <div class="lang" id="briefLang"><button data-l="en" class="on">EN</button><button data-l="th">ไทย</button><button data-l="ru">RU</button></div>
-      <pre class="msg" id="briefMsg">…</pre>
-      <button class="btn ghost" id="copyBrief" data-i18n="copyBrief">📋 Copy briefing</button>
+      <section class="card" aria-labelledby="hoursLabel">
+        <div class="card-h"><h2 class="h3" id="hoursLabel">Trip hours today</h2><p data-i18n="hoursSub">Wave and wind on the crossing, 08:00–17:00</p></div>
+        <div class="strip" id="strip" role="region" tabindex="0" aria-label="Wave and wind by hour" data-i18n-aria="hoursSub"></div>
+      </section>
     </div>
 
-    <div class="src" id="src"></div>
-  </main>
-</div>
+    <div class="col">
+      <section class="card msg-card" aria-labelledby="crewLabel">
+        <div class="card-h"><h2 class="h3" id="crewLabel">Summary for the crew</h2><p id="crewSub">For the WhatsApp/LINE group</p></div>
+        <div class="card-2 msg" id="crewMsg"></div>
+        <button type="button" class="btn btn-primary btn-block" id="copyCrew" data-note="crewNote" data-ok="copiedCrew"><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg><span data-i18n="copyCrew">Copy crew summary</span></button>
+        <div class="note note-ok" id="crewNote" role="status" hidden></div>
+      </section>
+
+      <section class="card msg-card" aria-labelledby="briefLabel">
+        <div class="card-h"><h2 class="h3" id="briefLabel" data-i18n="briefLabel">Briefing for clients</h2><p data-i18n="briefSub">Read it out or send it before the start.</p></div>
+        <div class="brief-lang"><span class="caption muted" id="briefLangL" data-i18n="briefLangLabel">Briefing language</span>
+          <div class="seg" id="briefLang" role="group" aria-labelledby="briefLangL"><button type="button" data-l="en" lang="en" aria-pressed="true">EN</button><button type="button" data-l="th" lang="th" aria-pressed="false">ไทย</button><button type="button" data-l="ru" lang="ru" aria-pressed="false">RU</button></div></div>
+        <div class="card-2 msg" id="briefMsg" lang="en"></div>
+        <button type="button" class="btn btn-secondary btn-block" id="copyBrief" data-note="briefNote" data-ok="copiedBrief"><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg><span data-i18n="copyBrief">Copy client briefing</span></button>
+        <div class="note note-ok" id="briefNote" role="status" hidden></div>
+      </section>
+    </div>
+  </div>
+
+  <section class="demo" aria-labelledby="demoH">
+    <h2 class="h3" id="demoH" data-i18n="demoH">Demo: show another day</h2>
+    <p class="body-s muted" data-i18n="frame"></p>
+    <div class="seg" id="scenSeg" role="group" aria-label="Which day to show" data-i18n-aria="scenLabel"><button type="button" data-scen="live" data-i18n="scenLive">Live</button><button type="button" data-scen="ok" data-i18n="scenOk">Calm</button><button type="button" data-scen="warn" data-i18n="scenWarn">Borderline</button><button type="button" data-scen="bad" data-i18n="scenBad">Storm</button></div>
+    <nav class="demo-links" aria-label="Other demo screens" data-i18n-aria="otherScreens"><span class="body-s muted" data-i18n="otherScreens">Other demo screens:</span><a href="index.html" data-i18n="navPhoto">Photo demo</a><a href="dashboard.html" data-i18n="navOps">Office dashboard</a><a href="bot.html" data-i18n="navBot">LINE bot</a></nav>
+  </section>
+</main>
+<footer class="footer-note" id="src"></footer>
 
 <script>
 (function(){
@@ -134,8 +227,8 @@
    PRELIMINARY placeholder values — to be calibrated with the lead guide during the season.
      wave = significant wave height at the crossing, metres
      wind = sustained wind at 10 m, knots
-     value >= warn → 🟡 caution (lead guide decides on the water)
-     value >= bad  → 🔴 reroute to the Inside Program (never a cancellation)
+     value >= warn → caution, "Wave building" (lead guide decides on the water)
+     value >= bad  → "No crossing": reroute to the Inside Program (never a cancellation)
    dashboard.html uses the same numbers — keep both pages in sync.
 
    SESSIONS — session start times shown in the UI (labels only). Changed on 12.10.2026 from
@@ -144,7 +237,10 @@
    ARRIVE — ABSOLUTE calibrated arrival times at each tide gate, per trip (m = morning, a = afternoon).
    Source: 179 real guide pings at Monkey, Feb–Apr 2026 (04_direction_B_weather.md v2.2); they were
    computed there as "session start 08:20 / 12:30 + offset". They are kept absolute so a new session
-   label does not shift them. Monkey is calibrated; the other stops are provisional — refine with the lead. */
+   label does not shift them. Monkey is calibrated; the other stops are provisional — refine with the lead.
+
+   URL parameters: ?wx=ok|warn|bad (demo day: wave/wind only, the tide stays real when available),
+   ?day=tomorrow (open on Tomorrow), ?lang=en|th|ru (also saved as the shared demo language). */
 const CONFIG = {
   API_BASE:    "https://api.open-meteo.com/v1/forecast",
   MARINE_BASE: "https://marine-api.open-meteo.com/v1/marine",
@@ -156,205 +252,251 @@ const CONFIG = {
 // East-coast Phuket corridor. Decision point: the open crossing to Monkey Island beyond Grand Marina.
 const SPOT = {lat:8.092, lon:98.425}; // midpoint of the actual crossing 8.068/98.427 → 8.1158/98.4234
 const TZ = "Asia/Bangkok";
-const TRIP_H = [8,16];   // "tomorrow" view: worst hour between 08:00 and 16:00 (both trips on the water)
+const TRIP_H = [8,16];   // worst hour between 08:00 and 16:00 (both trips on the water) — verdict for "tomorrow"
+const STRIP_H = [8,17];  // hours shown in the hourly strip
 const $ = s=>document.querySelector(s);
+const PARAMS = new URLSearchParams(location.search);
 let briefLang="en";
 
 /* ================= i18n =================
    EN is the default and complete. TH is a machine-drafted version that still needs proofreading
    by a native speaker (see 14_localization_tasks.md). RU — Russian guides.
-   Keep all Cyrillic/Thai strictly inside I18N below. Values may be functions (runtime text). */
-const SPAN = '<span style="text-transform:none;letter-spacing:0">';
+   Keep all Cyrillic/Thai strictly inside I18N below. Values may be functions (runtime text).
+   The crew summary and the client briefing are chat messages (WhatsApp/LINE), so they keep their
+   emoji; the interface itself uses Lucide icons only. */
 const I18N = {
   en: {
-    brand: "Crew Weather Board · demo",
-    navPhoto: "← photo demo", navOps: "ops dashboard", navBot: "LINE bot →",
-    frame: "⚓ Not about cancelling — we go out as usual. This is about <b>awareness and preparing the client</b>: will today's open crossing <b>Grand Marina → Monkey Island</b> go ahead, and what to tell clients BEFORE the start.",
-    scenLabel: "Demo scenarios:",
-    scenOk: "🟢 calm", scenWarn: "🟡 borderline", scenBad: "🔴 storm", scenLive: "⟳ live",
+    docTitle: "Phuket Jetski Club — Weather today (demo)",
+    opSub: "Weather today", langLabel: "Language", dayLabel: "Day",
+    themeAuto: "Auto", themeLight: "Light", themeDark: "Dark", themeTitle: "Theme",
     dayToday: "Today", dayTomorrow: "Tomorrow",
-    condLabel: "Conditions on the Monkey crossing (now)",
-    condLabel1: "Conditions on the Monkey crossing — tomorrow (worst trip hour 08–16)",
-    hoursLabel: "Next hours (wave / wind)",
-    hoursLabel1: "Tomorrow, trip hours (wave / wind)",
-    tideLabel: "🌊 Today's tide windows "+SPAN+"— water at the shore (predictable — tide model)</span>",
-    tideLabel1: "🌊 Tomorrow's tide windows "+SPAN+"— water at the shore (predictable — tide model)</span>",
-    tideHint: "Levels are relative to mean sea level (MSL). Arrival times are calibrated from real guide reports (Monkey ~10:53 morning / ~15:25 afternoon); other stops provisional. Low water rarely cancels a stop — Monkey lands from the <b>sheltered side</b>, mangroves switch to <b>distant viewing (~50–70 m)</b>. On a tight window, reorder the stops to match the water.",
-    crewLabel: "Morning summary for the crew (WhatsApp/LINE group)",
-    crewLabel1: "Tomorrow's morning summary for the crew (send it the evening before)",
-    copyCrew: "📋 Copy summary",
-    briefLabel: "Client briefing BEFORE the start (sets expectations → fewer refund disputes)",
-    copyBrief: "📋 Copy briefing",
-    copied: "✓ Copied", copyFail: "✗ copy failed — select the text manually",
+    "src.live": "Live forecast", "src.sample": "Sample data", "src.scen": n=>`Demo day: ${n}`,
+    spot: "crossing Ao Po → Monkey Island",
+    "v.ok.word": "Good to go", "v.warn.word": "Caution — wave building", "v.bad.word": "No crossing to Monkey",
+    "v.ok.route": "Full route, 9 islands — including the Monkey Island landing.",
+    "v.warn.route": "Normal route. The Monkey Island landing is on hold — the lead guide decides on the water. Backup monkeys: Rang Yai photo stop.",
+    "v.bad.route": "Reroute to the Inside Program (sheltered route). The trip goes ahead — don't cancel. Report \"no monkey\".",
+    routeLabel: "Route",
+    "cw.ok": "Monkey: good to go", "cw.warn": "Monkey: caution, wave building — the lead decides on the water", "cw.bad": "Monkey: no crossing — reroute, don't cancel",
+    why: (w,p,k,g,r)=>`Wave about ${w} m every ${p} s, wind ${k} knots with gusts to ${g}. ${r?"Rain.":"No rain."}`,
+    why1: "Worst trip hour (08–16): ",
+    "whyLim.ok": (w,k)=>`Below the caution line (wave ${w} m, wind ${k} kn).`,
+    "whyLim.warn": (w,k)=>`Over the caution line (wave ${w} m or wind ${k} kn).`,
+    "whyLim.bad": (w,k)=>`Over the no-crossing line (wave ${w} m or wind ${k} kn).`,
+    condLabel: "On the crossing now", condLabel1: "On the crossing tomorrow — worst hour 08–16",
+    "m.wave": "Wave", "m.wind": "Wind", "m.rain": "Rain", "m.vis": "Visibility",
+    "m.gusts": g=>`gusts ${g} kn`, "m.swell": (s,p)=>`swell ${s} m · ${p} s`,
+    "m.raining": "raining", "m.dry": "dry", "m.visRed": "reduced", "m.visNorm": "normal", "m.na": "no data",
+    "w.max": (v,h)=>`08–16: up to ${v} at ${h}`, "w.maxN": v=>`08–16: up to ${v}`, "w.min": v=>`08–16: down to ${v}`,
+    "w.at": h=>`worst hour, ${h}`, "w.worst": "worst hour 08–16",
+    lim: v=>`Over ${v}`,
+    "u.kn": "kn", "u.m": "m", "u.mm": "mm", "u.km": "km",
+    hoursLabel: "Trip hours today", hoursLabel1: "Trip hours tomorrow", hoursSub: "Wave and wind on the crossing, 08:00–⁠17:00",
+    hNow: "Now", "hs.ok": "OK", "hs.warn": "Caution", "hs.crit": "No crossing",
+    tideLabel: "Tide at the stops today", tideLabel1: "Tide at the stops tomorrow",
+    tideSub: "When each trip arrives and how much water there is at the shore. Tide model — predictable.",
+    tideHead: (lo,lol,hi,hil)=>`Low water <b>${lo}</b> (${lol} m) · High water <b>${hi}</b> (${hil} m)`,
+    tideLive: "Live tide table", tideSynth: "Sample tide curve — not real times",
+    tripM: s=>`Morning trip · ${s}`, tripA: s=>`Afternoon trip · ${s}`, threshold: "Limit", water: v=>`Water ${v} m`,
+    "gate.monkey": "Monkey Island landing", "gate.rangyai": "Rang Yai photo stop", "gate.mangroves": "Mangroves", "gate.naka": "Naka — parking, lunch",
+    "risk.monkey": "Low water: land from the sheltered side — shallower, less comfortable, but the landing still happens.",
+    "risk.rangyai": "Water pulls back from the beach (paid photographers).",
+    "risk.mangroves": "Low water: distant view only (about 50–70 m). Close approach and going inside need high water.",
+    "risk.naka": "Parking is limited.",
+    "gw.gate.ok": "OK", "gw.gate.warn": "Borderline", "gw.gate.bad": "Skip or reorder",
+    "gw.comfort.ok": "Easy landing, any side", "gw.comfort.warn": "Shallow — sheltered side", "gw.comfort.bad": "Sheltered side, still lands",
+    "gw.approach.ok": "Close approach + inside", "gw.approach.warn": "Close approach only", "gw.approach.bad": "Distant view only (50–⁠70 m)",
+    tideMore: "How arrival times are worked out",
+    tideHint: "Levels are relative to mean sea level (MSL). Arrival times are calibrated from real guide reports (Monkey about 10:53 in the morning, 15:25 in the afternoon); the other stops are provisional. Low water rarely cancels a stop — Monkey lands from the sheltered side, the mangroves switch to distant viewing (about 50–70 m). On a tight window, reorder the stops to match the water.",
+    crewLabel: "Summary for the crew", crewLabel1: "Tomorrow's summary for the crew",
+    crewSub: "For the WhatsApp/LINE group", crewSub1: "Send it to the group the evening before",
+    copyCrew: "Copy crew summary", copiedCrew: "Copied — paste it in the group chat",
+    briefLabel: "Briefing for clients", briefSub: "Read it out or send it before the start — clear expectations mean fewer refund disputes.",
+    briefLangLabel: "Briefing language", copyBrief: "Copy client briefing", copiedBrief: "Copied — paste it in the client chat",
+    copyFail: "Couldn't copy. Select the text above and copy it by hand.",
     briefRough: "🌊 Hi! There is noticeable wave and wind today. The tour goes ahead, but the open crossing to Monkey Island may be shortened — it depends on the weather and is decided on the water for safety. You can also see monkeys at the Rang Yai photo stop. Hold on at the turns; we ride calmly in waves. No refund for weather, but you can reschedule to the morning trip ({M}) — just tell your guide in advance. All photos are included 📸",
     briefGood: "☀️ Hi! The weather is good today — full route (9 islands) including the Monkey Island landing. Hold on at the turns and follow your guide. All ride photos are included 📸",
-    loading: "Fetching the forecast for the Sirey → Ao Po corridor…",
-    loadingLive: "Fetching the live forecast…",
-    badgeLive: "● LIVE Open-Meteo", badgeScen: n=>"demo scenario: "+n, badgeSample: "sample data · live unavailable",
-    spot: "Ao Po Grand Marina → Monkey Island (open crossing)",
-    monkey0: "🐒 Monkey today:", monkey1: "🐒 Monkey tomorrow:",
-    why: (w,p,k,g,r)=>`Swell/wave ~${w} m (period ${p} s), wind ${k} kn (gusts ${g}). ${r?"Rain.":"No rain."}`,
-    why1: "Worst trip hour (08–16): ",
-    route: "Route:",
-    "v.ok.word": "GO", "v.ok.route": "Full route (9 islands)",
-    "v.warn.word": "CAUTION — lead guide decides on the water", "v.warn.route": "Normal route, Monkey Island landing on hold · backup — Rang Yai photo stop",
-    "v.bad.word": "NO — reroute, don't cancel", "v.bad.route": "🚨 Inside Program (sheltered storm route) · report \"no monkey\"",
-    "m.wind": "Wind", "m.gusts": g=>`gusts ${g} kn`, "m.wave": "Wave / swell", "m.swell": (s,p)=>`swell ${s} m · ${p} s`,
-    "m.rain": "Rain", "m.raining": "raining", "m.dry": "dry", "m.vis": "Visibility", "m.visRed": "reduced", "m.visNorm": "normal", "m.na": "n/a",
-    "m.low": "Low tide (low water)", "m.lowSub": (hh,lv)=>`high tide ${hh} (+${lv} m) · per-stop windows below`,
-    "u.kn": "kn", "u.m": "m", "u.mm": "mm", "u.km": "km",
-    tideHead: (lo,lol,hi,hil)=>`Low tide <b>${lo}</b> (${lol} m) · High tide <b>${hi}</b> (+${hil} m)`,
-    tideLive: "● live tide table", tideSynth: "synthetic curve · live tide unavailable",
-    tripM: s=>`Morning trip · ${s}`, tripA: s=>`Afternoon trip · ${s}`, threshold: "threshold",
-    "gate.monkey": "🐒 Monkey Island", "gate.rangyai": "📸 Rang Yai photo stop", "gate.mangroves": "🌿 Mangroves", "gate.naka": "🍜 Naka — parking · lunch",
-    "risk.monkey": "low water → sheltered-side landing, shallower & less comfortable (landing still happens)",
-    "risk.rangyai": "water pulls back from the beach (paid photographers)",
-    "risk.mangroves": "low water → distant view only (~50–70 m); close approach & inner entry need high water",
-    "risk.naka": "parking is limited",
-    "gw.gate.ok": "✓ OK", "gw.gate.warn": "⚠ borderline", "gw.gate.bad": "✗ skip / reorder",
-    "gw.comfort.ok": "✓ easy landing (any side)", "gw.comfort.warn": "⚠ shallow — sheltered side", "gw.comfort.bad": "shallow — sheltered side, less comfortable (still lands)",
-    "gw.approach.ok": "✓ close approach + inner entry", "gw.approach.warn": "⚠ close approach only", "gw.approach.bad": "distant view only (~50–70 m)",
+    loading: "Loading the forecast for the Ao Po → Monkey Island crossing…",
+    loadingLive: "Loading the live forecast…",
+    offTitle: "No live forecast right now",
+    offBody: "We couldn't reach the weather service. Below is sample data so you can see how the board works — check the sea yourself before deciding.",
+    retry: "Try again",
+    demoH: "Demo: show another day",
+    frame: "This board doesn't cancel trips — we go out as usual. It answers one question for the lead guide: will the open crossing from Grand Marina to Monkey Island go ahead, and what do we tell clients before the start. The live forecast is real; the buttons below show what a calm, borderline or storm day looks like.",
+    scenLabel: "Which day to show", scenLive: "Live", scenOk: "Calm", scenWarn: "Borderline", scenBad: "Storm",
+    otherScreens: "Other demo screens:", navPhoto: "Photo demo", navOps: "Office dashboard", navBot: "LINE bot",
     crew: o=>`${o.emoji} Morning brief · ${o.date} · Sirey → Ao Po
 Wind ${o.wind} kn (gusts ${o.gust}) · wave ${o.wave} m · ${o.rain?"rain":"no rain"}${o.worst?" · worst hour 08–16":""}
-${o.vEmoji} MONKEY: ${o.word}
+${o.vEmoji} ${o.word}
 Route: ${o.route}
-🌊 Tide, afternoon trip ${o.sa} — Monkey ${o.gm} (${o.gmLv} m) · mangroves ${o.gg}
+🌊 Tide, afternoon trip ${o.sa} — Monkey: ${o.gm} (${o.gmLv} m) · mangroves: ${o.gg}
 Remind clients at the briefing: reaching Monkey depends on the crossing (waves); the landing itself almost always happens. Backup monkeys — Rang Yai photo stop.`,
-    srcLive: "Data: Open-Meteo Marine + Forecast at the Monkey Island crossing point (live). ",
-    srcScen: "Demo scenario shown (wave/wind only) — press ⟳ live for the live forecast. ",
-    srcSample: "Live data unavailable right now — showing sample data. ",
-    srcTideLive: "Tide: live tide table. ",
-    srcTideSynth: "Tide: synthetic demo curve (offline fallback — not real tide times). ",
-    srcThresh: (w1,w2,k1,k2)=>`Thresholds (wave ${w1} / ${w2} m, wind ${k1} / ${k2} kn): preliminary, calibrating with the lead guide.`
+    srcLive: "Weather: Open-Meteo forecast and marine data at the Monkey Island crossing, live. ",
+    srcScen: "Demo day shown (wave and wind only) — choose Live above for the real forecast. ",
+    srcSample: "Live data unavailable right now — sample data shown. ",
+    srcTideLive: "Tide: live tide table.",
+    srcTideSynth: "Tide: sample curve (offline fallback — not real tide times).",
+    srcThresh: (w1,w2,k1,k2)=>`Limits (wave ${w1} / ${w2} m, wind ${k1} / ${k2} kn) are preliminary — we are calibrating them with the lead guide.`,
+    attrib: "Weather data: <a href=\"https://open-meteo.com/\" target=\"_blank\" rel=\"noopener\">Open-Meteo</a> (CC BY 4.0)",
+    powered: "Powered by JetOps", thDraft: ""
   },
   th: {
-    brand: "บอร์ดสภาพอากาศสำหรับทีม · เดโม · 📝 ภาษาไทยฉบับร่าง",
-    navPhoto: "← เดโมรูปภาพ", navOps: "แดชบอร์ดงานประจำวัน", navBot: "บอท LINE →",
-    frame: "⚓ ไม่ได้มีไว้เพื่อยกเลิกทริป — เราออกทะเลตามปกติ หน้านี้ช่วยให้<b>รู้สภาพทะเลล่วงหน้าและเตรียมลูกค้า</b>: วันนี้จะข้ามทะเลเปิด <b>Grand Marina → Monkey Island</b> ได้ไหม และต้องบอกลูกค้าอะไรบ้างก่อนออกเดินทาง",
-    scenLabel: "สถานการณ์จำลอง:",
-    scenOk: "🟢 ทะเลสงบ", scenWarn: "🟡 ก้ำกึ่ง", scenBad: "🔴 พายุ", scenLive: "⟳ ข้อมูลจริง",
+    docTitle: "Phuket Jetski Club — สภาพอากาศวันนี้ (เดโม)",
+    opSub: "สภาพอากาศวันนี้ · ภาษาไทยฉบับร่าง", langLabel: "ภาษา", dayLabel: "วัน",
+    themeAuto: "อัตโนมัติ", themeLight: "สว่าง", themeDark: "มืด", themeTitle: "ธีม",
     dayToday: "วันนี้", dayTomorrow: "พรุ่งนี้",
-    condLabel: "สภาพทะเลช่วงข้ามไป Monkey (ตอนนี้)",
-    condLabel1: "สภาพทะเลช่วงข้ามไป Monkey — พรุ่งนี้ (ชั่วโมงที่แย่ที่สุด 08–16)",
-    hoursLabel: "ชั่วโมงถัดไป (คลื่น / ลม)",
-    hoursLabel1: "พรุ่งนี้ ช่วงเวลาทริป (คลื่น / ลม)",
-    tideLabel: "🌊 ช่วงน้ำขึ้นน้ำลงวันนี้ "+SPAN+"— ระดับน้ำที่ชายฝั่ง (คาดการณ์ได้ — แบบจำลองน้ำขึ้นน้ำลง)</span>",
-    tideLabel1: "🌊 ช่วงน้ำขึ้นน้ำลงพรุ่งนี้ "+SPAN+"— ระดับน้ำที่ชายฝั่ง (คาดการณ์ได้ — แบบจำลองน้ำขึ้นน้ำลง)</span>",
-    tideHint: "ระดับน้ำเทียบกับระดับน้ำทะเลปานกลาง (MSL) เวลาถึงแต่ละจุดปรับจากรายงานจริงของไกด์ (Monkey ประมาณ 10:53 รอบเช้า / 15:25 รอบบ่าย) จุดอื่นยังเป็นค่าประมาณ น้ำลงแทบไม่ทำให้ต้องตัดจุดแวะ — ที่ Monkey ให้ขึ้นฝั่ง<b>ด้านที่กำบังคลื่น</b> ส่วนป่าชายเลนเปลี่ยนเป็น<b>ชมจากระยะไกล (~50–70 ม.)</b> ถ้าช่วงน้ำแคบ ให้สลับลำดับจุดแวะให้เข้ากับระดับน้ำ",
-    crewLabel: "สรุปตอนเช้าสำหรับทีม (กลุ่ม WhatsApp/LINE)",
-    crewLabel1: "สรุปตอนเช้าของพรุ่งนี้สำหรับทีม (ส่งได้ตั้งแต่เย็นนี้)",
-    copyCrew: "📋 คัดลอกสรุป",
-    briefLabel: "บรีฟลูกค้าก่อนออกเดินทาง (บอกล่วงหน้า → ลดปัญหาขอคืนเงิน)",
-    copyBrief: "📋 คัดลอกบรีฟ",
-    copied: "✓ คัดลอกแล้ว", copyFail: "✗ คัดลอกไม่ได้ — กรุณาเลือกข้อความเอง",
-    briefRough: "🌊 สวัสดีครับ/ค่ะ! วันนี้คลื่นลมค่อนข้างแรง ทริปยังออกตามปกติ แต่ช่วงข้ามทะเลเปิดไปเกาะลิง (Monkey Island) อาจต้องสั้นลง — ขึ้นอยู่กับสภาพอากาศ และไกด์จะตัดสินใจบนน้ำเพื่อความปลอดภัย ลูกค้ายังดูลิงได้ที่จุดถ่ายรูปเกาะรังใหญ่ (Rang Yai) ช่วงเลี้ยวให้จับให้แน่น เวลามีคลื่นเราจะขับช้าลง ไม่มีการคืนเงินเพราะสภาพอากาศ แต่เลื่อนไปรอบเช้า ({M}) ได้ — แจ้งไกด์ล่วงหน้า รูปถ่ายทั้งหมดรวมในราคาแล้ว 📸",
-    briefGood: "☀️ สวัสดีครับ/ค่ะ! วันนี้อากาศดี ไปครบเส้นทาง (9 เกาะ) รวมขึ้นเกาะลิง (Monkey Island) ช่วงเลี้ยวให้จับให้แน่นและขับตามไกด์ รูปถ่ายทั้งหมดรวมในราคาแล้ว 📸",
-    loading: "กำลังโหลดพยากรณ์ของเส้นทาง Sirey → Ao Po…",
-    loadingLive: "กำลังโหลดพยากรณ์ล่าสุด…",
-    badgeLive: "● ข้อมูลจริง Open-Meteo", badgeScen: n=>"สถานการณ์จำลอง: "+n, badgeSample: "ข้อมูลตัวอย่าง · ตอนนี้ไม่มีข้อมูลจริง",
-    spot: "Ao Po Grand Marina → Monkey Island (ช่วงข้ามทะเลเปิด)",
-    monkey0: "🐒 Monkey วันนี้:", monkey1: "🐒 Monkey พรุ่งนี้:",
-    why: (w,p,k,g,r)=>`คลื่น ~${w} ม. (คาบ ${p} วิ) ลม ${k} นอต (กระโชก ${g}) ${r?"มีฝน":"ไม่มีฝน"}`,
+    "src.live": "พยากรณ์สด", "src.sample": "ข้อมูลตัวอย่าง", "src.scen": n=>`วันจำลอง: ${n}`,
+    spot: "ช่วงข้าม Ao Po → เกาะลิง (Monkey)",
+    "v.ok.word": "ออกได้", "v.warn.word": "คลื่นเริ่มแรง — ระวัง", "v.bad.word": "ไม่ข้ามไปเกาะลิง",
+    "v.ok.route": "ไปครบเส้นทาง 9 เกาะ — รวมขึ้นเกาะลิง (Monkey Island)",
+    "v.warn.route": "เส้นทางปกติ รอดูก่อนขึ้นเกาะลิง — หัวหน้าไกด์ตัดสินใจบนน้ำ ลิงสำรอง: จุดถ่ายรูป Rang Yai",
+    "v.bad.route": "เปลี่ยนไป Inside Program (เส้นทางหลบคลื่น) ทริปยังออกตามปกติ — ไม่ยกเลิก รายงาน \"no monkey\"",
+    routeLabel: "เส้นทาง",
+    "cw.ok": "Monkey: ออกได้", "cw.warn": "Monkey: คลื่นเริ่มแรง ระวัง — หัวหน้าไกด์ตัดสินใจบนน้ำ", "cw.bad": "Monkey: ไม่ข้าม — เปลี่ยนเส้นทาง ไม่ยกเลิกทริป",
+    why: (w,p,k,g,r)=>`คลื่นประมาณ ${w} ม. ทุก ${p} วินาที ลม ${k} นอต กระโชกถึง ${g} ${r?"มีฝน":"ไม่มีฝน"}`,
     why1: "ชั่วโมงที่แย่ที่สุดช่วงทริป (08–16): ",
-    route: "เส้นทาง:",
-    "v.ok.word": "ไปได้", "v.ok.route": "เส้นทางเต็ม (9 เกาะ)",
-    "v.warn.word": "ระวัง — หัวหน้าไกด์ตัดสินใจบนน้ำ", "v.warn.route": "เส้นทางปกติ รอดูก่อนขึ้นเกาะลิง · สำรอง — จุดถ่ายรูป Rang Yai",
-    "v.bad.word": "ไม่ข้าม — เปลี่ยนเส้นทาง ไม่ยกเลิกทริป", "v.bad.route": "🚨 Inside Program (เส้นทางหลบคลื่น) · รายงาน \"no monkey\"",
-    "m.wind": "ลม", "m.gusts": g=>`กระโชก ${g} นอต`, "m.wave": "คลื่น / คลื่นยาว", "m.swell": (s,p)=>`คลื่นยาว ${s} ม. · ${p} วิ`,
-    "m.rain": "ฝน", "m.raining": "ฝนตก", "m.dry": "ไม่มีฝน", "m.vis": "ทัศนวิสัย", "m.visRed": "ลดลง", "m.visNorm": "ปกติ", "m.na": "ไม่มีข้อมูล",
-    "m.low": "น้ำลงต่ำสุด", "m.lowSub": (hh,lv)=>`น้ำขึ้นสูงสุด ${hh} (+${lv} ม.) · ดูแต่ละจุดด้านล่าง`,
+    "whyLim.ok": (w,k)=>`ต่ำกว่าเกณฑ์ระวัง (คลื่น ${w} ม. ลม ${k} นอต)`,
+    "whyLim.warn": (w,k)=>`เกินเกณฑ์ระวัง (คลื่น ${w} ม. หรือลม ${k} นอต)`,
+    "whyLim.bad": (w,k)=>`เกินเกณฑ์ห้ามข้าม (คลื่น ${w} ม. หรือลม ${k} นอต)`,
+    condLabel: "ช่วงข้ามทะเลตอนนี้", condLabel1: "ช่วงข้ามทะเลพรุ่งนี้ — ชั่วโมงที่แย่ที่สุด 08–16",
+    "m.wave": "คลื่น", "m.wind": "ลม", "m.rain": "ฝน", "m.vis": "ทัศนวิสัย",
+    "m.gusts": g=>`กระโชก ${g} นอต`, "m.swell": (s,p)=>`คลื่นยาว ${s} ม. · ${p} วิ`,
+    "m.raining": "ฝนตก", "m.dry": "ไม่มีฝน", "m.visRed": "ลดลง", "m.visNorm": "ปกติ", "m.na": "ไม่มีข้อมูล",
+    "w.max": (v,h)=>`08–16: สูงสุด ${v} เวลา ${h}`, "w.maxN": v=>`08–16: สูงสุด ${v}`, "w.min": v=>`08–16: ต่ำสุด ${v}`,
+    "w.at": h=>`ชั่วโมงที่แย่ที่สุด ${h}`, "w.worst": "ชั่วโมงที่แย่ที่สุด 08–16",
+    lim: v=>`เกิน ${v}`,
     "u.kn": "นอต", "u.m": "ม.", "u.mm": "มม.", "u.km": "กม.",
-    tideHead: (lo,lol,hi,hil)=>`น้ำลงต่ำสุด <b>${lo}</b> (${lol} ม.) · น้ำขึ้นสูงสุด <b>${hi}</b> (+${hil} ม.)`,
-    tideLive: "● ตารางน้ำจริง", tideSynth: "กราฟจำลอง · ไม่มีข้อมูลน้ำจริง",
-    tripM: s=>`รอบเช้า · ${s}`, tripA: s=>`รอบบ่าย · ${s}`, threshold: "เกณฑ์",
-    "gate.monkey": "🐒 เกาะลิง (Monkey)", "gate.rangyai": "📸 จุดถ่ายรูป Rang Yai", "gate.mangroves": "🌿 ป่าชายเลน", "gate.naka": "🍜 Naka — ที่จอด · อาหารกลางวัน",
+    hoursLabel: "ช่วงเวลาทริปวันนี้", hoursLabel1: "ช่วงเวลาทริปพรุ่งนี้", hoursSub: "คลื่นและลมช่วงข้ามทะเล 08:00–⁠17:00",
+    hNow: "ตอนนี้", "hs.ok": "ได้", "hs.warn": "ระวัง", "hs.crit": "ไม่ข้าม",
+    tideLabel: "ระดับน้ำที่จุดแวะวันนี้", tideLabel1: "ระดับน้ำที่จุดแวะพรุ่งนี้",
+    tideSub: "เวลาที่แต่ละรอบไปถึงและระดับน้ำที่ชายฝั่ง แบบจำลองน้ำขึ้นน้ำลง — คาดการณ์ได้",
+    tideHead: (lo,lol,hi,hil)=>`น้ำลงต่ำสุด <b>${lo}</b> (${lol} ม.) · น้ำขึ้นสูงสุด <b>${hi}</b> (${hil} ม.)`,
+    tideLive: "ตารางน้ำจริง", tideSynth: "กราฟน้ำตัวอย่าง — ไม่ใช่เวลาจริง",
+    tripM: s=>`รอบเช้า · ${s}`, tripA: s=>`รอบบ่าย · ${s}`, threshold: "เกณฑ์", water: v=>`น้ำ ${v} ม.`,
+    "gate.monkey": "เกาะลิง (Monkey) — จุดขึ้นฝั่ง", "gate.rangyai": "จุดถ่ายรูป Rang Yai", "gate.mangroves": "ป่าชายเลน", "gate.naka": "Naka — ที่จอด · อาหารกลางวัน",
     "risk.monkey": "น้ำลง → ขึ้นฝั่งด้านที่กำบังคลื่น น้ำตื้นและไม่ค่อยสะดวก (ยังขึ้นฝั่งได้)",
     "risk.rangyai": "น้ำลดห่างจากหาด (จุดช่างภาพ)",
     "risk.mangroves": "น้ำลง → ชมได้จากระยะไกลเท่านั้น (~50–70 ม.) เข้าใกล้หรือเข้าด้านในต้องรอน้ำขึ้น",
     "risk.naka": "ที่จอดมีจำกัด",
-    "gw.gate.ok": "✓ ได้", "gw.gate.warn": "⚠ ก้ำกึ่ง", "gw.gate.bad": "✗ ข้ามจุดนี้ / สลับลำดับ",
-    "gw.comfort.ok": "✓ ขึ้นฝั่งง่าย (ด้านไหนก็ได้)", "gw.comfort.warn": "⚠ น้ำตื้น — ขึ้นด้านกำบัง", "gw.comfort.bad": "น้ำตื้น — ขึ้นด้านกำบัง ไม่ค่อยสะดวก (ยังขึ้นได้)",
-    "gw.approach.ok": "✓ เข้าใกล้ + เข้าด้านในได้", "gw.approach.warn": "⚠ เข้าใกล้ได้อย่างเดียว", "gw.approach.bad": "ชมจากระยะไกลเท่านั้น (~50–70 ม.)",
+    "gw.gate.ok": "ได้", "gw.gate.warn": "ก้ำกึ่ง", "gw.gate.bad": "ข้ามจุดนี้หรือสลับลำดับ",
+    "gw.comfort.ok": "ขึ้นฝั่งง่าย ด้านไหนก็ได้", "gw.comfort.warn": "น้ำตื้น — ขึ้นด้านกำบัง", "gw.comfort.bad": "ด้านกำบัง ยังขึ้นได้",
+    "gw.approach.ok": "เข้าใกล้ + เข้าด้านในได้", "gw.approach.warn": "เข้าใกล้ได้อย่างเดียว", "gw.approach.bad": "ชมจากไกลเท่านั้น (50–⁠70 ม.)",
+    tideMore: "เวลาไปถึงคำนวณอย่างไร",
+    tideHint: "ระดับน้ำเทียบกับระดับน้ำทะเลปานกลาง (MSL) เวลาถึงแต่ละจุดปรับจากรายงานจริงของไกด์ (Monkey ประมาณ 10:53 รอบเช้า / 15:25 รอบบ่าย) จุดอื่นยังเป็นค่าประมาณ น้ำลงแทบไม่ทำให้ต้องตัดจุดแวะ — ที่ Monkey ให้ขึ้นฝั่งด้านที่กำบังคลื่น ส่วนป่าชายเลนเปลี่ยนเป็นชมจากระยะไกล (~50–70 ม.) ถ้าช่วงน้ำแคบ ให้สลับลำดับจุดแวะให้เข้ากับระดับน้ำ",
+    crewLabel: "สรุปสำหรับทีม", crewLabel1: "สรุปของพรุ่งนี้สำหรับทีม",
+    crewSub: "สำหรับกลุ่ม WhatsApp/LINE", crewSub1: "ส่งเข้ากลุ่มได้ตั้งแต่เย็นนี้",
+    copyCrew: "คัดลอกสรุปให้ทีม", copiedCrew: "คัดลอกแล้ว — วางในแชทกลุ่มได้เลย",
+    briefLabel: "บรีฟลูกค้า", briefSub: "อ่านหรือส่งให้ลูกค้าก่อนออกเดินทาง — บอกล่วงหน้า ลดปัญหาขอคืนเงิน",
+    briefLangLabel: "ภาษาของบรีฟ", copyBrief: "คัดลอกบรีฟลูกค้า", copiedBrief: "คัดลอกแล้ว — วางในแชทลูกค้าได้เลย",
+    copyFail: "คัดลอกไม่ได้ — กรุณาเลือกข้อความด้านบนแล้วคัดลอกเอง",
+    briefRough: "🌊 สวัสดีครับ/ค่ะ! วันนี้คลื่นลมค่อนข้างแรง ทริปยังออกตามปกติ แต่ช่วงข้ามทะเลเปิดไปเกาะลิง (Monkey Island) อาจต้องสั้นลง — ขึ้นอยู่กับสภาพอากาศ และไกด์จะตัดสินใจบนน้ำเพื่อความปลอดภัย ลูกค้ายังดูลิงได้ที่จุดถ่ายรูปเกาะรังใหญ่ (Rang Yai) ช่วงเลี้ยวให้จับให้แน่น เวลามีคลื่นเราจะขับช้าลง ไม่มีการคืนเงินเพราะสภาพอากาศ แต่เลื่อนไปรอบเช้า ({M}) ได้ — แจ้งไกด์ล่วงหน้า รูปถ่ายทั้งหมดรวมในราคาแล้ว 📸",
+    briefGood: "☀️ สวัสดีครับ/ค่ะ! วันนี้อากาศดี ไปครบเส้นทาง (9 เกาะ) รวมขึ้นเกาะลิง (Monkey Island) ช่วงเลี้ยวให้จับให้แน่นและขับตามไกด์ รูปถ่ายทั้งหมดรวมในราคาแล้ว 📸",
+    loading: "กำลังโหลดพยากรณ์ช่วงข้าม Ao Po → เกาะลิง…",
+    loadingLive: "กำลังโหลดพยากรณ์สด…",
+    offTitle: "ตอนนี้ไม่มีพยากรณ์สด",
+    offBody: "เชื่อมต่อบริการพยากรณ์อากาศไม่ได้ ด้านล่างเป็นข้อมูลตัวอย่างให้เห็นว่าบอร์ดทำงานอย่างไร — ก่อนตัดสินใจให้ดูทะเลเองอีกครั้ง",
+    retry: "ลองอีกครั้ง",
+    demoH: "เดโม: ดูวันแบบอื่น",
+    frame: "บอร์ดนี้ไม่ได้มีไว้เพื่อยกเลิกทริป — เราออกทะเลตามปกติ บอร์ดตอบคำถามเดียวให้หัวหน้าไกด์: วันนี้จะข้ามทะเลเปิดจาก Grand Marina ไปเกาะลิง (Monkey Island) ได้ไหม และต้องบอกลูกค้าอะไรก่อนออกเดินทาง พยากรณ์สดเป็นข้อมูลจริง ปุ่มด้านล่างแสดงตัวอย่างวันทะเลสงบ ก้ำกึ่ง และพายุ",
+    scenLabel: "เลือกวันที่จะแสดง", scenLive: "ข้อมูลสด", scenOk: "ทะเลสงบ", scenWarn: "ก้ำกึ่ง", scenBad: "พายุ",
+    otherScreens: "หน้าจอเดโมอื่น:", navPhoto: "เดโมรูปภาพ", navOps: "แดชบอร์ดออฟฟิศ", navBot: "บอท LINE",
     crew: o=>`${o.emoji} สรุปตอนเช้า · ${o.date} · Sirey → Ao Po
 ลม ${o.wind} นอต (กระโชก ${o.gust}) · คลื่น ${o.wave} ม. · ${o.rain?"มีฝน":"ไม่มีฝน"}${o.worst?" · ชั่วโมงที่แย่ที่สุด 08–16":""}
-${o.vEmoji} MONKEY: ${o.word}
+${o.vEmoji} ${o.word}
 เส้นทาง: ${o.route}
-🌊 น้ำ รอบบ่าย ${o.sa} — Monkey ${o.gm} (${o.gmLv} ม.) · ป่าชายเลน ${o.gg}
+🌊 น้ำ รอบบ่าย ${o.sa} — Monkey: ${o.gm} (${o.gmLv} ม.) · ป่าชายเลน: ${o.gg}
 ย้ำลูกค้าตอนบรีฟ: จะไปถึง Monkey ได้ไหมขึ้นอยู่กับคลื่นช่วงข้ามทะเล ส่วนการขึ้นเกาะแทบจะได้ขึ้นทุกครั้ง ลิงสำรอง — จุดถ่ายรูป Rang Yai`,
-    srcLive: "ข้อมูล: Open-Meteo Marine + Forecast ที่จุดข้ามไป Monkey Island (ข้อมูลจริง) ",
-    srcScen: "กำลังแสดงสถานการณ์จำลอง (เฉพาะคลื่น/ลม) — กด ⟳ ข้อมูลจริง เพื่อดูพยากรณ์จริง ",
-    srcSample: "ตอนนี้ไม่มีข้อมูลจริง — แสดงข้อมูลตัวอย่าง ",
-    srcTideLive: "น้ำขึ้นน้ำลง: ตารางน้ำจริง ",
-    srcTideSynth: "น้ำขึ้นน้ำลง: กราฟจำลอง (ใช้ตอนออฟไลน์ — ไม่ใช่เวลาน้ำจริง) ",
-    srcThresh: (w1,w2,k1,k2)=>`เกณฑ์ (คลื่น ${w1} / ${w2} ม. ลม ${k1} / ${k2} นอต): ค่าเบื้องต้น กำลังปรับร่วมกับหัวหน้าไกด์`
+    srcLive: "สภาพอากาศ: พยากรณ์และข้อมูลทะเลจาก Open-Meteo ที่จุดข้ามไปเกาะลิง (ข้อมูลสด) ",
+    srcScen: "กำลังแสดงวันจำลอง (เฉพาะคลื่นและลม) — เลือก “ข้อมูลสด” ด้านบนเพื่อดูพยากรณ์จริง ",
+    srcSample: "ตอนนี้ไม่มีข้อมูลสด — แสดงข้อมูลตัวอย่าง ",
+    srcTideLive: "น้ำขึ้นน้ำลง: ตารางน้ำจริง",
+    srcTideSynth: "น้ำขึ้นน้ำลง: กราฟตัวอย่าง (ใช้ตอนออฟไลน์ — ไม่ใช่เวลาน้ำจริง)",
+    srcThresh: (w1,w2,k1,k2)=>`เกณฑ์ (คลื่น ${w1} / ${w2} ม. ลม ${k1} / ${k2} นอต) เป็นค่าเบื้องต้น กำลังปรับร่วมกับหัวหน้าไกด์`,
+    attrib: "ข้อมูลสภาพอากาศ: <a href=\"https://open-meteo.com/\" target=\"_blank\" rel=\"noopener\">Open-Meteo</a> (CC BY 4.0)",
+    powered: "ขับเคลื่อนโดย JetOps", thDraft: "ภาษาไทยในหน้านี้เป็นฉบับร่าง รอเจ้าของภาษาตรวจทาน"
   },
   ru: {
-    brand: "Crew Weather Board · Погодный борт",
-    navPhoto: "← фото-демо", navOps: "ops-дашборд", navBot: "LINE-бот →",
-    frame: "⚓ Не про отмену — выход в море как обычно. Это про <b>осведомлённость и подготовку клиента</b>: пройдём ли сегодня открытый переход <b>Grand Marina → Monkey Island</b>, и что сказать клиентам ДО старта.",
-    scenLabel: "Сценарии для показа:",
-    scenOk: "🟢 штиль", scenWarn: "🟡 на грани", scenBad: "🔴 шторм", scenLive: "⟳ live",
+    docTitle: "Phuket Jetski Club — Погода на сегодня (демо)",
+    opSub: "Погода на сегодня", langLabel: "Язык", dayLabel: "День",
+    themeAuto: "Авто", themeLight: "Светлая", themeDark: "Тёмная", themeTitle: "Тема",
     dayToday: "Сегодня", dayTomorrow: "Завтра",
-    condLabel: "Условия на переходе к Monkey (сейчас)",
-    condLabel1: "Условия на переходе к Monkey — завтра (худший час рейсов 08–16)",
-    hoursLabel: "Ближайшие часы (волна / ветер)",
-    hoursLabel1: "Завтра, часы рейсов (волна / ветер)",
-    tideLabel: "🌊 Приливные окна дня "+SPAN+"— вода у берега (предсказуемо — модель приливов)</span>",
-    tideLabel1: "🌊 Приливные окна на завтра "+SPAN+"— вода у берега (предсказуемо — модель приливов)</span>",
-    tideHint: "Уровень — к среднему морю (MSL). Время прибытия откалибровано по реальным отчётам гидов (Monkey ~10:53 утро / ~15:25 день); прочие точки — предварительно. Низкая вода редко отменяет точку — на Monkey высадка с <b>подветренной стороны</b>, мангры — <b>осмотр издалека (~50–70 м)</b>. При узком окне — переставить порядок точек под воду.",
-    crewLabel: "Утренняя сводка команде (в группу WhatsApp/LINE)",
-    crewLabel1: "Утренняя сводка команде на завтра (отправить с вечера)",
-    copyCrew: "📋 Скопировать сводку",
-    briefLabel: "Брифинг клиенту ДО старта (ставит ожидания → меньше споров о возврате)",
-    copyBrief: "📋 Скопировать брифинг",
-    copied: "✓ Скопировано", copyFail: "✗ не скопировалось — выделите текст вручную",
+    "src.live": "Живой прогноз", "src.sample": "Пример данных", "src.scen": n=>`Демо-день: ${n}`,
+    spot: "переход Ao Po → Monkey Island",
+    "v.ok.word": "Можно выходить", "v.warn.word": "Волна растёт — осторожно", "v.bad.word": "Не выходим к Monkey",
+    "v.ok.route": "Полный маршрут, 9 островов — с высадкой на Monkey Island.",
+    "v.warn.route": "Обычный маршрут. Высадка на Monkey под вопросом — лид решает на воде. Запасные обезьянки — фото-стоп Rang Yai.",
+    "v.bad.route": "Меняем маршрут на Inside Program (укрытый маршрут). Поездка состоится — не отменяем. Рапорт «no monkey».",
+    routeLabel: "Маршрут",
+    "cw.ok": "Monkey: можно выходить", "cw.warn": "Monkey: волна растёт, осторожно — лид решает на воде", "cw.bad": "Monkey: не выходим — меняем маршрут, не отменяем",
+    why: (w,p,k,g,r)=>`Волна около ${w} м с периодом ${p} с, ветер ${k} уз, порывы до ${g}. ${r?"Дождь.":"Без дождя."}`,
+    why1: "Худший час рейсов (08–16): ",
+    "whyLim.ok": (w,k)=>`Ниже порога осторожности (волна ${w} м, ветер ${k} уз).`,
+    "whyLim.warn": (w,k)=>`Выше порога осторожности (волна ${w} м или ветер ${k} уз).`,
+    "whyLim.bad": (w,k)=>`Выше порога «не выходим» (волна ${w} м или ветер ${k} уз).`,
+    condLabel: "На переходе сейчас", condLabel1: "На переходе завтра — худший час 08–16",
+    "m.wave": "Волна", "m.wind": "Ветер", "m.rain": "Дождь", "m.vis": "Видимость",
+    "m.gusts": g=>`порывы ${g} уз`, "m.swell": (s,p)=>`зыбь ${s} м · ${p} с`,
+    "m.raining": "идёт дождь", "m.dry": "сухо", "m.visRed": "снижена", "m.visNorm": "норма", "m.na": "нет данных",
+    "w.max": (v,h)=>`08–16: до ${v} в ${h}`, "w.maxN": v=>`08–16: до ${v}`, "w.min": v=>`08–16: минимум ${v}`,
+    "w.at": h=>`худший час, ${h}`, "w.worst": "худший час 08–16",
+    lim: v=>`Выше ${v}`,
+    "u.kn": "уз", "u.m": "м", "u.mm": "мм", "u.km": "км",
+    hoursLabel: "Часы рейсов сегодня", hoursLabel1: "Часы рейсов завтра", hoursSub: "Волна и ветер на переходе, 08:00–⁠17:00",
+    hNow: "Сейчас", "hs.ok": "Можно", "hs.warn": "Осторожно", "hs.crit": "Не выходим",
+    tideLabel: "Вода у точек сегодня", tideLabel1: "Вода у точек завтра",
+    tideSub: "Когда приходит каждый рейс и сколько воды у берега. Модель приливов — предсказуемо.",
+    tideHead: (lo,lol,hi,hil)=>`Отлив <b>${lo}</b> (${lol} м) · Полная вода <b>${hi}</b> (${hil} м)`,
+    tideLive: "Живая таблица приливов", tideSynth: "Пример кривой — не реальное время",
+    tripM: s=>`Утренний рейс · ${s}`, tripA: s=>`Дневной рейс · ${s}`, threshold: "Порог", water: v=>`Вода ${v} м`,
+    "gate.monkey": "Высадка на Monkey Island", "gate.rangyai": "Фото-стоп Rang Yai", "gate.mangroves": "Мангры", "gate.naka": "Naka — стоянка, обед",
+    "risk.monkey": "Низкая вода: высадка с подветренной стороны — мельче и менее удобно, но высадка будет.",
+    "risk.rangyai": "Вода отходит от пляжа (платные фотографы).",
+    "risk.mangroves": "Низкая вода: только осмотр издалека (около 50–70 м). Близкий подход и заход внутрь — на высокой воде.",
+    "risk.naka": "Мест для стоянки мало.",
+    "gw.gate.ok": "ОК", "gw.gate.warn": "На грани", "gw.gate.bad": "Пропустить или переставить",
+    "gw.comfort.ok": "Лёгкая высадка, любая сторона", "gw.comfort.warn": "Мелко — подветренная сторона", "gw.comfort.bad": "Подветренная сторона, высадка будет",
+    "gw.approach.ok": "Близкий подход + заход внутрь", "gw.approach.warn": "Только близкий подход", "gw.approach.bad": "Только издалека (50–⁠70 м)",
+    tideMore: "Как считаются времена прихода",
+    tideHint: "Уровень — относительно среднего уровня моря (MSL). Время прихода откалибровано по реальным отчётам гидов (Monkey около 10:53 утром и 15:25 днём); прочие точки — предварительно. Низкая вода редко отменяет точку — на Monkey высадка с подветренной стороны, мангры — осмотр издалека (около 50–70 м). При узком окне переставьте порядок точек под воду.",
+    crewLabel: "Сводка для команды", crewLabel1: "Сводка для команды на завтра",
+    crewSub: "Для группы в WhatsApp/LINE", crewSub1: "Отправьте в группу с вечера",
+    copyCrew: "Скопировать сводку", copiedCrew: "Скопировано — вставьте в чат группы",
+    briefLabel: "Брифинг для клиентов", briefSub: "Прочитайте или отправьте до старта — понятные ожидания, меньше споров о возврате.",
+    briefLangLabel: "Язык брифинга", copyBrief: "Скопировать брифинг", copiedBrief: "Скопировано — вставьте в чат с клиентами",
+    copyFail: "Не скопировалось. Выделите текст выше и скопируйте вручную.",
     briefRough: "🌊 Привет! Сегодня на море заметная волна/ветер. Программа состоится, но открытый участок к Monkey Island может быть укорочен — это зависит от погоды и решается на воде для безопасности. Обезьянок можно увидеть и на острове Rang Yai. Держитесь крепче на поворотах, на волне идём спокойнее. Возврата за погоду нет, но поездку можно перенести на утренний рейс ({M}) — просто скажите вашему гиду заранее. Все фото — включены 📸",
     briefGood: "☀️ Привет! Погода хорошая, идём полный маршрут (9 островов), включая Monkey Island. На поворотах держитесь крепче, слушайте гида. Все фото с поездки — включены 📸",
-    loading: "Загружаем прогноз для коридора Sirey → Ao Po…",
+    loading: "Загружаем прогноз для перехода Ao Po → Monkey Island…",
     loadingLive: "Загружаем живой прогноз…",
-    badgeLive: "● LIVE Open-Meteo", badgeScen: n=>"демо-сценарий: "+n, badgeSample: "пример данных · live недоступен",
-    spot: "Ao Po Grand Marina → Monkey Island (открытый переход)",
-    monkey0: "🐒 Monkey сегодня:", monkey1: "🐒 Monkey завтра:",
-    why: (w,p,k,g,r)=>`Волна/зыбь ~${w} м (период ${p} с), ветер ${k} уз (порывы ${g}). ${r?"Дождь.":"Без дождя."}`,
-    why1: "Худший час рейсов (08–16): ",
-    route: "Маршрут:",
-    "v.ok.word": "ИДЁМ", "v.ok.route": "Полный маршрут (9 островов)",
-    "v.warn.word": "ОСТОРОЖНО — лид решает на воде", "v.warn.route": "Обычный маршрут, высадка на Monkey под вопросом · запасной — фото-стоп Rang Yai",
-    "v.bad.word": "НЕТ — меняем маршрут, не отменяем", "v.bad.route": "🚨 Inside Program (укрытый штормовой маршрут) · рапорт «no monkey»",
-    "m.wind": "Ветер", "m.gusts": g=>`порывы ${g} уз`, "m.wave": "Волна / зыбь", "m.swell": (s,p)=>`зыбь ${s} м · ${p} с`,
-    "m.rain": "Дождь", "m.raining": "идёт дождь", "m.dry": "сухо", "m.vis": "Видимость", "m.visRed": "снижена", "m.visNorm": "норма", "m.na": "н/д",
-    "m.low": "Отлив (малая вода)", "m.lowSub": (hh,lv)=>`полная вода ${hh} (+${lv} м) · окна по точкам ниже`,
-    "u.kn": "уз", "u.m": "м", "u.mm": "мм", "u.km": "км",
-    tideHead: (lo,lol,hi,hil)=>`Отлив <b>${lo}</b> (${lol} м) · Полная вода <b>${hi}</b> (+${hil} м)`,
-    tideLive: "● живая таблица приливов", tideSynth: "синтетическая кривая · живых данных нет",
-    tripM: s=>`Утренний рейс · ${s}`, tripA: s=>`Дневной рейс · ${s}`, threshold: "порог",
-    "gate.monkey": "🐒 Monkey Island", "gate.rangyai": "📸 Фото-стоп Rang Yai", "gate.mangroves": "🌿 Мангры", "gate.naka": "🍜 Naka — стоянка · обед",
-    "risk.monkey": "низкая вода → высадка с подветренной стороны, мельче и менее удобно (высадка всё равно будет)",
-    "risk.rangyai": "вода отходит от пляжа (платные фотографы)",
-    "risk.mangroves": "низкая вода → только осмотр издалека (~50–70 м); близкий подход и заход внутрь — на высокой воде",
-    "risk.naka": "мест для стоянки мало",
-    "gw.gate.ok": "✓ ОК", "gw.gate.warn": "⚠ на грани", "gw.gate.bad": "✗ пропуск / переставить",
-    "gw.comfort.ok": "✓ лёгкая высадка (любая сторона)", "gw.comfort.warn": "⚠ мелко — подветренная сторона", "gw.comfort.bad": "мелко — подветренная сторона, менее удобно (высадка будет)",
-    "gw.approach.ok": "✓ близкий подход + заход внутрь", "gw.approach.warn": "⚠ только близкий подход", "gw.approach.bad": "только издалека (~50–70 м)",
+    offTitle: "Живого прогноза сейчас нет",
+    offBody: "Не удалось связаться с сервисом погоды. Ниже — пример данных, чтобы было видно, как работает борт. Перед решением проверьте море сами.",
+    retry: "Попробовать ещё раз",
+    demoH: "Демо: показать другой день",
+    frame: "Этот борт не отменяет поездки — выходим в море как обычно. Он отвечает лиду на один вопрос: пройдём ли открытый переход от Grand Marina к Monkey Island и что сказать клиентам до старта. Живой прогноз — настоящий; кнопки ниже показывают, как выглядит штиль, день на грани и шторм.",
+    scenLabel: "Какой день показать", scenLive: "Живые данные", scenOk: "Штиль", scenWarn: "На грани", scenBad: "Шторм",
+    otherScreens: "Другие экраны демо:", navPhoto: "Фото-демо", navOps: "Дашборд офиса", navBot: "LINE-бот",
     crew: o=>`${o.emoji} Утренняя сводка · ${o.date} · Sirey → Ao Po
 Ветер ${o.wind} уз (порывы ${o.gust}) · волна ${o.wave} м · ${o.rain?"дождь":"без дождя"}${o.worst?" · худший час 08–16":""}
-${o.vEmoji} MONKEY: ${o.word}
+${o.vEmoji} ${o.word}
 Маршрут: ${o.route}
-🌊 Прилив, дневной рейс ${o.sa} — Monkey ${o.gm} (${o.gmLv} м) · мангры ${o.gg}
+🌊 Прилив, дневной рейс ${o.sa} — Monkey: ${o.gm} (${o.gmLv} м) · мангры: ${o.gg}
 Напомнить клиентам на брифинге: дойдём ли до Monkey — зависит от перехода (волна); сама высадка почти всегда состоится. Запасные обезьянки — фото-стоп Rang Yai.`,
-    srcLive: "Данные: Open-Meteo Marine + Forecast в точке перехода к Monkey Island (live). ",
-    srcScen: "Показан демо-сценарий (только волна/ветер) — нажмите ⟳ live для живого прогноза. ",
+    srcLive: "Погода: прогноз и морские данные Open-Meteo в точке перехода к Monkey Island, live. ",
+    srcScen: "Показан демо-день (только волна и ветер) — выберите «Живые данные» выше для настоящего прогноза. ",
     srcSample: "Живые данные сейчас недоступны — показан пример. ",
-    srcTideLive: "Приливы: живая таблица. ",
-    srcTideSynth: "Приливы: синтетическая демо-кривая (офлайн-запасной вариант — не реальное время приливов). ",
-    srcThresh: (w1,w2,k1,k2)=>`Пороги (волна ${w1} / ${w2} м, ветер ${k1} / ${k2} уз): предварительные, калибруются с лидом.`
+    srcTideLive: "Приливы: живая таблица.",
+    srcTideSynth: "Приливы: пример кривой (запасной вариант без сети — не реальное время приливов).",
+    srcThresh: (w1,w2,k1,k2)=>`Пороги (волна ${w1} / ${w2} м, ветер ${k1} / ${k2} уз) предварительные — калибруем с лидом.`,
+    attrib: "Данные о погоде: <a href=\"https://open-meteo.com/\" target=\"_blank\" rel=\"noopener\">Open-Meteo</a> (CC BY 4.0)",
+    powered: "Работает на JetOps", thDraft: ""
   }
 };
 const LOCALE = {en:"en-GB", th:"th-TH", ru:"ru-RU"};
 // localStorage may be blocked (private mode / storage disabled) — never let it throw during init
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
-let uiLang = lsGet("jetops_lang") || "en";
+// "jetops_lang" is shared with index.html, dashboard.html and bot.html (values en | th | ru)
+let uiLang = (I18N[PARAMS.get("lang")] && PARAMS.get("lang")) || lsGet("jetops_lang") || "en";
 if(!I18N[uiLang]) uiLang = "en";
 function tl(lang,k){ const d=I18N[lang]; return (d && d[k]!=null) ? d[k] : (I18N.en[k]!=null ? I18N.en[k] : k); }
 function t(k){ const v=tl(uiLang,k); return typeof v==="function" ? v.apply(null, Array.prototype.slice.call(arguments,1)) : v; }
@@ -362,27 +504,34 @@ function applyLang(l){
   uiLang = I18N[l] ? l : "en";
   lsSet("jetops_lang", uiLang);
   document.documentElement.lang = uiLang;
+  document.title = t("docTitle");
   document.querySelectorAll("[data-i18n]").forEach(el=>{ const v=t(el.dataset.i18n); if(typeof v==="string") el.innerHTML=v; });
-  document.querySelectorAll("#uiLang button").forEach(b=>b.classList.toggle("on", b.dataset.l===uiLang));
+  document.querySelectorAll("[data-i18n-aria]").forEach(el=>{ const v=t(el.dataset.i18nAria); if(typeof v==="string") el.setAttribute("aria-label", v); });
+  document.querySelectorAll("#uiLang button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.l===uiLang)));
+  document.querySelectorAll("[data-jo-theme-toggle]").forEach(b=>{
+    b.setAttribute("data-label-auto", t("themeAuto")); b.setAttribute("data-label-light", t("themeLight"));
+    b.setAttribute("data-label-dark", t("themeDark")); b.setAttribute("data-label-title", t("themeTitle")); });
+  if(window.joTheme) window.joTheme.relabel();
   if(DATA) safeRender(); else showLoading("loading");
 }
 document.querySelectorAll("#uiLang button").forEach(b=>b.onclick=()=>applyLang(b.dataset.l));
 /* ============== end i18n ============== */
 
 // ---- fallback (offline demo): a typical borderline monsoon day ----
+// hours: [hour, wave m, wind kn] for the strip (08–17)
 const SAMPLE = { live:false, wind:16, gust:22, rain:0.3, vis:11000, wave:1.3, swell:1.1, period:6.4,
-  hours:[[9,1.2,15],[10,1.3,16],[11,1.4,18],[12,1.5,19],[13,1.5,20],[14,1.4,19],[15,1.3,18],[16,1.2,16]] };
+  hours:[[8,1.1,14],[9,1.2,15],[10,1.3,16],[11,1.4,18],[12,1.5,19],[13,1.5,20],[14,1.4,19],[15,1.3,18],[16,1.2,16],[17,1.1,15]] };
 // ---- demo scenarios (?wx=ok|warn|bad): override WAVE/WIND only — the tide stays real when available ----
 const SCENARIOS = {
   ok:  { live:false, scen:"ok",   wind:9,  gust:13, rain:0,   vis:24000, wave:0.5, swell:0.4, period:5.2,
-         hours:[[9,0.4,8],[10,0.5,9],[11,0.5,10],[12,0.6,11],[13,0.6,11],[14,0.5,10],[15,0.5,9],[16,0.4,9]] },
+         hours:[[8,0.4,8],[9,0.4,8],[10,0.5,9],[11,0.5,10],[12,0.6,11],[13,0.6,11],[14,0.5,10],[15,0.5,9],[16,0.4,9],[17,0.4,8]] },
   warn:{ live:false, scen:"warn", wind:16, gust:23, rain:0.4, vis:11000, wave:1.3, swell:1.1, period:6.4,
-         hours:[[9,1.1,14],[10,1.2,15],[11,1.3,17],[12,1.4,18],[13,1.5,19],[14,1.4,18],[15,1.3,17],[16,1.2,16]] },
+         hours:[[8,1.0,13],[9,1.1,14],[10,1.2,15],[11,1.3,17],[12,1.4,18],[13,1.5,19],[14,1.4,18],[15,1.3,17],[16,1.2,16],[17,1.2,15]] },
   bad: { live:false, scen:"bad",  wind:24, gust:34, rain:4.2, vis:4500,  wave:2.1, swell:1.8, period:7.8,
-         hours:[[9,1.9,22],[10,2.0,23],[11,2.2,25],[12,2.3,26],[13,2.2,25],[14,2.1,24],[15,2.0,23],[16,1.9,22]] }
+         hours:[[8,1.8,21],[9,1.9,22],[10,2.0,23],[11,2.2,25],[12,2.3,26],[13,2.2,25],[14,2.1,24],[15,2.0,23],[16,1.9,22],[17,1.9,22]] }
 };
 const SCEN_KEY = {ok:"scenOk", warn:"scenWarn", bad:"scenBad"};
-const WX_OVERRIDE = new URLSearchParams(location.search).get("wx");
+const WX_OVERRIDE = PARAMS.get("wx");
 
 /* ---- tide gates (calibrated from real guide reports, Feb–Apr 2026, and lead-guide input):
    Monkey — landing almost always happens; low water just means landing from the sheltered
@@ -402,8 +551,23 @@ const TIDE_GATES=[
 /* ---- state ---- */
 let LIVE=null;  // {wx:[today|null, tomorrow|null], tide:[today|null, tomorrow|null], days:[iso, iso]}
 let SCEN=(WX_OVERRIDE && SCENARIOS[WX_OVERRIDE]) ? WX_OVERRIDE : null;
-let DAY=0;      // 0 = today (now), 1 = tomorrow (trip hours) — the evening brief for the next morning
+let DAY=(PARAMS.get("day")==="tomorrow"||PARAMS.get("day")==="1") ? 1 : 0; // 0 = today (now), 1 = tomorrow (trip hours)
 let DATA=null, TIDE=null; // what is on screen
+
+/* ---- small view helpers (status → token class, Lucide icon, signed level) ---- */
+const ST = {ok:"ok", warn:"warn", bad:"crit"};                       // verdictCls / gate cls → css status
+const ST_IC = {ok:"circle-check", warn:"triangle-alert", crit:"circle-x", info:"info"};
+const ic = (id,cls)=>`<svg class="ic${cls?" "+cls:""}" aria-hidden="true"><use href="#i-${id}"/></svg>`;
+const badge = (st,txt)=>`<span class="badge badge-${st}">${ic(ST_IC[st])}<span>${txt}</span></span>`;
+const pad2 = n=>String(n).padStart(2,"0");
+const hh = n=>pad2(n)+":00";
+function sgn(v){ const r=Math.round(v*10)/10; return (r>0?"+":r<0?"−":"")+Math.abs(r).toFixed(1); }
+function setParam(k,v){ // keep ?wx= / ?day= in the address bar so the view can be shared; harmless if blocked (file://)
+  try{ const u=new URL(location.href); if(v==null) u.searchParams.delete(k); else u.searchParams.set(k,v); history.replaceState(null,"",u.href); }catch(e){}
+}
+function bkkHour(){
+  try{ return parseInt(new Date().toLocaleString("en-GB",{timeZone:TZ,hour:"2-digit",hourCycle:"h23"}),10); }catch(e){ return -1; }
+}
 
 function bkkDay(off){ // "YYYY-MM-DD" in Bangkok, today + off days
   const base=new Date().toLocaleDateString("en-CA",{timeZone:TZ});
@@ -435,7 +599,19 @@ function verdict(wave, wind){
   const cls=verdictCls(wave,wind);
   return {cls, emoji:{bad:"🔴",warn:"🟡",ok:"🟢"}[cls], word:t("v."+cls+".word"), route:t("v."+cls+".route")};
 }
-function dotColor(wave,wind){const c=verdictCls(wave,wind);return c==="bad"?"#e5484d":c==="warn"?"#f5a623":"#2fa84f";}
+// worst trip hour (TRIP_H) from the hourly rows [h, wave, wind, rain?, vis?] — used for the "08–16" line in the tiles
+function tripWorst(d){
+  const w={wave:null,waveH:null,wind:null,windH:null,rain:null,vis:null};
+  (d.hours||[]).forEach(h=>{
+    if(h[0]<TRIP_H[0]||h[0]>TRIP_H[1]) return;
+    if(h[1]!=null&&(w.wave==null||h[1]>w.wave)){w.wave=h[1];w.waveH=h[0];}
+    if(h[2]!=null&&(w.wind==null||h[2]>w.wind)){w.wind=h[2];w.windH=h[0];}
+    if(h[3]!=null&&(w.rain==null||h[3]>w.rain)) w.rain=h[3];
+    if(h[4]!=null&&(w.vis==null||h[4]<w.vis)) w.vis=h[4];
+  });
+  if(w.rain==null) w.rain=d.rain; if(w.vis==null) w.vis=d.vis;
+  return w;
+}
 
 const FETCH_MS=8000;
 function fetchJSON(url){
@@ -465,20 +641,26 @@ function parseTide(M){
     return {live:true, series:tm.slice(a,a+24).map((x,i)=>({h:parseInt(String(x).slice(11,13),10), lv:sub[i]}))};
   });
 }
-// today: the current hour + the next 8 hours
+// the strip rows for one day (0 = today, 1 = tomorrow): [hour, wave, wind, rain, visibility]; hourly series start at 00:00 local
+function stripHours(F,M,day){
+  const out=[];
+  for(let h=STRIP_H[0];h<=STRIP_H[1];h++){
+    const i=day*24+h; if(i>=F.hourly.time.length||i>=M.hourly.time.length) break;
+    const wv=num(M.hourly.wave_height[i]), wd=num(F.hourly.wind_speed_10m[i]);
+    out.push([h, wv, wd==null?null:Math.round(wd), num(F.hourly.precipitation[i]), num(F.hourly.visibility[i])]);
+  }
+  return out;
+}
+// today: the current hour (verdict + tiles) and today's trip hours (strip, "08–16" worst line)
 function parseNow(F,M){
   const tm=F.current.time;
   const fi=hourIndex(F.hourly.time,tm), mi=hourIndex(M.hourly.time,tm);
   if(fi<0||mi<0) throw new Error("no matching hour");
   const wave=num(M.hourly.wave_height[mi]);
   if(wave===null) throw new Error("wave_height is null"); // marine model has no value here → honest sample fallback
-  const hours=[];
-  for(let i=fi;i<Math.min(fi+8,F.hourly.time.length);i++){
-    hours.push([ parseInt(F.hourly.time[i].slice(11,13),10), num(M.hourly.wave_height[i-fi+mi]), Math.round(num(F.hourly.wind_speed_10m[i])||0) ]);
-  }
   return { live:true, wind:Math.round(num(F.current.wind_speed_10m)||0), gust:Math.round(num(F.current.wind_gusts_10m)||0),
     rain:num(F.current.precipitation)||0, vis:num(F.hourly.visibility[fi]), wave,
-    swell:num(M.hourly.swell_wave_height[mi]), period:num(M.hourly.wave_period[mi])||0, hours };
+    swell:num(M.hourly.swell_wave_height[mi]), period:num(M.hourly.wave_period[mi])||0, hours:stripHours(F,M,0) };
 }
 // tomorrow: worst hour of the trip window (TRIP_H) — conservative on purpose
 function parseTomorrow(F,M){
@@ -493,7 +675,7 @@ function parseTomorrow(F,M){
   return { live:true, tomorrow:true, wind:Math.round(mx(winds)), gust:Math.round(mx(gusts)), rain:mx(rains),
     vis:vis.length?Math.min.apply(null,vis):null, wave,
     swell:num(M.hourly.swell_wave_height[wi]), period:num(M.hourly.wave_period[wi])||0,
-    hours:idx.map((i,k)=>[i-24, W[k], Math.round(winds[k]||0)]) };
+    hours:stripHours(F,M,1) };
 }
 async function fetchLive(){
   const q=`latitude=${SPOT.lat}&longitude=${SPOT.lon}&timezone=Asia%2FBangkok&forecast_days=2`;
@@ -511,9 +693,28 @@ function select(){
   DATA = SCEN ? SCENARIOS[SCEN] : ((LIVE && LIVE.wx[DAY]) || SAMPLE);
   TIDE = (LIVE && LIVE.tide[DAY]) || synthTide(DAY);
 }
+function syncControls(){
+  document.querySelectorAll("#dayView button").forEach(b=>b.setAttribute("aria-pressed", String(+b.dataset.d===DAY)));
+  document.querySelectorAll("#scenSeg button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.scen===(SCEN||"live"))));
+  $("#condLabel").textContent=t(DAY?"condLabel1":"condLabel");
+  $("#hoursLabel").textContent=t(DAY?"hoursLabel1":"hoursLabel");
+  $("#tideLabel").textContent=t(DAY?"tideLabel1":"tideLabel");
+  $("#crewLabel").textContent=t(DAY?"crewLabel1":"crewLabel");
+  $("#crewSub").textContent=t(DAY?"crewSub1":"crewSub");
+}
+// loading: grey placeholders in the shape of the content (never a bare "…")
 function showLoading(key){
-  const vd=$("#verdict"); vd.className="verdict warn";
-  vd.innerHTML=`<div class="big">…</div><div class="why">${t(key)}</div>`;
+  syncControls();
+  const vd=$("#verdict"); vd.className="card verdict"; vd.setAttribute("aria-busy","true");
+  vd.innerHTML=`<p class="v-kick">${t(key)}</p><div class="sk sk-h"></div><div class="sk"></div><div class="sk sk-short"></div>`;
+  $("#tiles").innerHTML=[0,1,2,3].map(()=>`<div class="card tile"><div class="sk sk-short"></div><div class="sk sk-num"></div><div class="sk"></div></div>`).join("");
+  $("#tideSum").innerHTML=`<div class="sk sk-short" style="width:60%"></div>`;
+  $("#stops").innerHTML=[0,1,2,3].map(()=>`<div class="stop"><div class="sk sk-short"></div><div class="sk sk-row"></div></div>`).join("");
+  $("#strip").innerHTML=""; $("#srcChip").innerHTML="";
+  $("#crewMsg").innerHTML=`<div class="sk"></div><div class="sk" style="margin-top:8px"></div><div class="sk sk-short" style="margin-top:8px"></div>`;
+  $("#briefMsg").innerHTML=`<div class="sk"></div><div class="sk sk-short" style="margin-top:8px"></div>`;
+  $("#copyCrew").disabled=true; $("#copyBrief").disabled=true;
+  $("#offNote").hidden=true;
 }
 async function load(key){
   showLoading(key||"loading");
@@ -522,44 +723,79 @@ async function load(key){
 }
 function safeRender(){
   select();
-  try{ render(); }catch(e){ LIVE=null; select(); render(); } // never leave the page stuck on "…"
+  try{ render(); }catch(e){ LIVE=null; select(); render(); } // never leave the page stuck on the placeholders
+}
+
+function tile(icon,label,val,unit,sub,worst,extra){
+  return `<div class="card tile"><div class="tile-k">${ic(icon,"ic-s")}<span>${label}</span></div>
+    <div class="tile-v"><span class="num">${val}</span><span class="unit">${unit}</span></div>
+    <div class="tile-sub">${sub}</div><div class="tile-worst">${worst}</div>${extra||""}</div>`;
+}
+function limBadge(v,T,unit){
+  if(v==null) return "";
+  if(v>=T.bad) return badge("crit", t("lim", T.bad+" "+unit));
+  if(v>=T.warn) return badge("warn", t("lim", T.warn+" "+unit));
+  return "";
 }
 
 function render(){
-  const d=DATA, v=verdict(d.wave, d.wind), m=t("u.m"), kn=t("u.kn");
-  $("#dataBadge").outerHTML = d.live
-    ? `<span class="badge live" id="dataBadge">${t("badgeLive")}</span>`
-    : `<span class="badge demo" id="dataBadge">${d.scen?t("badgeScen",t(SCEN_KEY[d.scen])):t("badgeSample")}</span>`;
-  $("#spot").textContent = t("spot");
-  document.querySelectorAll("#dayView button").forEach(b=>b.classList.toggle("on", +b.dataset.d===DAY));
-  $("#condLabel").innerHTML=t(DAY?"condLabel1":"condLabel");
-  $("#hoursLabel").innerHTML=t(DAY?"hoursLabel1":"hoursLabel");
-  $("#tideLabel").innerHTML=t(DAY?"tideLabel1":"tideLabel");
-  $("#crewLabel").innerHTML=t(DAY?"crewLabel1":"crewLabel");
+  const d=DATA, v=verdict(d.wave, d.wind), st=ST[v.cls], m=t("u.m"), kn=t("u.kn"), T=CONFIG.THRESH;
+  syncControls();
+  // where the numbers come from: live / demo day / sample (with a human banner + Try again)
+  $("#srcChip").innerHTML = d.scen ? badge("info", t("src.scen", t(SCEN_KEY[d.scen])))
+    : d.live ? `<span class="chip-src">${ic("wifi")}<span>${t("src.live")} · Open-Meteo</span></span>`
+    : badge("warn", t("src.sample"));
+  $("#offNote").hidden = !!(d.live || d.scen);
   const rain=d.rain>0.2;
-  const vd=$("#verdict"); vd.className="verdict "+v.cls;
-  vd.innerHTML = `<div class="big">${t(DAY?"monkey1":"monkey0")} ${v.emoji} ${v.word}</div>
-    <div class="why">${DAY?t("why1"):""}${t("why", d.wave.toFixed(1), Math.round(d.period), d.wind, d.gust, rain)}</div>
-    <div class="route">${t("route")} ${v.route}</div>`;
-  $("#metrics").innerHTML = `
-    <div class="metric"><div class="k">${t("m.wind")}</div><div class="v">${d.wind} <span class="s">${kn}</span></div><div class="s">${t("m.gusts",d.gust)}</div></div>
-    <div class="metric"><div class="k">${t("m.wave")}</div><div class="v">${d.wave.toFixed(1)} <span class="s">${m}</span></div><div class="s">${t("m.swell",(+d.swell||0).toFixed(1),Math.round(d.period))}</div></div>
-    <div class="metric"><div class="k">${t("m.rain")}</div><div class="v">${(+d.rain||0).toFixed(1)} <span class="s">${t("u.mm")}</span></div><div class="s">${rain?t("m.raining"):t("m.dry")}</div></div>
-    <div class="metric"><div class="k">${t("m.vis")}</div><div class="v">${d.vis==null?"–":Math.round(d.vis/1000)} <span class="s">${t("u.km")}</span></div><div class="s">${d.vis==null?t("m.na"):(d.vis<6000?t("m.visRed"):t("m.visNorm"))}</div></div>
-    <div class="metric tide"><div class="k">${t("m.low")}</div><div class="v" id="tideTileV" style="font-size:18px">…</div><div class="s" id="tideTileS">…</div></div>`;
+  const iso = DAY ? ((LIVE&&LIVE.days&&LIVE.days[1])||bkkDay(1)) : ((LIVE&&LIVE.days&&LIVE.days[0])||bkkDay(0));
+
+  // verdict — the hero
+  const vd=$("#verdict"); vd.className="card verdict st-"+st; vd.removeAttribute("aria-busy");
+  const lim = v.cls==="bad" ? [T.wave.bad,T.wind.bad] : [T.wave.warn,T.wind.warn];
+  const why = t("why", d.wave.toFixed(1), Math.round(d.period), d.wind, d.gust, rain);
+  vd.innerHTML = `<p class="v-kick">${t(DAY?"dayTomorrow":"dayToday")}, ${fmtDay(iso)} · ${t("spot")}</p>
+    <div class="v-head"><span class="v-ic">${ic(ST_IC[st])}</span><h1 class="v-word">${v.word}</h1></div>
+    <p class="v-why">${DAY?t("why1")+why.charAt(0).toLowerCase()+why.slice(1):why} ${t("whyLim."+v.cls, lim[0], lim[1])}</p>
+    <div class="v-route">${ic("navigation")}<div><b>${t("routeLabel")}</b>${v.route}</div></div>`;
+
+  // key numbers: now (today) or the worst trip hour (tomorrow), plus the worst 08–16 line
+  const w=tripWorst(d), km=x=>x==null?"–":String(Math.round(x/1000));
+  const wl = DAY
+    ? { wave:t("w.at",w.waveH==null?"–":hh(w.waveH)), wind:t("w.at",w.windH==null?"–":hh(w.windH)), rain:t("w.worst"), vis:t("w.worst") }
+    : { wave: w.wave==null?"":t("w.max",(+w.wave).toFixed(1)+" "+m, hh(w.waveH)),
+        wind: w.wind==null?"":t("w.max",w.wind+" "+kn, hh(w.windH)),
+        rain: t("w.maxN",(+w.rain||0).toFixed(1)+" "+t("u.mm")),
+        vis:  w.vis==null?"":t("w.min",km(w.vis)+" "+t("u.km")) };
+  $("#tiles").innerHTML =
+      tile("waves", t("m.wave"), d.wave.toFixed(1), m, t("m.swell",(+d.swell||0).toFixed(1),Math.round(d.period)), wl.wave, limBadge(d.wave,T.wave,m))
+    + tile("wind", t("m.wind"), d.wind, kn, t("m.gusts",d.gust), wl.wind, limBadge(d.wind,T.wind,kn))
+    + tile("cloud-rain", t("m.rain"), (+d.rain||0).toFixed(1), t("u.mm"), rain?t("m.raining"):t("m.dry"), wl.rain)
+    + tile("eye", t("m.vis"), km(d.vis), t("u.km"), d.vis==null?t("m.na"):(d.vis<6000?t("m.visRed"):t("m.visNorm")), wl.vis);
+
   renderTide();
-  $("#timeline").innerHTML = d.hours.map(h=>`<div class="h"><div class="t">${String(h[0]).padStart(2,'0')}:00</div><div class="w">${h[1]==null?"–":(+h[1]).toFixed(1)+m}</div><div class="g">${h[2]} ${kn}</div><div class="dot" style="background:${dotColor(h[1]==null?0:h[1],h[2])}"></div></div>`).join("");
+
+  // hourly strip 08–17: time, wave, wind, status dot + word
+  const nowH = (d.live && DAY===0) ? bkkHour() : -1;
+  $("#strip").innerHTML = (d.hours||[]).map(h=>{
+    const c=ST[verdictCls(h[1]==null?0:h[1],h[2]||0)], cl=["hr","st-"+c];
+    if(h[0]===nowH) cl.push("now"); else if(nowH>=0 && h[0]<nowH) cl.push("past");
+    return `<div class="${cl.join(" ")}"><div class="hr-t">${hh(h[0])}</div>${h[0]===nowH?`<div class="hr-now">${t("hNow")}</div>`:""}
+      <div class="hr-w">${h[1]==null?"–":(+h[1]).toFixed(1)}<small> ${m}</small></div><div class="hr-k">${h[2]==null?"–":h[2]} ${kn}</div>
+      <div class="hr-s">${t("hs."+c)}</div></div>`;
+  }).join("");
+
   // crew message (UI language)
   const gm=gateStatus("a",TIDE_GATES[0]), gg=gateStatus("a",TIDE_GATES[2]); // afternoon trip: Monkey Island landing + mangroves
-  const iso = DAY ? ((LIVE&&LIVE.days&&LIVE.days[1])||bkkDay(1)) : ((LIVE&&LIVE.days&&LIVE.days[0])||bkkDay(0));
   $("#crewMsg").textContent = t("crew", {emoji:v.cls==='bad'?'🌧️':v.cls==='warn'?'🌤️':'☀️', date:fmtDay(iso),
-    wind:d.wind, gust:d.gust, wave:d.wave.toFixed(1), rain, worst:!!DAY, vEmoji:v.emoji, word:v.word, route:v.route,
-    gm:gm.word, gmLv:gm.lv.toFixed(1), gg:gg.word, sa:CONFIG.SESSIONS.a});
+    wind:d.wind, gust:d.gust, wave:d.wave.toFixed(1), rain, worst:!!DAY, vEmoji:v.emoji, word:t("cw."+v.cls), route:v.route,
+    gm:gm.word, gmLv:sgn(gm.lv), gg:gg.word, sa:CONFIG.SESSIONS.a});
   renderBrief();
-  const T=CONFIG.THRESH;
-  $("#src").innerHTML = (d.scen?t("srcScen"):d.live?t("srcLive"):t("srcSample"))
-    + (TIDE.live?t("srcTideLive"):t("srcTideSynth"))
-    + "<br><b>"+t("srcThresh",T.wave.warn,T.wave.bad,T.wind.warn,T.wind.bad)+"</b>";
+  $("#copyCrew").disabled=false; $("#copyBrief").disabled=false;
+
+  // footer: source, tide, preliminary thresholds, attribution, Thai draft marker
+  $("#src").innerHTML = `<p>${d.scen?t("srcScen"):d.live?t("srcLive"):t("srcSample")}${TIDE.live?t("srcTideLive"):t("srcTideSynth")}</p>
+    <p><b>${t("srcThresh",T.wave.warn,T.wave.bad,T.wind.warn,T.wind.bad)}</b></p>
+    <p>${t("attrib")}</p>${t("thDraft")?`<p>${t("thDraft")}</p>`:""}<p>${t("powered")}</p>`;
 }
 
 function gateStatus(w,g){ // trip ("m"/"a") × gate → {t,lv,cls,word}
@@ -567,40 +803,47 @@ function gateStatus(w,g){ // trip ("m"/"a") × gate → {t,lv,cls,word}
   const cls=lv>=g.thr+0.2?"ok":lv>=g.thr?"warn":"bad";
   return {t:tm,lv,cls,word:t("gw."+g.kind+"."+cls)};
 }
-const TG_COLOR={ok:"var(--ok)",warn:"#a86a00",bad:"var(--bad)"};
 function renderTide(){
   const s=TIDE.series, m=t("u.m");
   let lo=s[5],hi=s[5];
   for(let h=5;h<=21;h++){const p=s[h];if(p.lv<lo.lv)lo=p;if(p.lv>hi.lv)hi=p;}
-  const hh=n=>String(n).padStart(2,"0")+":00";
-  $("#tideHead").innerHTML=`${t("tideHead",hh(lo.h),lo.lv.toFixed(1),hh(hi.h),hi.lv.toFixed(1))} <span class="badge ${TIDE.live?"live":"demo"}" style="margin-left:6px">${TIDE.live?t("tideLive"):t("tideSynth")}</span>`;
-  const head=`<tr style="color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.4px"><td style="padding:4px"></td><td style="padding:4px">${t("tripM",CONFIG.SESSIONS.m)}</td><td style="padding:4px">${t("tripA",CONFIG.SESSIONS.a)}</td></tr>`;
-  const rows=TIDE_GATES.map(g=>{
-    const cells=["m","a"].map(w=>{const r=gateStatus(w,g);
-      return `<td style="padding:7px 4px;border-top:1px solid var(--line)"><span style="color:var(--muted);font-size:11px">${fmtM(r.t)}</span> · ${r.lv.toFixed(1)} ${m}<br><b style="color:${TG_COLOR[r.cls]}">${r.word}</b></td>`;}).join("");
-    return `<tr><td style="padding:7px 4px;border-top:1px solid var(--line)"><b style="font-size:12.5px">${t("gate."+g.id)}</b><div style="color:var(--muted);font-size:10.5px">${t("risk."+g.id)} · ${t("threshold")} ${g.thr>0?"+":""}${g.thr} ${m}</div></td>${cells}</tr>`;
+  $("#tideSum").innerHTML=`<span>${t("tideHead",hh(lo.h),sgn(lo.lv),hh(hi.h),sgn(hi.lv))}</span>`
+    + (TIDE.live ? `<span class="chip-src">${ic("wifi")}<span>${t("tideLive")}</span></span>` : badge("warn", t("tideSynth")));
+  $("#stops").innerHTML=TIDE_GATES.map(g=>{
+    const visits=["m","a"].map(w=>{ const r=gateStatus(w,g);
+      return `<div class="visit"><div class="visit-t"><b>${fmtM(r.t)}</b><span>${t(w==="m"?"tripM":"tripA",CONFIG.SESSIONS[w])}</span></div>
+        <div class="visit-s">${badge(ST[r.cls],r.word)}<span class="lv">${t("water",sgn(r.lv))}</span></div></div>`; }).join("");
+    return `<div class="stop"><div class="stop-n"><h3>${ic("map-pin","ic-s")}<span>${t("gate."+g.id)}</span></h3>
+      <p>${t("risk."+g.id)}</p><p class="lim">${t("threshold")} ${sgn(g.thr)} ${m}</p></div><div class="visits">${visits}</div></div>`;
   }).join("");
-  $("#tideGates").innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12.5px">${head}${rows}</table>`;
-  const vt=$("#tideTileV"); if(vt){vt.textContent=`${hh(lo.h)} · ${lo.lv.toFixed(1)} ${m}`; $("#tideTileS").textContent=t("m.lowSub",hh(hi.h),hi.lv.toFixed(1));}
 }
 function renderBrief(){ // the client briefing has its own language (EN/TH/RU), independent of the UI
   const rough = verdictCls(DATA.wave,DATA.wind)!=="ok";
-  $("#briefMsg").textContent = tl(briefLang, rough ? "briefRough" : "briefGood").replace("{M}", CONFIG.SESSIONS.m);
+  const el=$("#briefMsg"); el.lang=briefLang;
+  el.textContent = tl(briefLang, rough ? "briefRough" : "briefGood").replace("{M}", CONFIG.SESSIONS.m);
 }
 function copy(txt, btn){
-  const show=ok=>{const o=btn.textContent;btn.textContent=ok?t("copied"):t("copyFail");setTimeout(()=>btn.textContent=o,1600);};
+  const note=document.getElementById(btn.dataset.note);
+  const show=ok=>{
+    note.className="note "+(ok?"note-ok":"note-warn");
+    note.innerHTML=`${ic(ok?"check":"triangle-alert")}<div>${ok?t(btn.dataset.ok):t("copyFail")}</div>`;
+    note.hidden=false; clearTimeout(note._t); note._t=setTimeout(()=>{note.hidden=true;}, 6000);
+  };
   const fallback=()=>{try{const ta=document.createElement("textarea");ta.value=txt;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();const ok=document.execCommand("copy");ta.remove();show(!!ok);}catch(e){show(false);}};
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(()=>show(true),fallback);}
   else fallback();
 }
-document.querySelectorAll("#briefLang button").forEach(b=>b.onclick=()=>{briefLang=b.dataset.l;document.querySelectorAll("#briefLang button").forEach(x=>x.classList.toggle("on",x===b));if(DATA)renderBrief();});
-document.querySelectorAll("#dayView button").forEach(b=>b.onclick=()=>{DAY=+b.dataset.d;if(DATA)safeRender();});
+document.querySelectorAll("#briefLang button").forEach(b=>b.onclick=()=>{briefLang=b.dataset.l;
+  document.querySelectorAll("#briefLang button").forEach(x=>x.setAttribute("aria-pressed", String(x===b)));if(DATA)renderBrief();});
+document.querySelectorAll("#dayView button").forEach(b=>b.onclick=()=>{DAY=+b.dataset.d;setParam("day",DAY?"tomorrow":null);
+  if(DATA)safeRender(); else syncControls();});
 // scenarios replace wave/wind only; the (live) tide table stays as loaded
-document.querySelectorAll(".scen").forEach(b=>b.onclick=()=>{const k=b.dataset.scen;
-  if(k==="live"){SCEN=null;DATA=null;load("loadingLive");}
-  else{SCEN=k;if(LIVE||DATA)safeRender();}});
-$("#copyCrew").onclick=e=>copy($("#crewMsg").textContent, e.target);
-$("#copyBrief").onclick=e=>copy($("#briefMsg").textContent, e.target);
+document.querySelectorAll("#scenSeg button").forEach(b=>b.onclick=()=>{const k=b.dataset.scen;
+  if(k==="live"){SCEN=null;DATA=null;setParam("wx",null);load("loadingLive");}
+  else{SCEN=k;setParam("wx",k);if(LIVE||DATA)safeRender(); else syncControls();}});
+$("#retry").onclick=()=>{SCEN=null;DATA=null;load("loadingLive");};
+$("#copyCrew").onclick=e=>copy($("#crewMsg").textContent, e.currentTarget);
+$("#copyBrief").onclick=e=>copy($("#briefMsg").textContent, e.currentTarget);
 applyLang(uiLang);
 load("loading"); // always fetch: even in a scenario (?wx=…) the real tide table is used when available
 })();
