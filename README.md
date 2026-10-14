@@ -6,13 +6,13 @@ step, no backend, no tracking, no third-party scripts.
 
 | Page | What it shows |
 |---|---|
-| [`index.html`](index.html) | **Photo delivery** — the guide uploads (trip + color team + jet ski number) → automatic check → the client finds their photos by jet ski number |
+| [`index.html`](index.html) | **Photo delivery** — the guide picks day, trip and team colour and sends the photos → the tourist opens the free full-quality gallery, finds their jet ski by number and saves the photos (`?view=about\|guide\|tourist`) |
 | [`weather.html`](weather.html) | **Crew weather board** — live forecast and marine data for the open crossing to Monkey Island, a go / caution / reroute verdict, tide windows per stop, a crew summary and a client briefing; *Today* and *Tomorrow* (for the evening-before brief) |
 | [`dashboard.html`](dashboard.html) | **Operations dashboard** — a simulated day on a real-coordinate route map: teams on the water, event feed, tech board, photo completeness, shifts and the end-of-day report |
-| [`bot.html`](bot.html) | **LINE ops-bot showcase** — group message → event → alert to the lead guide → daily digest |
+| [`bot.html`](bot.html) | **LINE ops-bot showcase** — group message → event → alert to the lead guide → daily digest; the data is the real output of the bot's code (`?play=all`) |
 
-**Languages:** English (default), Thai and Russian — use the switcher on any page; the choice is
-remembered in the browser. The Thai text is a draft that is still being reviewed by a native speaker.
+**Languages:** English (default), Thai and Russian — use the switcher on any page (or `?lang=`); the choice is
+remembered in the browser. **Theme:** follows your device; the light/dark toggle is in the header. The Thai text is a draft that is still being reviewed by a native speaker.
 
 **Demo scenarios:** `weather.html?wx=ok|warn|bad` and `dashboard.html?wx=ok|warn|bad` show the calm /
 borderline / storm states on any day. Scenarios replace wave and wind only — tide times stay live.

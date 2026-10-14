@@ -3,342 +3,798 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0b141b">
-<title>Phuket Jetski Club — LINE Ops-Bot (showcase)</title>
+<meta name="theme-color" content="#0F2433" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#071219" media="(prefers-color-scheme: dark)">
+<title>Phuket Jetski Club — LINE ops bot (showcase)</title>
+<link rel="stylesheet" href="assets/jo/jetops.css">
+<script src="assets/jo/theme.js"></script>
 <style>
-  :root{--bg:#0b141b;--panel:#121e27;--panel2:#0f1922;--line:#1f3242;--ink:#e8f3fa;--muted:#7d95a6;
-    --accent:#22b8f0;--ok:#3ddc78;--warn:#ffb43d;--bad:#ff5d63;--lineGreen:#06c755;
-    --shadow:0 10px 30px rgba(0,0,0,.35);--r:14px}
-  *{box-sizing:border-box}html,body{margin:0}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans Thai",sans-serif;background:var(--bg);color:var(--ink)}
-  #app{max-width:760px;margin:0 auto;padding:0 14px 50px}
-  header.top{display:flex;align-items:center;gap:10px;padding:16px 2px 10px}
-  .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#06c755,#04a344);display:grid;place-items:center;font-size:18px}
-  .brand{font-weight:800}.brand small{display:block;font-weight:600;color:var(--muted);font-size:10.5px;letter-spacing:1.1px;text-transform:uppercase}
-  .lang{margin-left:auto;display:flex;gap:4px}
-  .lang button{background:var(--panel);border:1px solid var(--line);color:var(--muted);font:inherit;font-size:11px;font-weight:800;padding:5px 10px;border-radius:999px;cursor:pointer}
-  .lang button.on{color:var(--ink);border-color:var(--accent)}
-  .frame{background:#0e2231;border:1px solid #1d425c;color:#9fd2ec;font-size:13px;border-radius:12px;padding:12px 14px;margin:8px 0 18px;line-height:1.6}
-  .pipe{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 20px;font-size:12.5px;font-weight:700}
-  .pipe .st{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 13px}
-  .pipe .ar{color:var(--muted)}
-  h2{font-size:16px;margin:26px 0 12px;letter-spacing:.3px}
-  h2 .n{color:var(--muted);font-weight:600;font-size:12.5px}
-  .pair{display:grid;grid-template-columns:minmax(0,1.1fr) 26px minmax(0,1fr);gap:8px;align-items:center;margin-bottom:10px}
-  @media(max-width:640px){.pair{grid-template-columns:1fr;gap:4px}.pair .ar{display:none}}
-  .bubble{background:#15242f;border:1px solid var(--line);border-radius:14px 14px 14px 4px;padding:10px 12px;font-size:13px;line-height:1.5}
-  .bubble .meta{display:flex;gap:8px;font-size:10.5px;color:var(--muted);margin-bottom:4px;font-weight:700}
-  .bubble .who{color:var(--lineGreen)}
-  .bubble .trn{margin-top:5px;font-size:10.5px;color:var(--muted);font-style:italic}
-  .ar{color:var(--muted);text-align:center;font-size:15px}
-  .event{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:10px;padding:9px 11px;font-size:12px}
-  .event.breakdown{border-left-color:var(--warn)} .event.incident{border-left-color:var(--bad)}
-  .event.shift{border-left-color:#5bd8c5} .event.photo_status{border-left-color:#8e5bd8}
-  .event.client_issue{border-left-color:#ff8fb3} .event.office_notice{border-left-color:#7d95a6}
-  .event b{font-size:12.5px}
-  .chip{display:inline-block;font-size:10px;font-weight:800;padding:1.5px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);margin:3px 4px 0 0}
-  .chip.high{color:var(--bad);border-color:rgba(255,93,99,.5)} .chip.medium{color:var(--warn);border-color:rgba(255,180,61,.4)}
-  .phone{max-width:420px;background:#000;border-radius:22px;padding:10px;border:1px solid #26343f;box-shadow:var(--shadow)}
-  .notif{background:rgba(28,38,46,.96);border-radius:14px;padding:11px 13px;color:#fff}
-  .notif .head{display:flex;align-items:center;gap:7px;font-size:10.5px;color:#b9c8d3;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
-  .notif .head .ic{width:16px;height:16px;border-radius:4px;background:var(--lineGreen);display:grid;place-items:center;font-size:9px}
-  .notif .t{font-size:13px;font-weight:700;margin-bottom:2px}
-  .notif .b{font-size:12.5px;color:#d7e3ec;line-height:1.45}
-  pre.eod{background:#0a1219;border:1px solid var(--line);color:#dcebf5;border-radius:12px;padding:14px;font-size:11.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,Menlo,monospace;margin:0;overflow-x:auto}
-  .note{font-size:12px;color:var(--muted);line-height:1.6;margin-top:8px}
-  a.back{color:var(--accent);text-decoration:none;font-size:12.5px;font-weight:700}
-  .badge{display:inline-block;font-size:10.5px;font-weight:800;padding:3px 10px;border-radius:999px;background:rgba(61,220,120,.1);color:var(--ok);border:1px solid rgba(61,220,120,.35);margin-left:8px}
+  /* LINE bot showcase — page layout only. Tokens and components (.appbar .seg .btn .card .badge .note .dot .sk
+     .footer-note) come from assets/jo/jetops.css. The only raw colours are the two team-wristband dots (data). */
+  [hidden] { display: none !important; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  /* header: one row on a computer, logo row + controls row on a phone (same as the weather board) */
+  .appbar-in { flex-wrap: wrap; gap: var(--s2) var(--s3); padding-block: var(--s2); }
+  .op-text { min-width: 0; }
+  .ctrls { display: flex; align-items: center; gap: var(--s2); }
+  @media (max-width: 559px) { .appbar .spacer { display: none; } .ctrls { flex-basis: 100%; justify-content: space-between; } }
+
+  .wrap { max-width: var(--w-page); margin: 0 auto; padding: var(--s5) var(--s4) var(--s6); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s7); }
+  @media (min-width: 1024px) { .wrap { padding: var(--s6) var(--s5); gap: var(--s8); } }
+  .blk { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s4); align-content: start; min-width: 0; scroll-margin-top: var(--s4); }
+  .blk-h { display: grid; gap: var(--s2); max-width: var(--w-read); }
+  .blk-h h2 { display: flex; align-items: center; gap: var(--s3); }
+  .blk-h .n { width: 36px; height: 36px; flex: none; border-radius: 50%; display: grid; place-items: center; background: var(--bg-2);
+    font-size: var(--fs-body); font-weight: 800; }
+  .blk-h p { color: var(--muted); }
+
+  /* ---- hero: one sentence + three steps + one main action ---- */
+  .hero { display: grid; gap: var(--s4); }
+  @media (min-width: 900px) { .hero { gap: var(--s5); } }
+  .hero-t { display: grid; gap: var(--s3); }
+  .kick { font-size: var(--fs-caption); font-weight: 700; color: var(--muted); }
+  .hero h1 { font-size: clamp(30px, 6vw, 46px); line-height: 1.12; letter-spacing: -0.02em; max-width: 18ch; text-wrap: balance; }
+  .lead { font-size: 19px; line-height: 1.55; max-width: 58ch; }
+  /* phone: a compact vertical timeline (the main button stays near the first screen); computer: three cards in a row */
+  .flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); }
+  .step { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 0 var(--s4); align-items: start; }
+  .step-ic { grid-row: span 2; width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--surface); border: 1px solid var(--line); color: var(--fg); }
+  .step h3 { font-size: var(--fs-h3); line-height: 1.3; }
+  .step p { font-size: var(--fs-body-s); color: var(--muted); }
+  .flow .arr { display: grid; place-items: center; width: 48px; height: 28px; color: var(--muted); }
+  .flow .arr .ic { width: 20px; height: 20px; transform: rotate(90deg); }
+  @media (min-width: 900px) {
+    .flow { grid-template-columns: minmax(0, 1fr) 32px minmax(0, 1fr) 32px minmax(0, 1fr); align-items: stretch; }
+    .flow .arr { width: auto; height: auto; }
+    .flow .arr .ic { width: 24px; height: 24px; transform: none; }
+    .step { grid-template-columns: minmax(0, 1fr); align-content: start; gap: var(--s1); padding: var(--s5);
+      background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-1); }
+    .step-ic { grid-row: auto; width: 52px; height: 52px; margin-bottom: var(--s2); background: var(--bg-2); border: 0; }
+  }
+  .cta { display: flex; flex-wrap: wrap; gap: var(--s3); }
+  @media (max-width: 559px) { .cta .btn { width: 100%; } }
+  .trust { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--s2) var(--s5); }
+  .trust li { display: inline-flex; align-items: center; gap: var(--s2); font-size: var(--fs-body-s); font-weight: 600; color: var(--muted); }
+  .trust .ic { color: var(--fg); }
+
+  /* ---- 1. chat → events. Phone: one chat panel, the event card under each bubble.
+     Computer: the chat on the left, each event card to the right of its message. ---- */
+  .feed-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s2) var(--s3); min-height: 48px; }
+  .feed-st { font-size: var(--fs-body-s); font-weight: 600; color: var(--muted); }
+  /* while the messages play, progress + "Show all now" stay on screen */
+  body[data-state="playing"] .feed-bar { position: sticky; top: 0; z-index: 3; margin-inline: calc(-1 * var(--s4)); padding: var(--s1) var(--s4);
+    background: color-mix(in srgb, var(--bg) 94%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  .feed { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .chat-top { display: flex; align-items: center; gap: var(--s3); padding: var(--s3) var(--s4); background: var(--bg-2);
+    border-radius: var(--r-xl) var(--r-xl) 0 0; border-bottom: 1px solid var(--line); }
+  .g-ic { width: 44px; height: 44px; flex: none; border-radius: 50%; display: grid; place-items: center; background: var(--surface); border: 1px solid var(--line); }
+  .chat-top b { display: block; line-height: 1.3; }
+  .chat-top span { font-size: var(--fs-caption); font-weight: 600; color: var(--muted); }
+  .ev-colh { display: none; }
+  .chat-end { height: var(--s4); background: var(--bg-2); border-radius: 0 0 var(--r-xl) var(--r-xl); }
+  .row { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .say { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: var(--s2); align-items: start; padding: var(--s3) var(--s4) var(--s2); background: var(--bg-2); }
+  .av { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--surface); color: var(--muted); border: 1px solid var(--line); }
+  .av .ic { width: 20px; height: 20px; }
+  .who { display: flex; flex-wrap: wrap; gap: 0 var(--s2); font-size: var(--fs-caption); font-weight: 700; color: var(--muted); }
+  .bubble { margin-top: 4px; width: fit-content; max-width: 100%; background: var(--surface); border: 1px solid var(--line);
+    border-radius: 4px var(--r-lg) var(--r-lg) var(--r-lg); padding: var(--s2) var(--s3); box-shadow: var(--shadow-1); }
+  .msgtext { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .trn { margin-top: var(--s2); padding-top: var(--s2); border-top: 1px dashed var(--line); font-size: var(--fs-body-s); color: var(--muted); }
+  .trn b { font-size: var(--fs-caption); font-weight: 700; margin-right: 6px; }
+  .evc { display: grid; padding: var(--s1) var(--s4) var(--s3) calc(var(--s4) + 36px + var(--s2)); background: var(--bg-2); }
+  .evc .arr { display: none; }
+  .ev { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--border); border-radius: var(--r-md);
+    padding: var(--s3) var(--s4); display: grid; gap: var(--s2); min-width: 0; }
+  .ev.sev-high { border-left-color: var(--crit); }
+  .ev.sev-medium { border-left-color: var(--warn); }
+  .ev-top { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3); }
+  .tb { display: inline-flex; align-items: center; gap: var(--s2); font-weight: 800; }
+  .tb .ic { width: 22px; height: 22px; }
+  .badge-plain { background: var(--bg-2); color: var(--muted); }
+  .tags { display: flex; flex-wrap: wrap; gap: var(--s2); }
+  .tag { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: var(--r-pill); background: var(--surface-2);
+    border: 1px solid var(--line); font-size: var(--fs-caption); font-weight: 700; line-height: 1.5; }
+  .tag .k { color: var(--muted); font-weight: 600; }
+  .tag .ic { width: 16px; height: 16px; color: var(--muted); }
+  .tag .dot { width: 12px; height: 12px; }
+  .dot-blue { background: #0091d5; } .dot-yellow { background: #f5c518; }   /* team wristband colours = data */
+  .out { display: flex; align-items: flex-start; gap: var(--s2); font-size: var(--fs-body-s); font-weight: 600; color: var(--muted); }
+  .out .ic { width: 20px; height: 20px; margin-top: 2px; }
+  .out.al { color: var(--crit); }
+  .ev-sk { display: none; gap: var(--s2); padding: var(--s3) var(--s4); border-radius: var(--r-md); background: var(--surface); border: 1px dashed var(--border); }
+  .ev-sk p { font-size: var(--fs-body-s); font-weight: 600; color: var(--muted); }
+  .ev-sk .sk { height: 18px; } .ev-sk .sk + .sk { width: 60%; }
+  @media (max-width: 559px) {
+    .feed { margin-inline: calc(-1 * var(--s4)); }
+    .chat-top, .chat-end { border-radius: 0; }
+    .say { grid-template-columns: 32px minmax(0, 1fr); padding-inline: var(--s3); }
+    .av { width: 32px; height: 32px; }
+    .evc { padding: var(--s1) var(--s3) var(--s3) calc(var(--s3) + 32px + var(--s2)); }
+  }
+  .row.pending .ev { display: none; }
+  .row.pending .ev-sk { display: grid; }
+  .row.enter .say, .row.enter .ev { animation: jo-rise .35s ease-out both; }
+  @keyframes jo-rise { from { opacity: 0; transform: translateY(8px); } }
+  @media (prefers-reduced-motion: reduce) { .row.enter .say, .row.enter .ev { animation: none; } }
+  @media (min-width: 900px) {
+    .feed { grid-template-columns: minmax(0, 440px) minmax(0, 1fr); }
+    .ev-colh { display: flex; align-items: flex-end; padding: 0 0 var(--s3) calc(var(--s5) + 32px); font-size: var(--fs-body-s); font-weight: 700; color: var(--muted); }
+    .chat-end { grid-column: 1; }
+    .row { grid-column: 1 / -1; grid-template-columns: minmax(0, 440px) minmax(0, 1fr); }
+    .say { padding-bottom: var(--s3); }
+    .evc { background: transparent; padding: var(--s2) 0 var(--s2) var(--s3); grid-template-columns: 32px minmax(0, 1fr); gap: var(--s2); align-items: center; }
+    .evc .arr { display: grid; place-items: center; color: var(--muted); }
+    .ev, .ev-sk { max-width: 620px; }
+  }
+
+  /* ---- 2. the alert on the lead guide's phone ---- */
+  .al-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s5); align-items: start; }
+  @media (min-width: 900px) { .al-grid { grid-template-columns: 380px minmax(0, 1fr); gap: var(--s6); } }
+  .phone { width: 100%; max-width: 360px; justify-self: center; padding: 10px; border-radius: 40px; background: var(--deep-900);
+    border: 1px solid var(--line); box-shadow: var(--shadow-2); }
+  .screen { min-height: 360px; border-radius: 30px; background: var(--deep-800); color: var(--sand-50);
+    padding: var(--s6) var(--s3) var(--s6); display: grid; gap: var(--s5); align-content: start; }
+  .ph-clock { text-align: center; display: grid; gap: var(--s1); }
+  .ph-clock b { font-size: 60px; line-height: 1; font-weight: 700; letter-spacing: -0.02em; }
+  .ph-clock span { font-size: var(--fs-body-s); font-weight: 600; }
+  .notif { color: var(--fg); box-shadow: var(--shadow-2); border-radius: var(--r-lg); }
+  .nf-app { display: flex; justify-content: space-between; gap: var(--s2); font-size: var(--fs-caption); font-weight: 700; color: var(--muted); }
+  .nf-text { margin-top: 4px; font-size: var(--fs-body-s); line-height: 1.5; }
+  .al-side { display: grid; gap: var(--s4); align-content: start; }
+  .facts { margin: 0; display: grid; gap: var(--s4); }
+  .facts > div { display: grid; gap: 2px; }
+  .facts dt { display: flex; align-items: center; gap: var(--s3); font-size: var(--fs-caption); font-weight: 700; color: var(--muted); }
+  .facts dd { margin: 0 0 0 calc(24px + var(--s3)); font-weight: 600; }
+  .rules { display: grid; gap: var(--s3); }
+  .rules h3 { font-size: var(--fs-body); font-weight: 800; }
+  .rules ul { margin: 0; padding-left: 22px; display: grid; gap: var(--s1); }
+  .rules p { font-size: var(--fs-body-s); color: var(--muted); }
+
+  /* ---- 3. the daily digest: a readable card, or the exact LINE text ---- */
+  .dg-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s3); }
+  .dg { display: grid; gap: var(--s5); }
+  .dg-head { display: grid; gap: var(--s2); }
+  .dg-head h3 { display: flex; align-items: center; gap: var(--s2); }
+  .dg-date { font-size: var(--fs-body-s); font-weight: 600; color: var(--muted); }
+  .dg-total { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--s3); }
+  .dg-total span { font-weight: 700; }
+  .dg-honest { font-size: var(--fs-body-s); color: var(--muted); max-width: 72ch; }
+  .dg-secs { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s4); }
+  @media (min-width: 900px) { .dg-secs { grid-template-columns: repeat(2, minmax(0, 1fr)); } .dg-sec.crit { grid-column: 1 / -1; } }
+  .dg-sec { display: grid; gap: var(--s3); align-content: start; padding: var(--s4); border-radius: var(--r-lg); background: var(--surface-2); border: 1px solid var(--line); }
+  .dg-sec.crit { background: var(--crit-soft); border-color: color-mix(in srgb, var(--crit) 35%, transparent); }
+  .dg-sec h4 { margin: 0; display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-body); font-weight: 800; }
+  .dg-sec.crit h4 { color: var(--crit); }
+  .cnt { margin-left: auto; min-width: 36px; height: 32px; padding: 0 10px; border-radius: var(--r-pill); display: grid; place-items: center;
+    background: var(--surface); border: 1px solid var(--line); color: var(--fg); font-size: var(--fs-body-s); font-weight: 800; }
+  .dg-sec ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s3); }
+  .dg-it { display: grid; gap: var(--s1); min-width: 0; }
+  .dg-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
+  .dg-meta time { font-weight: 800; font-size: var(--fs-body-s); min-width: 48px; }
+  .dg-it p { font-size: var(--fs-body-s); }
+  .mrg { display: grid; gap: 2px; font-size: var(--fs-caption); color: var(--muted); font-weight: 600; }
+  .dg-sec.crit .dg-it p { font-weight: 600; }
+  @media (max-width: 559px) { .dg { padding: var(--s4); } .dg-sec { padding: var(--s3); } }
+  .dg-foot { display: grid; gap: var(--s2); padding-top: var(--s4); border-top: 1px solid var(--line); font-size: var(--fs-body-s); color: var(--muted); }
+  .dg-foot p { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: var(--s2); }
+  .dg-foot .ic { width: 20px; height: 20px; margin-top: 2px; }
+  .txt { display: grid; gap: var(--s3); padding: var(--s3) 0 var(--s4); background: var(--bg-2); border-radius: var(--r-xl); }
+  .txt .say { padding-bottom: 0; }
+  .txt .bubble { width: auto; max-width: 760px; }
+  .lt { font-size: var(--fs-body-s); line-height: 1.55; }
+  .txt-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3); padding: 0 var(--s4); }
+
+  /* ---- 4. how it works, honestly ---- */
+  .hw { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s3); }
+  @media (min-width: 900px) { .hw { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .hw li { display: grid; gap: var(--s2); align-content: start; padding: var(--s4) var(--s5); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); }
+  .hw h3 { font-size: var(--fs-body); font-weight: 800; }
+  .hw p { font-size: var(--fs-body-s); color: var(--muted); }
+  .more { display: flex; flex-wrap: wrap; gap: var(--s3); }
+
+  .footer-note { max-width: var(--w-read); margin: 0 auto; padding-top: 0; display: grid; gap: var(--s2); }
+  .footer-note nav { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0 var(--s2); }
+  .footer-note a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--s2); font-weight: 700; }
+  .footer-note .pw { font-weight: 700; }
 </style>
 </head>
-<body>
-<div id="app">
-  <header class="top">
-    <img class="logo" src="assets/logo.png" alt="Phuket Jetski Club" style="width:auto;height:28px;background:#fff;padding:4px 8px;border-radius:8px;box-sizing:content-box">
-    <span class="brand"><small data-i18n="brand">🤖 LINE Ops-Bot · messages → events → report · showcase</small></span>
-    <div class="lang" role="group" aria-label="Language">
-      <button type="button" data-lang="en" class="on">EN</button>
-      <button type="button" data-lang="th">ไทย</button>
-      <button type="button" data-lang="ru">RU</button>
-    </div>
-  </header>
-  <div><a class="back" href="index.html" data-i18n="nav_photos">← photos</a> · <a class="back" href="weather.html" data-i18n="nav_weather">weather</a> · <a class="back" href="dashboard.html" data-i18n="nav_dashboard">dashboard</a></div>
+<body data-state="loading">
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><!-- Lucide icons (ISC), copied from assets/jo/icons.svg; "play" is Lucide's play icon (not in the shared sprite yet) --><symbol id="i-message-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" /></symbol><symbol id="i-list-checks" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4" /><path d="m3 7 2 2 4-4" /><path d="M13 6h8" /><path d="M13 12h8" /><path d="M13 18h8" /></symbol><symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></symbol><symbol id="i-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></symbol><symbol id="i-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></symbol><symbol id="i-waves" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" /><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" /><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" /></symbol><symbol id="i-wrench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></symbol><symbol id="i-life-buoy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="m4.93 4.93 4.24 4.24" /><path d="m14.83 9.17 4.24-4.24" /><path d="m14.83 14.83 4.24 4.24" /><path d="m9.17 14.83-4.24 4.24" /><circle cx="12" cy="12" r="4" /></symbol><symbol id="i-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></symbol><symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></symbol><symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></symbol><symbol id="i-ship" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" /><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76" /><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6" /><path d="M12 10v4" /><path d="M12 2v3" /></symbol><symbol id="i-triangle-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /><path d="M12 9v4" /><path d="M12 17h.01" /></symbol><symbol id="i-circle-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></symbol><symbol id="i-circle-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="m9 12 2 2 4-4" /></symbol><symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></symbol><symbol id="i-map-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" /><circle cx="12" cy="10" r="3" /></symbol><symbol id="i-rotate-ccw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></symbol><symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></symbol><symbol id="i-smartphone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2" /><path d="M12 18h.01" /></symbol><symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z" /><path d="m21.854 2.147-10.94 10.939" /></symbol><symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></symbol><symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3" /></symbol></svg>
 
-  <div class="frame" data-i18n="frame">A silent observer bot sits in the working LINE groups (Thai guides and captains/staff) and turns the chat into operational events: anything critical is pushed to the lead guide the moment it happens, and in the evening the admin/office and the mechanics receive a ready daily digest. Below is <b>real output of the working code</b> (working code, 120+ automated tests); the messages are samples based on the team's real vocabulary.<span class="badge">official LINE API</span></div>
-
-  <div class="pipe">
-    <span class="st" data-i18n="pipe1">💬 LINE groups</span><span class="ar">→</span>
-    <span class="st" data-i18n="pipe2">🤖 TH/EN/RU classifier</span><span class="ar">→</span>
-    <span class="st" data-i18n="pipe3">⚡ alert to lead guide</span><span class="ar">→</span>
-    <span class="st" data-i18n="pipe4">📋 18:00 daily digest</span><span class="ar">→</span>
-    <span class="st" data-i18n="pipe5">🖥 dashboard</span>
-  </div>
-
-  <h2><span data-i18n="s1">1 · Group message → event</span> <span class="n" data-i18n="s1n">(live classification)</span></h2>
-
-  <div class="pair">
-    <div class="bubble"><div class="meta"><span class="who" data-i18n="who_th">guide · Thai group</span><span>08:30</span></div>วันนี้ไม่ไป monkey คลื่นใหญ่มาก 💙 ลูกค้าขับช้า</div>
-    <div class="ar">→</div>
-    <div class="event" data-i18n="ev1"><b>🌊 weather report</b><br><span class="chip">team: blue</span><span class="chip">spot: Monkey Island</span><span class="chip">info</span></div>
-  </div>
-  <div class="pair">
-    <div class="bubble"><div class="meta"><span class="who" data-i18n="who_th">guide · Thai group</span><span>09:36</span></div>K18 เสีย พวงมาลัยหนักมาก ต้องซ่อมด่วน</div>
-    <div class="ar">→</div>
-    <div class="event breakdown" data-i18n="ev2"><b>🔧 breakdown → ticket to mechanics</b><br><span class="chip">machine: K18</span><span class="chip high">HIGH · urgent</span></div>
-  </div>
-  <div class="pair">
-    <div class="bubble"><div class="meta"><span class="who" data-i18n="who_th">guide · Thai group</span><span>10:42</span></div>ลูกค้าเมาเรือ เรียก speedboat มารับที่ Monkey ด่วน</div>
-    <div class="ar">→</div>
-    <div class="event incident" data-i18n="ev3"><b>🚑 incident · evacuation</b><br><span class="chip">spot: Monkey Island</span><span class="chip medium">medium</span></div>
-  </div>
-  <div class="pair">
-    <div class="bubble"><div class="meta"><span class="who" data-i18n="who_th">guide · Thai group</span><span>11:04</span></div>ลืมถ่ายรูปที่ Monkey 🙈 ขอโทษครับ</div>
-    <div class="ar">→</div>
-    <div class="event photo_status" data-i18n="ev4"><b>📸 photos: missed photo stop</b><br><span class="chip">spot: Monkey Island</span><span class="chip">→ reminder to guide</span></div>
-  </div>
-  <div class="pair">
-    <div class="bubble"><div class="meta"><span class="who" data-i18n="who_th">guide · Thai group</span><span>11:48</span></div>พรุ่งนี้ขอลา ป่วยครับ ใครแทนได้บ้าง</div>
-    <div class="ar">→</div>
-    <div class="event shift" data-i18n="ev5"><b>👥 shifts: replacement needed tomorrow</b><br><span class="chip">sick leave</span><span class="chip">→ Standby?</span></div>
-  </div>
-  <div class="pair">
-    <div class="bubble"><div class="meta"><span class="who" data-i18n="who_office">admin/office · captains group</span><span>12:54</span></div>Morning Program Change Due to High Waves and Wind — inside program today</div>
-    <div class="ar">→</div>
-    <div class="event" data-i18n="ev6"><b>🌊 day mode: Inside Program</b><br><span class="chip">official</span><span class="chip">→ dashboard: all color teams</span></div>
-  </div>
-  <div class="pair">
-    <div class="bubble"><div class="meta"><span class="who" data-i18n="who_captain">captain · captains group</span><span>13:16</span></div>ลูกค้าขอ refund บอกฝนตกทำไมไม่ยกเลิก ร้องเรียนที่ office</div>
-    <div class="ar">→</div>
-    <div class="event client_issue" data-i18n="ev7"><b>💬 client issue: weather refund request</b><br><span class="chip medium">→ briefing script + reschedule offer</span></div>
-  </div>
-  <div class="pair">
-    <div class="bubble"><div class="meta"><span class="who" data-i18n="who_captain">captain · captains group</span><span>13:38</span></div>P11 hood broken again, flew off in the wind, hit near customer head — second time!</div>
-    <div class="ar">→</div>
-    <div class="event breakdown" data-i18n="ev8"><b>🔧 breakdown, hit near a customer</b><br><span class="chip">machine: P11</span><span class="chip high">HIGH · repeat #2</span></div>
-  </div>
-  <div class="pair">
-    <div class="bubble"><div class="meta"><span class="who" data-i18n="who_ru">guide · RU group*</span><span>14:22</span></div>Клиент упал на волне у Rang Yai, порез ноги, кровь остановили, спидбот не нужен<div class="trn" data-i18n="trn">EN: Customer fell on a wave near Rang Yai — leg cut, bleeding stopped, no speedboat needed</div></div>
-    <div class="ar">→</div>
-    <div class="event incident" data-i18n="ev9"><b>🚑 incident · injury</b><br><span class="chip">spot: Rang Yai</span><span class="chip high">HIGH · logged</span></div>
-  </div>
-
-  <h2><span data-i18n="s2">2 · Auto-alert on a problem</span> <span class="n" data-i18n="s2n">(sent to the lead guide the moment it happens)</span></h2>
-  <div class="phone">
-    <div class="notif">
-      <div class="head"><span class="ic">🤖</span> <span data-i18n="notif_head">LINE · JetOps Bot · now</span></div>
-      <div class="t" data-i18n="notif_t">⚠️ ALERT (Thai guides)</div>
-      <div class="b" data-i18n="notif_b">P11 hood broken again, flew off in the wind, hit near customer head — second time!<br>#breakdown · P11 · HIGH → swap the jet ski + priority ticket to mechanics</div>
+<header class="appbar">
+  <div class="appbar-in">
+    <img class="op-logo" src="assets/logo.png" alt="" width="63" height="36">
+    <div class="op-text"><div class="op-name">Phuket Jetski Club</div><div class="op-sub" data-i18n="opSub">LINE ops bot</div></div>
+    <div class="spacer"></div>
+    <div class="ctrls">
+      <div class="seg" id="uiLang" role="group" aria-label="Language" data-i18n-aria="langLabel"><button type="button" data-l="en" lang="en">EN</button><button type="button" data-l="th" lang="th">ไทย</button><button type="button" data-l="ru" lang="ru">RU</button></div>
+      <button type="button" class="btn btn-quiet btn-s" data-jo-theme-toggle data-label-auto="Auto" data-label-light="Light" data-label-dark="Dark" data-label-title="Theme"></button>
     </div>
   </div>
-  <p class="note" data-i18n="alert_note">Only critical events trigger an alert (blood / hospital / evacuation / urgent breakdown / repeated risk to a customer). Everything else is collected silently for the evening digest — nobody drowns in notifications.</p>
+</header>
 
-  <h2><span data-i18n="s3">3 · Daily digest (18:00 · office + mechanics)</span> <span class="n" data-i18n="s3n">— real output of the working code</span></h2>
-  <pre class="eod" data-i18n="digest">PHUKET JETSKI CLUB — DAILY OPS REPORT · <span id="eodDate">today</span>
-──────────────────────────────────────────
-20 events from work chats
+<main class="wrap">
+  <section class="hero" aria-labelledby="heroH">
+    <div class="hero-t">
+      <p class="kick" data-i18n="kick">Showcase · real output of the working code</p>
+      <h1 id="heroH" data-i18n="heroH">A quiet helper in your LINE work groups</h1>
+      <p class="lead" data-i18n="heroP"></p>
+    </div>
+    <ol class="flow">
+      <li class="step"><span class="step-ic"><svg class="ic" aria-hidden="true"><use href="#i-message-circle"/></svg></span><h3 data-i18n="st1T">Group chat</h3><p data-i18n="st1P"></p></li>
+      <li class="arr" aria-hidden="true"><svg class="ic"><use href="#i-arrow-right"/></svg></li>
+      <li class="step"><span class="step-ic"><svg class="ic" aria-hidden="true"><use href="#i-list-checks"/></svg></span><h3 data-i18n="st2T">Event</h3><p data-i18n="st2P"></p></li>
+      <li class="arr" aria-hidden="true"><svg class="ic"><use href="#i-arrow-right"/></svg></li>
+      <li class="step"><span class="step-ic"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg></span><h3 data-i18n="st3T">Alert &amp; daily digest</h3><p data-i18n="st3P"></p></li>
+    </ol>
+    <div class="cta">
+      <button type="button" class="btn btn-primary" id="playBtn"><svg class="ic" aria-hidden="true"><use href="#i-play"/></svg><span id="playLbl">Play the demo</span></button>
+      <a class="btn btn-secondary" href="#digest" id="skipBtn"><svg class="ic" aria-hidden="true"><use href="#i-chevron-down"/></svg><span data-i18n="skip">Skip to the digest</span></a>
+    </div>
+    <ul class="trust">
+      <li><svg class="ic ic-s" aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="tr1">Official LINE API</span></li>
+      <li><svg class="ic ic-s" aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="tr2">Never writes in your groups</span></li>
+      <li><svg class="ic ic-s" aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="tr3">Stored on your company's server</span></li>
+    </ul>
+  </section>
 
-⚠️ CRITICAL (3)
-  09:36 [K18] steering very heavy after contact — urgent repair (TH)
-  13:38 [P11] hood broken again, flew off in the wind, hit near customer head — second time!
-  14:22 [Rang Yai] customer fell on a wave, leg cut, bleeding stopped — no speedboat needed (RU)
+  <section class="blk" id="chat" aria-labelledby="s1H">
+    <div class="blk-h"><h2 id="s1H"><span class="n" aria-hidden="true">1</span><span data-i18n="s1H">Group message → event</span></h2><p data-i18n="s1P"></p></div>
+    <div class="feed-bar">
+      <p class="feed-st" id="feedSt" role="status" aria-live="polite"></p>
+      <button type="button" class="btn btn-quiet btn-s" id="feedBtn"></button>
+    </div>
+    <div class="feed" id="feed">
+      <div class="chat-top"><span class="g-ic"><svg class="ic" aria-hidden="true"><use href="#i-users"/></svg></span><div><b data-i18n="grpT">Work groups in LINE</b><span data-i18n="grpS">The bot is a silent member</span></div></div>
+      <div class="ev-colh" aria-hidden="true" data-i18n="colH">What the bot records</div>
+      <div id="rows" style="display:contents"></div>
+      <div class="chat-end" aria-hidden="true"></div>
+    </div>
+  </section>
 
-🌊 WEATHER / ROUTE (5)
-  08:30 [blue · Monkey Island] big waves, "no monkey" today, customers riding slow (TH)
-  08:52 [Rang Yai] heavy rain at Rang Yai, holding — fog coming down (TH)
-  09:14 [Naka] very low tide at Naka, hard to moor — customers snorkel from the jet skis (TH)
-  12:54 Morning Program Change Due to High Waves and Wind — inside program today
-  14:44 [Monkey Island] big waves after Grand Marina, "no monkey" today, all color teams inside
+  <section class="blk" id="alert" aria-labelledby="s2H">
+    <div class="blk-h"><h2 id="s2H"><span class="n" aria-hidden="true">2</span><span data-i18n="s2H">Alert to the lead guide</span></h2><p data-i18n="s2P"></p></div>
+    <div class="al-grid">
+      <div class="phone" role="img" aria-labelledby="nfText">
+        <div class="screen">
+          <div class="ph-clock" aria-hidden="true"><b>13:38</b><span id="phDate"></span></div>
+          <div class="note note-crit notif">
+            <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
+            <div><div class="nf-app"><span data-i18n="nfApp">LINE · JetOps bot</span><span data-i18n="nfNow">now</span></div>
+              <div class="nf-text msgtext" id="nfText" lang="en"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="al-side">
+        <dl class="facts">
+          <div><dt><svg class="ic" aria-hidden="true"><use href="#i-triangle-alert"/></svg><span data-i18n="aWhatK">What</span></dt><dd data-i18n="aWhat"></dd></div>
+          <div><dt><svg class="ic" aria-hidden="true"><use href="#i-map-pin"/></svg><span data-i18n="aWhereK">Where</span></dt><dd data-i18n="aWhere"></dd></div>
+          <div><dt><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg><span data-i18n="aWhoK">Who gets it</span></dt><dd data-i18n="aWho"></dd></div>
+        </dl>
+        <div class="card-2 rules">
+          <h3 data-i18n="rulesH">What raises an alert</h3>
+          <ul id="rulesList"></ul>
+          <p data-i18n="rulesN1"></p>
+          <p data-i18n="rulesN2"></p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-🚑 INCIDENTS (2)
-  10:20 [Rang Yai] customer fell, minor injury, treated on site (TH)
-  10:42 [Monkey Island] customer seasick, speedboat pickup at Monkey Island — urgent (TH)
+  <section class="blk" id="digest" aria-labelledby="s3H">
+    <div class="blk-h"><h2 id="s3H"><span class="n" aria-hidden="true">3</span><span data-i18n="s3H">Daily digest at 18:00</span></h2><p data-i18n="s3P"></p></div>
+    <div class="dg-bar">
+      <div class="seg" id="dgView" role="group" aria-label="Digest view" data-i18n-aria="viewLabel"><button type="button" data-v="card" aria-pressed="true" data-i18n="viewCard">Card</button><button type="button" data-v="text" aria-pressed="false" data-i18n="viewText">View as LINE text</button></div>
+    </div>
+    <article class="card dg" id="dgCard" aria-labelledby="dgTitle"></article>
+    <div class="txt" id="dgText" hidden>
+      <div class="txt-bar">
+        <span class="caption muted" id="txtLangL" data-i18n="txtLang">Language the bot writes in</span>
+        <div class="seg" id="txtLang" role="group" aria-labelledby="txtLangL"><button type="button" data-l="en" lang="en" aria-pressed="true">English</button><button type="button" data-l="ru" lang="ru" aria-pressed="false">Русский</button></div>
+      </div>
+      <div class="note note-info" id="txtNote" hidden style="margin: 0 var(--s4)"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><div data-i18n="txtNote"></div></div>
+      <div class="say"><span class="av" aria-hidden="true"><svg class="ic"><use href="#i-smartphone"/></svg></span>
+        <div><div class="who"><span data-i18n="txtFrom">JetOps bot · private chat with the office</span><span>18:00</span></div>
+          <div class="bubble"><div class="msgtext lt" id="ltText"></div></div></div></div>
+    </div>
+  </section>
 
-🔧 MAINTENANCE — action required (3)
-  09:58 [H100] engine died at sea, won't restart (TH)
-  12:32 [Y62] fuel leak — send to the workshop (TH)
-  14:00 [H29] won't go over 65, sensor warning
+  <section class="blk" id="honest" aria-labelledby="s4H">
+    <div class="blk-h"><h2 id="s4H"><span class="n" aria-hidden="true">4</span><span data-i18n="s4H">How it works — honestly</span></h2><p data-i18n="s4P"></p></div>
+    <ul class="hw" id="hwList"></ul>
+    <div class="more"><a class="btn btn-secondary" href="dashboard.html"><svg class="ic" aria-hidden="true"><use href="#i-arrow-right"/></svg><span data-i18n="dashLink">Open the operations dashboard</span></a></div>
+  </section>
+</main>
 
-📸 PHOTOS (3)
-  11:04 [Monkey Island] missed photo stop ("forget" 🙈) — reminder sent to the guide
-  11:26 office reminder: upload photos by 21:00
-  15:28 [yellow] upload complete — Coconut and Rang Yai, 40 shots each
+<footer class="footer-note">
+  <nav aria-label="Other demo screens" data-i18n-aria="otherScreens"><span data-i18n="otherScreens">Other demo screens:</span><a href="index.html" data-i18n="navPhoto">Photo demo</a><a href="weather.html" data-i18n="navWeather">Weather today</a><a href="dashboard.html" data-i18n="navOps">Office dashboard</a></nav>
+  <p data-i18n="ruFoot"></p>
+  <p id="thDraft" data-i18n="thDraft" hidden></p>
+  <p class="pw"><span data-i18n="powered">Powered by JetOps</span> · <span data-i18n="tests">120+ automated tests</span></p>
+</footer>
 
-👥 SHIFTS (3)
-  11:48 replacement needed tomorrow (sick) → request sent to Standby
-  12:10 Standby: 1 person confirmed at the pier
-  15:06 evening: cover needed (guide's motorbike broke down)
-
-💬 CLIENT FLAGS (1)
-  13:16 refund request over rain → briefing script sent, morning trip reschedule offered
-──────────────────────────────────────────
-auto-generated by LINE/WA ops-bot · full log in dashboard</pre>
-
-  <h2><span data-i18n="s4">4 · How it works</span> <span class="n" data-i18n="s4n">(the honest version)</span></h2>
-  <p class="note" data-i18n="how_note">
-    <b>LINE is connected officially</b> (Messaging API: the bot is invited into the group as a member) — this covers both Thai groups at once, with no risk. The <b>Russian guides' WhatsApp</b> is the next step, via a dedicated read-only bridge number. The classifier is dictionary-based, built on the team's real vocabulary, with optional AI enrichment of unrecognized messages; severity (blood / evacuation / repeated risk to a customer) is escalated automatically. All data stays on the company's server; the bot never posts in the groups. The same events feed the live <a class="back" href="dashboard.html">operations dashboard →</a>
-  </p>
-  <p class="note" style="opacity:.7" data-i18n="ru_footnote">* the RU group is shown for the full picture — connecting it via the WhatsApp bridge is phase two.</p>
-</div>
 <script>
 (function(){
-  // localStorage may be blocked — never let it throw
-  function lsGet(k){ try { return localStorage.getItem(k); } catch(e) { return null; } }
-  function lsSet(k,v){ try { localStorage.setItem(k,v); } catch(e) {} }
-  var RULE = "──────────────────────────────────────────";
-  var DATE = '<span id="eodDate"></span>';
-  /* EN = the markup below (captured at start-up). TH = machine-drafted, needs proofreading by a
-     native speaker (14_localization_tasks.md). RU digest labels mirror line-bot/src/digest.js;
-     the bot itself prints EN/RU today — the TH digest here is a translated preview (said so on the page). */
-  var I18N = {
-    en: {}, // English is the default content baked into the markup below
-    th: {
-      brand: "🤖 บอท LINE สำหรับงาน · ข้อความ → เหตุการณ์ → รายงาน · ตัวอย่าง · 📝 ภาษาไทยฉบับร่าง",
-      nav_photos: "← รูปภาพ", nav_weather: "สภาพอากาศ", nav_dashboard: "แดชบอร์ด",
-      frame: "บอทที่คอยอ่านอยู่เงียบ ๆ ในกลุ่ม LINE ของทีม (ไกด์ไทย และกัปตัน/สตาฟ) จะแปลงข้อความในแชทเป็นเหตุการณ์งาน: เรื่องสำคัญส่งถึงหัวหน้าไกด์ทันที และตอนเย็นแอดมิน/ออฟฟิศกับช่างจะได้รับสรุปประจำวันพร้อมใช้ ด้านล่างคือ<b>ผลลัพธ์จริงจากโค้ดที่ใช้งานได้</b> (โค้ดใช้งานได้จริง มีการทดสอบอัตโนมัติมากกว่า 120 รายการ) ส่วนข้อความเป็นตัวอย่างที่อิงจากคำศัพท์จริงของทีม<span class=\"badge\">LINE API ทางการ</span>",
-      pipe1: "💬 กลุ่ม LINE", pipe2: "🤖 ตัวแยกข้อความ TH/EN/RU", pipe3: "⚡ แจ้งเตือนหัวหน้าไกด์", pipe4: "📋 สรุปประจำวัน 18:00", pipe5: "🖥 แดชบอร์ด",
-      s1: "1 · ข้อความในกลุ่ม → เหตุการณ์", s1n: "(แยกประเภทแบบสด)",
-      who_th: "ไกด์ · กลุ่มไทย", who_office: "แอดมิน/ออฟฟิศ · กลุ่มกัปตัน", who_captain: "กัปตัน · กลุ่มกัปตัน", who_ru: "ไกด์ · กลุ่มรัสเซีย*",
-      trn: "TH: ลูกค้าตกจากเจ็ตสกีเพราะคลื่นใกล้ Rang Yai — ขาเป็นแผล เลือดหยุดแล้ว ไม่ต้องเรียกสปีดโบ๊ท",
-      ev1: "<b>🌊 รายงานสภาพอากาศ</b><br><span class=\"chip\">ทีม: น้ำเงิน</span><span class=\"chip\">จุด: Monkey Island</span><span class=\"chip\">ข้อมูล</span>",
-      ev2: "<b>🔧 เครื่องเสีย → ใบแจ้งซ่อมถึงช่าง</b><br><span class=\"chip\">เครื่อง: K18</span><span class=\"chip high\">สูง · ด่วน</span>",
-      ev3: "<b>🚑 เหตุการณ์ · ส่งตัวลูกค้ากลับ</b><br><span class=\"chip\">จุด: Monkey Island</span><span class=\"chip medium\">ปานกลาง</span>",
-      ev4: "<b>📸 รูป: ลืมถ่ายที่จุดถ่ายรูป</b><br><span class=\"chip\">จุด: Monkey Island</span><span class=\"chip\">→ เตือนไกด์</span>",
-      ev5: "<b>👥 กะงาน: พรุ่งนี้ต้องหาคนแทน</b><br><span class=\"chip\">ลาป่วย</span><span class=\"chip\">→ สแตนด์บาย?</span>",
-      ev6: "<b>🌊 โหมดวันนี้: Inside Program</b><br><span class=\"chip\">ประกาศทางการ</span><span class=\"chip\">→ แดชบอร์ด: ทุกทีมสี</span>",
-      ev7: "<b>💬 เรื่องลูกค้า: ขอคืนเงินเพราะสภาพอากาศ</b><br><span class=\"chip medium\">→ ข้อความบรีฟ + เสนอเลื่อนรอบ</span>",
-      ev8: "<b>🔧 เครื่องเสีย เกือบโดนลูกค้า</b><br><span class=\"chip\">เครื่อง: P11</span><span class=\"chip high\">สูง · ซ้ำครั้งที่ 2</span>",
-      ev9: "<b>🚑 เหตุการณ์ · บาดเจ็บ</b><br><span class=\"chip\">จุด: Rang Yai</span><span class=\"chip high\">สูง · บันทึกแล้ว</span>",
-      s2: "2 · แจ้งเตือนอัตโนมัติเมื่อมีปัญหา", s2n: "(ส่งถึงหัวหน้าไกด์ทันทีที่เกิดเหตุ)",
-      notif_head: "LINE · JetOps Bot · ตอนนี้",
-      notif_t: "⚠️ แจ้งเตือน (กลุ่มไกด์ไทย)",
-      notif_b: "P11 hood broken again, flew off in the wind, hit near customer head — second time!<br>#breakdown · P11 · HIGH → เปลี่ยนเจ็ตสกี + ใบแจ้งซ่อมด่วนถึงช่าง",
-      alert_note: "แจ้งเตือนเฉพาะเรื่องสำคัญ (เลือดออก / โรงพยาบาล / ส่งตัวกลับ / เครื่องเสียด่วน / อันตรายต่อลูกค้าซ้ำ) เรื่องอื่นเก็บไว้เงียบ ๆ รอสรุปตอนเย็น — ไม่มีใครต้องจมอยู่กับการแจ้งเตือน",
-      s3: "3 · สรุปประจำวัน (18:00 · ออฟฟิศ + ช่าง)", s3n: "— ผลลัพธ์จริงจากโค้ดที่ใช้งานได้ (ฉบับภาษาไทยเป็นตัวอย่างคำแปล)",
-      digest: "PHUKET JETSKI CLUB — รายงานประจำวัน · " + DATE + "\n" + RULE + "\n20 เหตุการณ์จากแชทงาน\n\n" +
-        "⚠️ เร่งด่วน (3)\n" +
-        "  09:36 [K18] พวงมาลัยหนักมากหลังชน — ต้องซ่อมด่วน (TH)\n" +
-        "  13:38 [P11] ฝากระโปรงพังอีกแล้ว ปลิวไปตามลม เกือบโดนหัวลูกค้า — ครั้งที่สอง!\n" +
-        "  14:22 [Rang Yai] ลูกค้าตกเพราะคลื่น ขาเป็นแผล เลือดหยุดแล้ว — ไม่ต้องเรียกสปีดโบ๊ท (RU)\n\n" +
-        "🌊 สภาพอากาศ / เส้นทาง (5)\n" +
-        "  08:30 [blue · Monkey Island] คลื่นใหญ่ วันนี้ \"no monkey\" ลูกค้าขับช้า (TH)\n" +
-        "  08:52 [Rang Yai] ฝนตกหนักที่ Rang Yai รอก่อน — หมอกลงจัด (TH)\n" +
-        "  09:14 [Naka] น้ำลงมากที่ Naka จอดยาก — ลูกค้าดำน้ำตื้นจากเจ็ตสกี (TH)\n" +
-        "  12:54 Morning Program Change Due to High Waves and Wind — inside program today\n" +
-        "  14:44 [Monkey Island] คลื่นใหญ่หลัง Grand Marina วันนี้ \"no monkey\" ทุกทีมสีไป inside\n\n" +
-        "🚑 เหตุการณ์ (2)\n" +
-        "  10:20 [Rang Yai] ลูกค้าล้ม บาดเจ็บเล็กน้อย ปฐมพยาบาลที่จุดแล้ว (TH)\n" +
-        "  10:42 [Monkey Island] ลูกค้าเมาเรือ เรียกสปีดโบ๊ทรับที่ Monkey Island — ด่วน (TH)\n\n" +
-        "🔧 เครื่อง — สำหรับช่าง (3)\n" +
-        "  09:58 [H100] เครื่องดับกลางทะเล สตาร์ทไม่ติด (TH)\n" +
-        "  12:32 [Y62] น้ำมันรั่ว — ส่งอู่ (TH)\n" +
-        "  14:00 [H29] วิ่งไม่เกิน 65 เซ็นเซอร์เตือน\n\n" +
-        "📸 รูปภาพ (3)\n" +
-        "  11:04 [Monkey Island] ลืมถ่ายที่จุดถ่ายรูป (\"ลืม\" 🙈) — ส่งเตือนไกด์แล้ว\n" +
-        "  11:26 ออฟฟิศเตือน: อัปโหลดรูปก่อน 21:00\n" +
-        "  15:28 [yellow] อัปโหลดครบ — Coconut และ Rang Yai จุดละ 40 รูป\n\n" +
-        "👥 กะงาน (3)\n" +
-        "  11:48 พรุ่งนี้ต้องหาคนแทน (ป่วย) → ส่งคำขอถึงสแตนด์บายแล้ว\n" +
-        "  12:10 สแตนด์บาย: ยืนยันแล้ว 1 คนที่ท่าเรือ\n" +
-        "  15:06 ช่วงเย็น: ต้องหาคนแทน (มอเตอร์ไซค์ของไกด์เสีย)\n\n" +
-        "💬 ลูกค้า (1)\n" +
-        "  13:16 ขอคืนเงินเพราะฝน → ส่งข้อความบรีฟแล้ว เสนอเลื่อนไปรอบเช้า\n" +
-        RULE + "\nสร้างอัตโนมัติโดยบอท LINE/WA · ดูบันทึกทั้งหมดในแดชบอร์ด",
-      s4: "4 · ทำงานอย่างไร", s4n: "(ตามจริง)",
-      how_note: "<b>เชื่อมต่อ LINE อย่างเป็นทางการ</b> (Messaging API: เชิญบอทเข้ากลุ่มเหมือนสมาชิกคนหนึ่ง) — ครอบคลุมทั้งสองกลุ่มไทยพร้อมกันและไม่มีความเสี่ยง <b>WhatsApp ของไกด์รัสเซีย</b>เป็นขั้นต่อไป ผ่านเบอร์เชื่อมต่อแบบอ่านอย่างเดียว ตัวแยกประเภทใช้พจนานุกรมจากคำศัพท์จริงของทีม และใช้ AI ช่วยกับข้อความที่ระบบไม่รู้จักได้ (ไม่บังคับ) ระดับความรุนแรง (เลือดออก / ส่งตัวกลับ / อันตรายต่อลูกค้าซ้ำ) จะถูกยกระดับอัตโนมัติ ข้อมูลทั้งหมดอยู่บนเซิร์ฟเวอร์ของบริษัท บอทไม่โพสต์อะไรในกลุ่ม เหตุการณ์เดียวกันนี้ส่งเข้า<a class=\"back\" href=\"dashboard.html\">แดชบอร์ดงานประจำวัน →</a>แบบสด",
-      ru_footnote: "* แสดงกลุ่มรัสเซียเพื่อให้เห็นภาพรวม — การเชื่อมผ่าน WhatsApp เป็นเฟสที่สอง"
-    },
-    ru: {
-      brand: "🤖 LINE Ops-Bot · сообщения → события → отчёт · showcase",
-      nav_photos: "← фото", nav_weather: "погода", nav_dashboard: "дашборд",
-      frame: "Бот-наблюдатель состоит в рабочих LINE-группах (тай-гиды и капитаны/стафф) и <b>молча</b> превращает переписку в операционные события: критичное мгновенно улетает лиду, вечером офис и тех.отдел получают готовый отчёт. Ниже — <b>реальный вывод работающего кода</b> (рабочий код, 120+ автотестов), сообщения — образцы на основе реального лексикона команды.<span class=\"badge\">официальный LINE API</span>",
-      pipe1: "💬 группы LINE", pipe2: "🤖 классификатор TH/EN/RU", pipe3: "⚡ алерт лиду", pipe4: "📋 отчёт 18:00", pipe5: "🖥 дашборд",
-      s1: "1 · Сообщение в группе → событие", s1n: "(живая классификация)",
-      who_th: "гид · тайская группа", who_office: "админ/офис · группа капитанов", who_captain: "капитан · группа капитанов", who_ru: "гид · рус-группа*",
-      trn: "",
-      ev1: "<b>🌊 погодный рапорт</b><br><span class=\"chip\">команда: синяя</span><span class=\"chip\">точка: Monkey Island</span><span class=\"chip\">инфо</span>",
-      ev2: "<b>🔧 поломка → тикет механикам</b><br><span class=\"chip\">машина: K18</span><span class=\"chip high\">HIGH · срочно</span>",
-      ev3: "<b>🚑 инцидент · эвакуация</b><br><span class=\"chip\">точка: Monkey Island</span><span class=\"chip medium\">средний</span>",
-      ev4: "<b>📸 фото: пропущен фото-стоп</b><br><span class=\"chip\">точка: Monkey Island</span><span class=\"chip\">→ напоминание гиду</span>",
-      ev5: "<b>👥 смены: завтра нужна замена</b><br><span class=\"chip\">больничный</span><span class=\"chip\">→ Standby?</span>",
-      ev6: "<b>🌊 режим дня: Inside Program</b><br><span class=\"chip\">официально</span><span class=\"chip\">→ дашборд: все цветовые группы</span>",
-      ev7: "<b>💬 клиент: просит возврат из-за погоды</b><br><span class=\"chip medium\">→ текст брифинга + предложение переноса</span>",
-      ev8: "<b>🔧 поломка, удар рядом с клиентом</b><br><span class=\"chip\">машина: P11</span><span class=\"chip high\">HIGH · повтор №2</span>",
-      ev9: "<b>🚑 инцидент · травма</b><br><span class=\"chip\">точка: Rang Yai</span><span class=\"chip high\">HIGH · в журнале</span>",
-      s2: "2 · Автосообщение при проблеме", s2n: "(улетает лиду в момент события)",
-      notif_head: "LINE · JetOps Bot · сейчас",
-      notif_t: "⚠️ АЛЕРТ (тайские гиды)",
-      notif_b: "P11 hood broken again, flew off in the wind, hit near customer head — second time!<br>#breakdown · P11 · HIGH → заменить гидроцикл + приоритетный тикет механикам",
-      alert_note: "Алертится только критичное (кровь/госпиталь/эвакуация/срочная поломка/повторная угроза клиенту). Всё остальное копится молча до вечернего отчёта — никто не тонет в уведомлениях.",
-      s3: "3 · Вечерний отчёт (18:00 · офис + тех.отдел)", s3n: "— реальный вывод работающего кода",
-      digest: "PHUKET JETSKI CLUB — ОТЧЁТ ДНЯ · " + DATE + "\n" + RULE + "\n20 событий из чатов\n\n" +
-        "⚠️ КРИТИЧНОЕ (3)\n" +
-        "  09:36 [K18] руль очень тяжёлый после контакта — срочный ремонт (TH)\n" +
-        "  13:38 [P11] капот снова сломан, сорвало ветром, ударил рядом с головой клиента — второй раз!\n" +
-        "  14:22 [Rang Yai] клиент упал на волне, порез ноги, кровь остановили — спидбот не нужен (RU)\n\n" +
-        "🌊 ПОГОДА / МАРШРУТ (5)\n" +
-        "  08:30 [blue · Monkey Island] большая волна, сегодня «no monkey», клиенты идут медленно (TH)\n" +
-        "  08:52 [Rang Yai] сильный дождь у Rang Yai, ждём — опускается туман (TH)\n" +
-        "  09:14 [Naka] очень низкая вода у Naka, трудно встать — клиенты снорклят с гидроциклов (TH)\n" +
-        "  12:54 Morning Program Change Due to High Waves and Wind — inside program today\n" +
-        "  14:44 [Monkey Island] большая волна за Grand Marina, сегодня «no monkey», все цветовые группы — inside\n\n" +
-        "🚑 ИНЦИДЕНТЫ (2)\n" +
-        "  10:20 [Rang Yai] клиент упал, лёгкая травма, обработан на месте (TH)\n" +
-        "  10:42 [Monkey Island] клиента укачало, спидбот забирает с Monkey Island — срочно (TH)\n\n" +
-        "🔧 ТЕХНИКА — тех.отделу (3)\n" +
-        "  09:58 [H100] заглох в море, не заводится (TH)\n" +
-        "  12:32 [Y62] течь топлива — в цех (TH)\n" +
-        "  14:00 [H29] не едет больше 65, предупреждение датчика\n\n" +
-        "📸 ФОТО (3)\n" +
-        "  11:04 [Monkey Island] пропущен фото-стоп («forget» 🙈) — гиду ушло напоминание\n" +
-        "  11:26 напоминание офиса: загрузить фото до 21:00\n" +
-        "  15:28 [yellow] загрузка завершена — Coconut и Rang Yai, по 40 кадров\n\n" +
-        "👥 СМЕНЫ (3)\n" +
-        "  11:48 завтра нужна замена (болезнь) → запрос ушёл в Standby\n" +
-        "  12:10 Standby: 1 человек подтверждён на пирсе\n" +
-        "  15:06 вечер: нужна подмена (у гида сломался мотобайк)\n\n" +
-        "💬 КЛИЕНТЫ (1)\n" +
-        "  13:16 просят возврат из-за дождя → отправлен текст брифинга, предложен перенос на утро\n" +
-        RULE + "\nсформировано автоматически LINE/WA-ботом · полный лог в дашборде",
-      s4: "4 · Как устроено", s4n: "(честно)",
-      how_note: "<b>LINE подключается официально</b> (Messaging API: бот приглашается в группу как участник) — покрывает обе тайские группы сразу и без рисков. <b>WhatsApp рус-гидов</b> — следующий шаг через выделенный номер-мост (read-only). Классификатор — словари на реальном лексиконе команды + опциональное AI-дообогащение нераспознанного; критичность (кровь/эвакуация/повторная угроза) поднимается автоматически. Данные остаются на сервере компании; в группах бот молчит. Эти же события в реальном времени питают <a class=\"back\" href=\"dashboard.html\">операционный дашборд →</a>",
-      ru_footnote: "* рус-группа показана для полноты картины — её подключение через WhatsApp-мост, вторая очередь."
-    }
-  };
+"use strict";
+/* ============ BOT_RUN — generated, do not edit by hand ============
+   The demo day (the 20 messages of line-bot/sample_messages.jsonl at the times shown here + one departure board
+   and one mask report) run through the REAL bot code: line-bot/src/classify.js → store.js → digest.js
+   (buildDigest, quota {used:41, limit:300}); the alert text follows server.js alertText().
+   msgs[]: type / severity / machines / team colour / place as classified; digest.sections: the digest's sections in
+   order, each item = message ids merged into one line (dedupe.js, 30 min); text.en / text.ru: the exact digest text
+   ("{DATE}" = today in Bangkok); alert: the exact alert text per critical message.
+   After changing the bot or the messages, regenerate this line the same way line-bot/simulate.js does
+   (classify() each message with its time → store.append() into a scratch DATA_DIR → buildDigest(day, "en"|"ru", {quota}))
+   and paste it here — never edit the texts by hand, the "LINE text" view must stay the bot's exact output. */
+const BOT_RUN = {"msgs":[{"id":"m01","t":"08:30","chat":"thai_guides","text":"วันนี้ไม่ไป monkey คลื่นใหญ่มาก 💙 ลูกค้าขับช้า","type":"weather_report","sev":"info","mach":[],"color":"blue","place":"Monkey"},{"id":"m02","t":"08:52","chat":"thai_guides","text":"ฝนตกหนักที่ Rang Yai รอก่อนครับ หมอกลงด้วย","type":"weather_report","sev":"info","mach":[],"color":null,"place":"Rang Yai"},{"id":"m03","t":"09:14","chat":"thai_guides","text":"น้ำลงมากที่ Naka Yai จอดยาก ให้ลูกค้า snorkel จากเจ็ตสกี","type":"weather_report","sev":"info","mach":[],"color":null,"place":"Naka Yai"},{"id":"m04","t":"09:36","chat":"thai_guides","text":"K18 เสีย พวงมาลัยหนักมาก ต้องซ่อมด่วน","type":"breakdown","sev":"medium","mach":["K18"],"color":null,"place":null},{"id":"b01","t":"09:45","chat":"captains","text":"💛 09:31 | 13.20-13.30\n💜 09:35 | 13.25-13.35\n💙 09:40 | 13.30-13.40","type":"dispatch","sev":"info","mach":[],"color":null,"place":null},{"id":"m05","t":"09:58","chat":"thai_guides","text":"H100 เครื่องดับกลางทะเล สตาร์ทไม่ติด","type":"breakdown","sev":"medium","mach":["H100"],"color":null,"place":null},{"id":"m06","t":"10:20","chat":"thai_guides","text":"ลูกค้าล้มที่ Rang Yai บาดเจ็บนิดหน่อย ทำแผลแล้ว","type":"incident","sev":"medium","mach":[],"color":null,"place":"Rang Yai"},{"id":"m07","t":"10:42","chat":"thai_guides","text":"ลูกค้าเมาเรือ เรียก speedboat มารับที่ Monkey ด่วน","type":"incident","sev":"medium","mach":[],"color":null,"place":"Monkey"},{"id":"m08","t":"11:04","chat":"thai_guides","text":"ลืมถ่ายรูปที่ Monkey 🙈 ขอโทษครับ","type":"photo_status","sev":"info","mach":[],"color":null,"place":"Monkey"},{"id":"m09","t":"11:26","chat":"thai_guides","text":"ส่งรูปก่อน 3 ทุ่มนะครับทุกคน","type":"photo_status","sev":"info","mach":[],"color":null,"place":null},{"id":"m10","t":"11:48","chat":"thai_guides","text":"พรุ่งนี้ขอลา ป่วยครับ ใครแทนได้บ้าง","type":"shift","sev":"info","mach":[],"color":null,"place":null},{"id":"m11","t":"12:10","chat":"captains","text":"Standby: 1 คน พร้อมที่ pier","type":"shift","sev":"info","mach":[],"color":null,"place":null},{"id":"m12","t":"12:32","chat":"captains","text":"Y62 น้ำมันรั่ว เอาเข้าอู่ก่อน","type":"breakdown","sev":"medium","mach":["Y62"],"color":null,"place":null},{"id":"m13","t":"12:54","chat":"captains","text":"Morning Program Change Due to High Waves and Wind — inside program today","type":"weather_report","sev":"info","mach":[],"color":null,"place":null},{"id":"k01","t":"13:05","chat":"thai_guides","text":"Yellow Morning / 7jet, 11pax, 11mask","type":"masks","sev":"info","mach":[],"color":"yellow","place":null},{"id":"m14","t":"13:16","chat":"captains","text":"ลูกค้าขอ refund บอกฝนตกทำไมไม่ยกเลิก ร้องเรียนที่ office","type":"client_issue","sev":"medium","mach":[],"color":null,"place":null},{"id":"m15","t":"13:38","chat":"captains","text":"P11 hood broken again, flew off in the wind, hit near customer head — second time!","type":"breakdown","sev":"high","mach":["P11"],"color":null,"place":null},{"id":"m16","t":"14:00","chat":"ru_guides","text":"не едет быстрее 65, H29 сигналит постоянно","type":"breakdown","sev":"medium","mach":["H29"],"color":null,"place":null},{"id":"m17","t":"14:22","chat":"ru_guides","text":"Клиент упал на волне у Rang Yai, порез ноги, кровь остановили, спидбот не нужен","type":"incident","sev":"high","mach":[],"color":null,"place":"Rang Yai"},{"id":"m18","t":"14:44","chat":"ru_guides","text":"big waves после grand marina, no monkey сегодня, все группы inside","type":"weather_report","sev":"info","mach":[],"color":null,"place":"Grand Marina"},{"id":"m19","t":"15:06","chat":"ru_guides","text":"кто сможет подменить на вечер? у второго гида байк сломался","type":"shift","sev":"info","mach":[],"color":null,"place":null},{"id":"m20","t":"15:28","chat":"ru_guides","text":"Фото загрузил все, Мали и Флауэр по 40 штук 💛","type":"photo_status","sev":"info","mach":[],"color":"yellow","place":"Mali"}],"digest":{"total":22,"sections":[{"k":"high","items":[{"id":"m15","ids":["m15"]},{"id":"m17","ids":["m17"]}]},{"k":"wx","items":[{"id":"m01","ids":["m01","m02"]},{"id":"m03","ids":["m03"]},{"id":"m13","ids":["m13"]},{"id":"m18","ids":["m18"]}]},{"k":"inc","items":[{"id":"m06","ids":["m06","m07"]}]},{"k":"br","items":[{"id":"m04","ids":["m04"]},{"id":"m05","ids":["m05"]},{"id":"m12","ids":["m12"]},{"id":"m16","ids":["m16"]}]},{"k":"ph","items":[{"id":"m08","ids":["m08","m09"]},{"id":"m20","ids":["m20"]}]},{"k":"sh","items":[{"id":"m10","ids":["m10","m11"]},{"id":"m19","ids":["m19"]}]},{"k":"cl","items":[{"id":"m14","ids":["m14"]}]}],"boards":1,"masks":1,"other":0,"quota":{"used":41,"limit":300}},"text":{"en":"PHUKET JETSKI CLUB — DAILY OPS REPORT · {DATE}\n\n──────────────────────────────────────────\n\n22 events from work chats\nLower bounds extracted from chat text; mentions of the same event within 30 min are merged (×N).\n\n⚠️ CRITICAL (2)\n  13:38 [P11] P11 hood broken again, flew off in the wind, hit near customer head — second time!\n  14:22 [Rang Yai] Клиент упал на волне у Rang Yai, порез ноги, кровь остановили, спидбот не нужен\n\n🌊 WEATHER / ROUTE (4)\n  08:30 [blue · Monkey] วันนี้ไม่ไป monkey คลื่นใหญ่มาก 💙 ลูกค้าขับช้า (×2)\n  09:14 [Naka Yai] น้ำลงมากที่ Naka Yai จอดยาก ให้ลูกค้า snorkel จากเจ็ตสกี\n  12:54 Morning Program Change Due to High Waves and Wind — inside program today\n  14:44 [Grand Marina] big waves после grand marina, no monkey сегодня, все группы inside\n\n🚑 INCIDENTS (1)\n  10:20 [Rang Yai] ลูกค้าล้มที่ Rang Yai บาดเจ็บนิดหน่อย ทำแผลแล้ว (×2)\n\n🔧 MAINTENANCE — action required (4)\n  09:36 [K18] K18 เสีย พวงมาลัยหนักมาก ต้องซ่อมด่วน\n  09:58 [H100] H100 เครื่องดับกลางทะเล สตาร์ทไม่ติด\n  12:32 [Y62] Y62 น้ำมันรั่ว เอาเข้าอู่ก่อน\n  14:00 [H29] не едет быстрее 65, H29 сигналит постоянно\n\n📸 PHOTOS (2)\n  11:04 [Monkey] ลืมถ่ายรูปที่ Monkey 🙈 ขอโทษครับ (×2)\n  15:28 [yellow · Mali] Фото загрузил все, Мали и Флауэр по 40 штук 💛\n\n👥 SHIFTS (2)\n  11:48 พรุ่งนี้ขอลา ป่วยครับ ใครแทนได้บ้าง (×2)\n  15:06 кто сможет подменить на вечер? у второго гида байк сломался\n\n💬 CLIENT FLAGS (1)\n  13:16 ลูกค้าขอ refund บอกฝนตกทำไมไม่ยกเลิก ร้องเรียนที่ office\n\n🚤 departure boards: 1 · 🤿 mask reports: 1\n\n──────────────────────────────────────────\n\nLINE quota: 41/300 messages this month\n\nauto-generated by LINE/WA ops-bot · full log in dashboard","ru":"PHUKET JETSKI CLUB — ОТЧЁТ ДНЯ · {DATE}\n\n──────────────────────────────────────────\n\n22 событий из чатов\nНижние границы, извлечённые из текста чата; упоминания одного события в пределах 30 мин слиты (×N).\n\n⚠️ КРИТИЧНОЕ (2)\n  13:38 [P11] P11 hood broken again, flew off in the wind, hit near customer head — second time!\n  14:22 [Rang Yai] Клиент упал на волне у Rang Yai, порез ноги, кровь остановили, спидбот не нужен\n\n🌊 ПОГОДА / МАРШРУТ (4)\n  08:30 [blue · Monkey] วันนี้ไม่ไป monkey คลื่นใหญ่มาก 💙 ลูกค้าขับช้า (×2)\n  09:14 [Naka Yai] น้ำลงมากที่ Naka Yai จอดยาก ให้ลูกค้า snorkel จากเจ็ตสกี\n  12:54 Morning Program Change Due to High Waves and Wind — inside program today\n  14:44 [Grand Marina] big waves после grand marina, no monkey сегодня, все группы inside\n\n🚑 ИНЦИДЕНТЫ (1)\n  10:20 [Rang Yai] ลูกค้าล้มที่ Rang Yai บาดเจ็บนิดหน่อย ทำแผลแล้ว (×2)\n\n🔧 ТЕХНИКА — тех.отделу (4)\n  09:36 [K18] K18 เสีย พวงมาลัยหนักมาก ต้องซ่อมด่วน\n  09:58 [H100] H100 เครื่องดับกลางทะเล สตาร์ทไม่ติด\n  12:32 [Y62] Y62 น้ำมันรั่ว เอาเข้าอู่ก่อน\n  14:00 [H29] не едет быстрее 65, H29 сигналит постоянно\n\n📸 ФОТО (2)\n  11:04 [Monkey] ลืมถ่ายรูปที่ Monkey 🙈 ขอโทษครับ (×2)\n  15:28 [yellow · Mali] Фото загрузил все, Мали и Флауэр по 40 штук 💛\n\n👥 СМЕНЫ (2)\n  11:48 พรุ่งนี้ขอลา ป่วยครับ ใครแทนได้บ้าง (×2)\n  15:06 кто сможет подменить на вечер? у второго гида байк сломался\n\n💬 КЛИЕНТЫ (1)\n  13:16 ลูกค้าขอ refund บอกฝนตกทำไมไม่ยกเลิก ร้องเรียนที่ office\n\n🚤 табло отправлений: 1 · 🤿 отчётов о масках: 1\n\n──────────────────────────────────────────\n\nквота LINE: 41/300 сообщений в этом месяце\n\nсформировано автоматически LINE/WA-ботом · полный лог в дашборде"},"alert":{"m15":"⚠️ ALERT (captains)\nP11 hood broken again, flew off in the wind, hit near customer head — second time!\n#breakdown · P11","m17":"⚠️ ALERT (ru_guides)\nКлиент упал на волне у Rang Yai, порез ноги, кровь остановили, спидбот не нужен\n#incident · Rang Yai"}};
 
-  // Capture the default (English) markup so switching back never loses it.
-  var els = document.querySelectorAll("[data-i18n]");
-  els.forEach(function(el){ I18N.en[el.getAttribute("data-i18n")] = el.innerHTML; });
+/* ============ page config ============ */
+const SHOW = ["m01","m04","b01","m07","m08","m10","m13","m14","m15","m17"];   // the messages played in the chat
+const ALERT_ID = "m15";                                                         // the alert shown on the phone
+const MSG_LANG = { m13:"en", k01:"en", m15:"en", m16:"ru", m17:"ru", m18:"ru", m19:"ru", m20:"ru", b01:"" }; // default: Thai
+const WHO = { thai_guides:"who_th", captains:"who_captain", ru_guides:"who_ru" };
+const WHO_ID = { b01:"who_office", m13:"who_office" };                         // office posts in the captains group
+const TEAM = { blue:"dot-blue", yellow:"dot-yellow" };                          // wristband colours (data)
+const TYPE_IC = { weather_report:"waves", breakdown:"wrench", incident:"life-buoy", photo_status:"camera", shift:"users",
+  client_issue:"message-circle", office_notice:"info", dispatch:"ship", masks:"list-checks", other:"info" };
+const TYPE_SEC = { weather_report:"wx", incident:"inc", breakdown:"br", photo_status:"ph", shift:"sh", client_issue:"cl", office_notice:"of" };
+const SEC_IC = { high:"triangle-alert", wx:"waves", inc:"life-buoy", br:"wrench", ph:"camera", sh:"users", cl:"message-circle", of:"info" };
+const SEV = { high:["crit","triangle-alert"], medium:["warn","circle-alert"], info:["plain","info"] };
+const STEP_MS = 650, READ_MS = 900;                                             // playback: bubble → card, card → next
+const PARAMS = new URLSearchParams(location.search);
+const LOCALE = { en:"en-GB", th:"th-TH", ru:"ru-RU" };
 
-  function t(key, lang){
-    var dict = I18N[lang] || {};
-    return (key in dict) ? dict[key] : I18N.en[key]; // any gaps fall back to EN
+/* ================= i18n =================
+   EN is the default and complete. TH is a machine-drafted version that still needs proofreading by a native
+   speaker (14_localization_tasks.md) — marked "ภาษาไทยฉบับร่าง" in the header and in the footer. RU — Russian guides.
+   Message texts in the chat, the alert and the LINE-text digest are real chat / bot messages: they stay as written
+   (their emoji included); the readable digest card uses the translated summaries "sum.<id>". */
+const I18N = {
+  en: {
+    docTitle: "Phuket Jetski Club — LINE ops bot (showcase)",
+    opSub: "LINE ops bot", langLabel: "Language",
+    themeAuto: "Auto", themeLight: "Light", themeDark: "Dark", themeTitle: "Theme",
+    kick: "Showcase · real output of the working code",
+    heroH: "A quiet helper in your LINE work groups",
+    heroP: "It reads what guides and captains write, alerts the lead guide at once when someone may be hurt, and sends the office one digest every evening. It never writes in the groups.",
+    st1T: "Group chat", st1P: "Guides and captains write as usual — in Thai, English or Russian.",
+    st2T: "Event", st2P: "Each message becomes an event: breakdown, incident, weather, photos, shifts…",
+    st3T: "Alert & daily digest", st3P: "Someone hurt → the lead guide gets an alert at once. Everything else → one digest at 18:00.",
+    play: "Play the demo", replay: "Play the demo again", skip: "Skip to the digest",
+    tr1: "Official LINE API", tr2: "Never writes in your groups", tr3: "Stored on your company's server",
+    s1H: "Group message → event",
+    s1P: "Sample messages in the team's real words. Each card is what the working code makes of the message.",
+    grpT: "Work groups in LINE", grpS: "The bot is a silent member", colH: "What the bot records",
+    who_th: "Guide · Thai group", who_office: "Office · captains group", who_captain: "Captain · captains group", who_ru: "Guide · Russian group*",
+    trn: "Translation:",
+    stPlay: (i,n)=>`Message ${i} of ${n}`,
+    stDone: (n,a)=>`${n} messages sorted: ${a} alerts sent at once, the rest went to the evening digest.`,
+    stIdle: (n,a)=>`${n} messages from one day · ${a} of them raised an alert.`,
+    showAll: "Show all now", again: "Play again", playMsgs: "Play them one by one",
+    reading: "Reading the message…",
+    "t.weather_report": "Weather / route", "t.breakdown": "Breakdown", "t.incident": "Incident", "t.photo_status": "Photos",
+    "t.shift": "Shifts", "t.client_issue": "Client issue", "t.office_notice": "Office notice", "t.dispatch": "Departure board",
+    "t.masks": "Mask report", "t.other": "Not recognised",
+    "sev.high": "Critical", "sev.medium": "Needs attention", "sev.info": "Info",
+    machine: "Machine", team: c=>({blue:"Blue team", yellow:"Yellow team"})[c] || c,
+    outAlert: "Alert sent to the lead guide at once — and listed under Critical in the digest",
+    outDigest: s=>`Goes to the 18:00 digest: ${s}`,
+    outCount: "Routine post — counted in the digest, no alert",
+    s2H: "Alert to the lead guide",
+    s2P: "Only when someone may be hurt. It goes privately to the lead guide — nobody in the group sees it.",
+    nfApp: "LINE · JetOps bot", nfNow: "now",
+    aWhatK: "What", aWhat: "A breakdown that hit near a customer: the hood of P11 flew off in the wind — the second time.",
+    aWhereK: "Where", aWhere: "Machine P11 · written in the captains group at 13:38",
+    aWhoK: "Who gets it", aWho: "Only the lead guide, in a private LINE chat with the bot.",
+    rulesH: "What raises an alert",
+    rules: ["Blood, a hospital or an ambulance", "Drowning, a missing person, someone unconscious",
+      "A fall into the water with an injury, or a serious injury", "A breakdown that hits a person"],
+    rulesN1: "An urgent repair on its own is not an alert — it waits for the digest. The rule leans to the safe side: any mention of a hospital or an ambulance counts, so expect an extra alert now and then.",
+    rulesN2: "Several alerts from one group within 5 minutes arrive as one message. In today's sample there are 2 alerts: 13:38 P11 and 14:22 Rang Yai.",
+    s3H: "Daily digest at 18:00",
+    s3P: "One message a day for the office and the mechanics, built by the working code from today's messages.",
+    viewLabel: "Digest view", viewCard: "Card", viewText: "View as LINE text",
+    dgTitle: "Daily ops report",
+    dgTotal: "events from work chats",
+    dgHonest: "Lower bounds: the bot counts only what is written in the chat. Mentions of the same thing within 30 minutes count once — “2 messages” below.",
+    "sec.high": "Critical", "sec.wx": "Weather / route", "sec.inc": "Incidents", "sec.br": "Maintenance — action required",
+    "sec.ph": "Photos", "sec.sh": "Shifts", "sec.cl": "Client flags", "sec.of": "Office",
+    merged: n=>`${n} messages`, alsoMerged: "Also in this line:",
+    dgRoutine: (b,m)=>`Routine posts, counted but not listed: departure boards ${b} · mask reports ${m}`,
+    dgQuota: (u,l)=>`LINE quota: ${u} of ${l} messages used this month`,
+    dgFoot: "Made automatically by the bot · the full log is in the dashboard",
+    txtLang: "Language the bot writes in",
+    txtNote: "",
+    txtFrom: "JetOps bot · private chat with the office",
+    s4H: "How it works — honestly",
+    s4P: "What is proven, what is not yet, and where your data goes.",
+    hw: [
+      ["ok", "Works today", "Official LINE connection", "The bot joins your groups through LINE's official Messaging API, as a member. It only reads — it never writes in the groups."],
+      ["ok", "Measured", "How often it is right", "On manual checks, 98–100% of found breakdowns and 88–100% of incidents were real; some events are missed — a message with no telling words slips through — so the digest counts are a lower bound."],
+      ["warn", "Not checked yet", "Thai on real messages", "Thai has not been checked on real Thai group messages yet. The first 1–2 weeks run in silent mode while we tune the word lists to your team."],
+      ["ok", "On your server", "Privacy (PDPA)", "The team gets a PDPA notice before the bot joins (a draft, to be checked by a lawyer). Messages stay on the company's server for 90 days; a message deleted in LINE is erased. The digest shows who wrote each message."],
+      ["info", "Optional", "AI step", "Off unless you turn it on. Then only messages the word lists did not recognise go to an AI service in the USA — this must be in the PDPA notice. The AI can never raise an alert by itself."],
+      ["info", "Plan limit", "LINE free plan", "300 messages a month: enough for the digest and alerts to one person, who forwards them. A digest to a whole group needs the LINE Basic plan."]
+    ],
+    dashLink: "The same events feed the office dashboard",
+    otherScreens: "Other demo screens:", navPhoto: "Photo demo", navWeather: "Weather today", navOps: "Office dashboard",
+    ruFoot: "* The Russian group is shown for the full picture. It is on WhatsApp, which this bot cannot read — connecting it through a bridge is phase two.",
+    thDraft: "", powered: "Powered by JetOps", tests: "120+ automated tests",
+    "sum.m01": "Big waves — not going to Monkey today; customers riding slowly",
+    "sum.m02": "Heavy rain at Rang Yai, waiting — fog too",
+    "sum.m03": "Very low tide at Naka Yai, hard to moor — customers snorkel from the jet skis",
+    "sum.m04": "K18 broken: steering very heavy — needs an urgent repair",
+    "sum.m05": "H100 engine died at sea, won't restart",
+    "sum.m06": "Customer fell at Rang Yai — minor injury, wound dressed",
+    "sum.m07": "Customer seasick — speedboat called to pick up at Monkey, urgent",
+    "sum.m08": "Forgot to take photos at Monkey — the guide apologises",
+    "sum.m09": "Everyone: send the photos before 21:00",
+    "sum.m10": "Sick tomorrow, asking for leave — who can cover?",
+    "sum.m11": "Standby: 1 person ready at the pier",
+    "sum.m12": "Y62 fuel leak — taken to the workshop",
+    "sum.m13": "Morning program changed due to high waves and wind — inside program today",
+    "sum.m14": "Customer wants a refund: “it rained, why not cancel?” — complained at the office",
+    "sum.m15": "P11 hood broken again, flew off in the wind, hit near a customer's head — second time!",
+    "sum.m16": "H29 won't go faster than 65, keeps beeping",
+    "sum.m17": "Customer fell on a wave near Rang Yai — leg cut, bleeding stopped, no speedboat needed",
+    "sum.m18": "Big waves after Grand Marina — no Monkey today, all groups inside",
+    "sum.m19": "Who can cover the evening? The second guide's motorbike broke down",
+    "sum.m20": "All photos uploaded — Mali and Flower, 40 each"
+  },
+  th: {
+    docTitle: "Phuket Jetski Club — บอท LINE สำหรับงาน (ตัวอย่าง)",
+    opSub: "บอท LINE สำหรับงาน · ภาษาไทยฉบับร่าง", langLabel: "ภาษา",
+    themeAuto: "อัตโนมัติ", themeLight: "สว่าง", themeDark: "มืด", themeTitle: "ธีม",
+    kick: "ตัวอย่าง · ผลลัพธ์จริงจากโค้ดที่ใช้งานได้",
+    heroH: "ผู้ช่วยเงียบ ๆ ในกลุ่ม LINE ของทีม",
+    heroP: "บอทอ่านข้อความที่ไกด์และกัปตันเขียน แจ้งเตือนหัวหน้าไกด์ทันทีเมื่ออาจมีคนบาดเจ็บ และส่งสรุปประจำวันให้ออฟฟิศทุกเย็น บอทไม่เขียนอะไรในกลุ่ม",
+    st1T: "แชทกลุ่ม", st1P: "ไกด์และกัปตันเขียนตามปกติ — ภาษาไทย อังกฤษ หรือรัสเซีย",
+    st2T: "เหตุการณ์", st2P: "ทุกข้อความกลายเป็นเหตุการณ์: เครื่องเสีย อุบัติเหตุ สภาพอากาศ รูปภาพ กะงาน…",
+    st3T: "แจ้งเตือนและสรุปประจำวัน", st3P: "มีคนบาดเจ็บ → หัวหน้าไกด์ได้รับแจ้งเตือนทันที เรื่องอื่น → สรุปรวมครั้งเดียวตอน 18:00",
+    play: "ดูการสาธิต", replay: "ดูการสาธิตอีกครั้ง", skip: "ข้ามไปที่สรุปประจำวัน",
+    tr1: "LINE API ทางการ", tr2: "ไม่เขียนอะไรในกลุ่ม", tr3: "เก็บบนเซิร์ฟเวอร์ของบริษัท",
+    s1H: "ข้อความในกลุ่ม → เหตุการณ์",
+    s1P: "ข้อความตัวอย่างที่ใช้คำจริงของทีม แต่ละการ์ดคือสิ่งที่โค้ดจริงสรุปจากข้อความนั้น",
+    grpT: "กลุ่มงานใน LINE", grpS: "บอทเป็นสมาชิกที่อ่านอย่างเดียว", colH: "สิ่งที่บอทบันทึก",
+    who_th: "ไกด์ · กลุ่มไทย", who_office: "ออฟฟิศ · กลุ่มกัปตัน", who_captain: "กัปตัน · กลุ่มกัปตัน", who_ru: "ไกด์ · กลุ่มรัสเซีย*",
+    trn: "คำแปล:",
+    stPlay: (i,n)=>`ข้อความที่ ${i} จาก ${n}`,
+    stDone: (n,a)=>`จัดเรียงแล้ว ${n} ข้อความ: แจ้งเตือนทันที ${a} ครั้ง ที่เหลือเข้าสรุปตอนเย็น`,
+    stIdle: (n,a)=>`${n} ข้อความจากหนึ่งวัน · แจ้งเตือน ${a} ครั้ง`,
+    showAll: "แสดงทั้งหมดเลย", again: "เล่นอีกครั้ง", playMsgs: "เล่นทีละข้อความ",
+    reading: "กำลังอ่านข้อความ…",
+    "t.weather_report": "สภาพอากาศ / เส้นทาง", "t.breakdown": "เครื่องเสีย", "t.incident": "อุบัติเหตุ", "t.photo_status": "รูปภาพ",
+    "t.shift": "กะงาน", "t.client_issue": "เรื่องลูกค้า", "t.office_notice": "ประกาศออฟฟิศ", "t.dispatch": "ตารางออกเรือ",
+    "t.masks": "รายงานหน้ากาก", "t.other": "ไม่รู้จักข้อความ",
+    "sev.high": "วิกฤต", "sev.medium": "ต้องดูแล", "sev.info": "ข้อมูล",
+    machine: "เครื่อง", team: c=>({blue:"ทีมสีน้ำเงิน", yellow:"ทีมสีเหลือง"})[c] || c,
+    outAlert: "ส่งแจ้งเตือนถึงหัวหน้าไกด์ทันที — และอยู่ในหมวดวิกฤตของสรุปประจำวัน",
+    outDigest: s=>`เข้าสรุปประจำวัน 18:00: ${s}`,
+    outCount: "ข้อความประจำ — นับในสรุป ไม่แจ้งเตือน",
+    s2H: "แจ้งเตือนถึงหัวหน้าไกด์",
+    s2P: "เฉพาะเมื่ออาจมีคนบาดเจ็บ ส่งถึงหัวหน้าไกด์แบบส่วนตัว — คนในกลุ่มไม่เห็น",
+    nfApp: "LINE · บอท JetOps", nfNow: "ตอนนี้",
+    aWhatK: "เกิดอะไร", aWhat: "เครื่องเสียจนเกือบโดนลูกค้า: ฝากระโปรงของ P11 ปลิวไปตามลม — เป็นครั้งที่สอง",
+    aWhereK: "ที่ไหน", aWhere: "เครื่อง P11 · เขียนในกลุ่มกัปตันเวลา 13:38",
+    aWhoK: "ใครได้รับ", aWho: "หัวหน้าไกด์คนเดียว ในแชทส่วนตัวกับบอทใน LINE",
+    rulesH: "อะไรทำให้เกิดการแจ้งเตือน",
+    rules: ["เลือดออก โรงพยาบาล หรือรถพยาบาล", "จมน้ำ คนหาย คนหมดสติ", "ตกน้ำแล้วบาดเจ็บ หรือบาดเจ็บสาหัส", "เครื่องเสียจนโดนคน"],
+    rulesN1: "การซ่อมด่วนอย่างเดียวไม่แจ้งเตือน — รอในสรุปประจำวัน กฎเอียงไปทางปลอดภัย: แค่พูดถึงโรงพยาบาลหรือรถพยาบาลก็นับ จึงอาจมีแจ้งเตือนเกินบ้าง",
+    rulesN2: "แจ้งเตือนหลายครั้งจากกลุ่มเดียวภายใน 5 นาทีจะรวมเป็นข้อความเดียว ตัวอย่างวันนี้มีแจ้งเตือน 2 ครั้ง: 13:38 P11 และ 14:22 Rang Yai",
+    s3H: "สรุปประจำวันตอน 18:00",
+    s3P: "ข้อความเดียวต่อวันสำหรับออฟฟิศและช่าง สร้างโดยโค้ดจริงจากข้อความของวันนี้",
+    viewLabel: "มุมมองสรุป", viewCard: "การ์ด", viewText: "ดูเป็นข้อความ LINE",
+    dgTitle: "รายงานงานประจำวัน",
+    dgTotal: "เหตุการณ์จากแชทงาน",
+    dgHonest: "เป็นตัวเลขขั้นต่ำ: บอทนับเฉพาะสิ่งที่เขียนในแชท เรื่องเดียวกันที่พูดถึงภายใน 30 นาทีนับครั้งเดียว — “2 ข้อความ” ด้านล่าง",
+    "sec.high": "วิกฤต", "sec.wx": "สภาพอากาศ / เส้นทาง", "sec.inc": "อุบัติเหตุ", "sec.br": "เครื่อง — สำหรับช่าง",
+    "sec.ph": "รูปภาพ", "sec.sh": "กะงาน", "sec.cl": "เรื่องลูกค้า", "sec.of": "ออฟฟิศ",
+    merged: n=>`${n} ข้อความ`, alsoMerged: "รวมอยู่ในบรรทัดนี้ด้วย:",
+    dgRoutine: (b,m)=>`ข้อความประจำ นับแต่ไม่แสดงรายการ: ตารางออกเรือ ${b} · รายงานหน้ากาก ${m}`,
+    dgQuota: (u,l)=>`โควตา LINE: ใช้ไป ${u} จาก ${l} ข้อความในเดือนนี้`,
+    dgFoot: "สร้างอัตโนมัติโดยบอท · บันทึกทั้งหมดอยู่ในแดชบอร์ด",
+    txtLang: "ภาษาที่บอทใช้เขียน",
+    txtNote: "บอทเขียนสรุปเป็นภาษาอังกฤษหรือรัสเซีย ยังไม่มีภาษาไทย",
+    txtFrom: "บอท JetOps · แชทส่วนตัวกับออฟฟิศ",
+    s4H: "ทำงานอย่างไร — ตามจริง",
+    s4P: "อะไรพิสูจน์แล้ว อะไรยังไม่ได้ และข้อมูลของคุณไปที่ไหน",
+    hw: [
+      ["ok", "ใช้ได้แล้ว", "เชื่อมต่อ LINE อย่างเป็นทางการ", "บอทเข้ากลุ่มผ่าน Messaging API ทางการของ LINE ในฐานะสมาชิก อ่านอย่างเดียว — ไม่เขียนอะไรในกลุ่ม"],
+      ["ok", "วัดผลแล้ว", "ถูกต้องบ่อยแค่ไหน", "จากการตรวจด้วยมือ เครื่องเสียที่บอทพบเป็นเรื่องจริง 98–100% และอุบัติเหตุ 88–100% บางเหตุการณ์ยังหลุดไป — ข้อความที่ไม่มีคำสำคัญจะไม่ถูกจับ — ตัวเลขในสรุปจึงเป็นค่าขั้นต่ำ"],
+      ["warn", "ยังไม่ได้ตรวจ", "ภาษาไทยกับข้อความจริง", "ยังไม่ได้ตรวจภาษาไทยกับข้อความจริงจากกลุ่มไทย 1–2 สัปดาห์แรกบอททำงานแบบเงียบ ระหว่างที่เราปรับรายการคำให้เข้ากับทีมของคุณ"],
+      ["ok", "บนเซิร์ฟเวอร์ของคุณ", "ความเป็นส่วนตัว (PDPA)", "ทีมได้รับประกาศ PDPA ก่อนบอทเข้ากลุ่ม (ฉบับร่าง รอนักกฎหมายตรวจ) ข้อความเก็บบนเซิร์ฟเวอร์ของบริษัท 90 วัน ข้อความที่ยกเลิกใน LINE จะถูกลบ สรุปประจำวันแสดงชื่อคนเขียนแต่ละข้อความ"],
+      ["info", "ไม่บังคับ", "ขั้นตอน AI", "ปิดไว้จนกว่าคุณจะเปิด เมื่อเปิด เฉพาะข้อความที่รายการคำไม่รู้จักจะส่งไปยังบริการ AI ในสหรัฐฯ — ต้องระบุในประกาศ PDPA AI ยกระดับเป็นแจ้งเตือนเองไม่ได้"],
+      ["info", "ข้อจำกัดแพ็กเกจ", "LINE แพ็กเกจฟรี", "300 ข้อความต่อเดือน: พอสำหรับสรุปและแจ้งเตือนถึงคนเดียว แล้วเขาส่งต่อ ถ้าจะส่งสรุปเข้ากลุ่มต้องใช้แพ็กเกจ LINE Basic"]
+    ],
+    dashLink: "เหตุการณ์เดียวกันนี้ส่งเข้าแดชบอร์ดออฟฟิศ",
+    otherScreens: "หน้าจอเดโมอื่น:", navPhoto: "เดโมรูปภาพ", navWeather: "สภาพอากาศวันนี้", navOps: "แดชบอร์ดออฟฟิศ",
+    ruFoot: "* แสดงกลุ่มรัสเซียเพื่อให้เห็นภาพรวม กลุ่มนี้อยู่ใน WhatsApp ซึ่งบอทนี้อ่านไม่ได้ — การเชื่อมผ่านตัวเชื่อมเป็นเฟสที่สอง",
+    thDraft: "ภาษาไทยในหน้านี้เป็นฉบับร่าง รอเจ้าของภาษาตรวจทาน", powered: "ขับเคลื่อนโดย JetOps", tests: "ทดสอบอัตโนมัติมากกว่า 120 รายการ",
+    "sum.m01": "คลื่นใหญ่มาก วันนี้ไม่ไป Monkey ลูกค้าขับช้า",
+    "sum.m02": "ฝนตกหนักที่ Rang Yai รอก่อน หมอกลงด้วย",
+    "sum.m03": "น้ำลงมากที่ Naka Yai จอดยาก ให้ลูกค้าดำน้ำตื้นจากเจ็ตสกี",
+    "sum.m04": "K18 เสีย พวงมาลัยหนักมาก ต้องซ่อมด่วน",
+    "sum.m05": "H100 เครื่องดับกลางทะเล สตาร์ทไม่ติด",
+    "sum.m06": "ลูกค้าล้มที่ Rang Yai บาดเจ็บนิดหน่อย ทำแผลแล้ว",
+    "sum.m07": "ลูกค้าเมาเรือ เรียกสปีดโบ๊ทมารับที่ Monkey ด่วน",
+    "sum.m08": "ลืมถ่ายรูปที่ Monkey ไกด์ขอโทษ",
+    "sum.m09": "ทุกคนส่งรูปก่อน 21:00",
+    "sum.m10": "พรุ่งนี้ขอลาป่วย ใครแทนได้บ้าง",
+    "sum.m11": "สแตนด์บาย: 1 คน พร้อมที่ท่าเรือ",
+    "sum.m12": "Y62 น้ำมันรั่ว เอาเข้าอู่แล้ว",
+    "sum.m13": "เปลี่ยนโปรแกรมเช้าเพราะคลื่นลมแรง — วันนี้ไป inside program",
+    "sum.m14": "ลูกค้าขอคืนเงิน บอกว่าฝนตกทำไมไม่ยกเลิก — ร้องเรียนที่ออฟฟิศ",
+    "sum.m15": "ฝากระโปรง P11 พังอีกแล้ว ปลิวไปตามลม เกือบโดนหัวลูกค้า — ครั้งที่สอง!",
+    "sum.m16": "H29 วิ่งไม่เกิน 65 มีเสียงเตือนตลอด",
+    "sum.m17": "ลูกค้าตกจากเจ็ตสกีเพราะคลื่นใกล้ Rang Yai ขาเป็นแผล เลือดหยุดแล้ว ไม่ต้องเรียกสปีดโบ๊ท",
+    "sum.m18": "คลื่นใหญ่หลัง Grand Marina วันนี้ไม่ไป Monkey ทุกกลุ่มไป inside",
+    "sum.m19": "ใครแทนช่วงเย็นได้บ้าง มอเตอร์ไซค์ของไกด์อีกคนเสีย",
+    "sum.m20": "อัปโหลดรูปครบแล้ว — Mali และ Flower จุดละ 40 รูป"
+  },
+  ru: {
+    docTitle: "Phuket Jetski Club — LINE-бот для работы (витрина)",
+    opSub: "LINE-бот для работы", langLabel: "Язык",
+    themeAuto: "Авто", themeLight: "Светлая", themeDark: "Тёмная", themeTitle: "Тема",
+    kick: "Витрина · настоящий вывод работающего кода",
+    heroH: "Тихий помощник в рабочих группах LINE",
+    heroP: "Читает, что пишут гиды и капитаны, сразу предупреждает лида, если кто-то мог пострадать, и каждый вечер присылает офису одну сводку. Сам в группах ничего не пишет.",
+    st1T: "Чат группы", st1P: "Гиды и капитаны пишут как обычно — по-тайски, по-английски или по-русски.",
+    st2T: "Событие", st2P: "Каждое сообщение становится событием: поломка, инцидент, погода, фото, смены…",
+    st3T: "Алерт и сводка дня", st3P: "Кто-то пострадал → лид сразу получает алерт. Всё остальное → одна сводка в 18:00.",
+    play: "Запустить демо", replay: "Запустить демо ещё раз", skip: "Сразу к сводке",
+    tr1: "Официальный LINE API", tr2: "Ничего не пишет в группах", tr3: "Хранится на сервере компании",
+    s1H: "Сообщение в группе → событие",
+    s1P: "Образцы сообщений на реальном языке команды. Каждая карточка — то, что работающий код делает из сообщения.",
+    grpT: "Рабочие группы в LINE", grpS: "Бот — молчаливый участник", colH: "Что записывает бот",
+    who_th: "Гид · тайская группа", who_office: "Офис · группа капитанов", who_captain: "Капитан · группа капитанов", who_ru: "Гид · русская группа*",
+    trn: "Перевод:",
+    stPlay: (i,n)=>`Сообщение ${i} из ${n}`,
+    stDone: (n,a)=>`Разобрано сообщений: ${n}. Алертов сразу: ${a}, остальное ушло в вечернюю сводку.`,
+    stIdle: (n,a)=>`${n} сообщений за один день · алертов среди них: ${a}.`,
+    showAll: "Показать всё сразу", again: "Ещё раз", playMsgs: "Показать по одному",
+    reading: "Читаем сообщение…",
+    "t.weather_report": "Погода / маршрут", "t.breakdown": "Поломка", "t.incident": "Инцидент", "t.photo_status": "Фото",
+    "t.shift": "Смены", "t.client_issue": "Клиент", "t.office_notice": "Объявление офиса", "t.dispatch": "Табло отправлений",
+    "t.masks": "Отчёт о масках", "t.other": "Не распознано",
+    "sev.high": "Критично", "sev.medium": "Требует внимания", "sev.info": "Для сведения",
+    machine: "Машина", team: c=>({blue:"Синяя команда", yellow:"Жёлтая команда"})[c] || c,
+    outAlert: "Алерт лиду ушёл сразу — и в сводке в разделе «Критичное»",
+    outDigest: s=>`В сводку 18:00: ${s}`,
+    outCount: "Регулярный пост — посчитан в сводке, без алерта",
+    s2H: "Алерт лиду",
+    s2P: "Только если кто-то мог пострадать. Уходит лиду лично — в группе его никто не видит.",
+    nfApp: "LINE · бот JetOps", nfNow: "сейчас",
+    aWhatK: "Что", aWhat: "Поломка, задевшая клиента: капот P11 сорвало ветром и ударило рядом с головой — второй раз.",
+    aWhereK: "Где", aWhere: "Машина P11 · написано в группе капитанов в 13:38",
+    aWhoK: "Кому", aWho: "Только лиду, в личном чате с ботом в LINE.",
+    rulesH: "Что вызывает алерт",
+    rules: ["Кровь, больница или скорая", "Утопление, пропавший человек, потеря сознания", "Падение в воду с травмой или серьёзная травма", "Поломка, задевшая человека"],
+    rulesN1: "Срочный ремонт сам по себе — не алерт, он ждёт сводки. Правило перестраховывается: любое упоминание больницы или скорой считается, поэтому иногда будет лишний алерт.",
+    rulesN2: "Несколько алертов из одной группы за 5 минут приходят одним сообщением. В сегодняшнем примере 2 алерта: 13:38 P11 и 14:22 Rang Yai.",
+    s3H: "Сводка дня в 18:00",
+    s3P: "Одно сообщение в день для офиса и механиков — работающий код собрал его из сегодняшних сообщений.",
+    viewLabel: "Вид сводки", viewCard: "Карточка", viewText: "Как текст в LINE",
+    dgTitle: "Отчёт дня",
+    dgTotal: "событий из рабочих чатов",
+    dgHonest: "Это нижняя граница: бот считает только то, что написано в чате. Упоминания одного и того же в пределах 30 минут считаются один раз — «2 сообщения» ниже.",
+    "sec.high": "Критичное", "sec.wx": "Погода / маршрут", "sec.inc": "Инциденты", "sec.br": "Техника — механикам",
+    "sec.ph": "Фото", "sec.sh": "Смены", "sec.cl": "Клиенты", "sec.of": "Офис",
+    merged: n=>`${n} сообщения`, alsoMerged: "В этой же строке:",
+    dgRoutine: (b,m)=>`Регулярные посты, посчитаны без списка: табло отправлений ${b} · отчёты о масках ${m}`,
+    dgQuota: (u,l)=>`Квота LINE: использовано ${u} из ${l} сообщений в этом месяце`,
+    dgFoot: "Собрано ботом автоматически · полный журнал — в дашборде",
+    txtLang: "Язык, на котором пишет бот",
+    txtNote: "",
+    txtFrom: "Бот JetOps · личный чат с офисом",
+    s4H: "Как это работает — честно",
+    s4P: "Что доказано, что ещё нет и куда уходят ваши данные.",
+    hw: [
+      ["ok", "Работает", "Официальное подключение к LINE", "Бот входит в группы через официальный Messaging API LINE как участник. Только читает — в группах ничего не пишет."],
+      ["ok", "Измерено", "Как часто бот прав", "При ручной проверке 98–100% найденных поломок и 88–100% инцидентов оказались настоящими; часть событий бот пропускает — сообщение без характерных слов проходит мимо, — поэтому счётчики в сводке — нижняя граница."],
+      ["warn", "Ещё не проверено", "Тайский на реальных сообщениях", "Тайский ещё не проверен на настоящих сообщениях тайских групп. Первые 1–2 недели бот работает молча, пока мы подстраиваем словари под вашу команду."],
+      ["ok", "На вашем сервере", "Приватность (PDPA)", "До подключения команда получает уведомление по PDPA (черновик, нужна проверка юристом). Сообщения хранятся на сервере компании 90 дней; удалённое в LINE сообщение стирается. В сводке видно, кто что написал."],
+      ["info", "По желанию", "Шаг с ИИ", "Выключен, пока вы его не включите. Тогда только нераспознанные словарём сообщения уходят в ИИ-сервис в США — это нужно указать в уведомлении PDPA. Сам поднять алерт ИИ не может."],
+      ["info", "Лимит тарифа", "Бесплатный тариф LINE", "300 сообщений в месяц: хватает на сводку и алерты одному человеку, он пересылает дальше. Сводка в группу — только на тарифе LINE Basic."]
+    ],
+    dashLink: "Эти же события питают дашборд офиса",
+    otherScreens: "Другие экраны демо:", navPhoto: "Фото-демо", navWeather: "Погода на сегодня", navOps: "Дашборд офиса",
+    ruFoot: "* Русская группа показана для полноты картины. Она в WhatsApp, который этот бот не читает, — подключение через мост — второй этап.",
+    thDraft: "", powered: "Работает на JetOps", tests: "120+ автотестов",
+    "sum.m01": "Большая волна — сегодня не идём на Monkey, клиенты едут медленно",
+    "sum.m02": "Сильный дождь у Rang Yai, ждём — ещё и туман",
+    "sum.m03": "Очень низкая вода у Naka Yai, трудно встать — клиенты снорклят с гидроциклов",
+    "sum.m04": "K18 сломан: руль очень тяжёлый — срочный ремонт",
+    "sum.m05": "H100 заглох в море, не заводится",
+    "sum.m06": "Клиент упал на Rang Yai — лёгкая травма, рану обработали",
+    "sum.m07": "Клиента укачало — вызвали спидбот на Monkey, срочно",
+    "sum.m08": "Забыл сфотографировать на Monkey — гид извиняется",
+    "sum.m09": "Всем: отправить фото до 21:00",
+    "sum.m10": "Завтра на больничном — кто может подменить?",
+    "sum.m11": "Standby: 1 человек готов на пирсе",
+    "sum.m12": "Y62 течь топлива — отправлен в мастерскую",
+    "sum.m13": "Утренняя программа изменена из-за волны и ветра — сегодня inside program",
+    "sum.m14": "Клиент просит возврат: «шёл дождь, почему не отменили?» — пожаловался в офисе",
+    "sum.m15": "У P11 снова сломан капот, сорвало ветром, ударил рядом с головой клиента — второй раз!",
+    "sum.m16": "H29 не едет быстрее 65, постоянно сигналит",
+    "sum.m17": "Клиент упал на волне у Rang Yai — порез ноги, кровь остановили, спидбот не нужен",
+    "sum.m18": "Большая волна за Grand Marina — сегодня без Monkey, все группы inside",
+    "sum.m19": "Кто подменит на вечер? У второго гида сломался байк",
+    "sum.m20": "Все фото загружены — Mali и Flower, по 40"
   }
+};
 
-  // the digest is "today's" — date computed at runtime in Bangkok time (no hardcoded date)
-  function fillDate(){
-    try {
-      var today = new Date().toLocaleDateString("en-CA", {timeZone:"Asia/Bangkok"});
-      var dEl = document.getElementById("eodDate");
-      if (dEl && /^\d{4}-\d{2}-\d{2}$/.test(today)) dEl.textContent = today;
-    } catch(e) {}
-  }
+// localStorage may be blocked (private mode / storage disabled) — never let it throw during init
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+// "jetops_lang" is shared with index.html, weather.html and dashboard.html (values en | th | ru); ?lang= wins
+let uiLang = (I18N[PARAMS.get("lang")] && PARAMS.get("lang")) || lsGet("jetops_lang") || "en";
+if(!I18N[uiLang]) uiLang = "en";
+function tl(lang,k){ const d=I18N[lang]; return (d && d[k]!=null) ? d[k] : (I18N.en[k]!=null ? I18N.en[k] : k); }
+function t(k){ const v=tl(uiLang,k); return typeof v==="function" ? v.apply(null, Array.prototype.slice.call(arguments,1)) : v; }
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
+const ic = (id,cls)=>`<svg class="ic${cls?" "+cls:""}" aria-hidden="true"><use href="#i-${id}"/></svg>`;
+const MSG = {}; BOT_RUN.msgs.forEach(m=>{ MSG[m.id]=m; });
+const msgLang = id=>(id in MSG_LANG) ? MSG_LANG[id] : "th";
 
-  function applyLang(lang){
-    if (!I18N[lang]) lang = "en";
-    els.forEach(function(el){ el.innerHTML = t(el.getAttribute("data-i18n"), lang); });
-    document.documentElement.lang = lang;
-    document.querySelectorAll(".lang button").forEach(function(b){
-      b.classList.toggle("on", b.getAttribute("data-lang") === lang);
-    });
-    lsSet("jetops_lang", lang);
-    fillDate();
-  }
+/* ---- today in Bangkok: the digest and the alert are "today's" (no hard-coded date) ---- */
+function today(){ try{ const d=new Date().toLocaleDateString("en-CA",{timeZone:"Asia/Bangkok"}); if(/^\d{4}-\d{2}-\d{2}$/.test(d)) return d; }catch(e){} return new Date().toISOString().slice(0,10); }
+function fmtDay(iso, long){
+  try{ return new Date(iso+"T12:00:00Z").toLocaleDateString(LOCALE[uiLang]||"en-GB", long
+    ? {timeZone:"UTC", weekday:"long", day:"numeric", month:"long"} : {timeZone:"UTC", weekday:"short", day:"numeric", month:"long", year:"numeric"}); }
+  catch(e){ return iso; }
+}
 
-  document.querySelectorAll(".lang button").forEach(function(b){
-    b.addEventListener("click", function(){ applyLang(b.getAttribute("data-lang")); });
+/* ---- tags: machine / team / place, exactly the fields the classifier extracted ---- */
+function tagList(m){
+  const out=[];
+  (m.mach||[]).forEach(x=>out.push(`<span class="tag"><span class="k">${t("machine")}</span>${esc(x)}</span>`));
+  if(m.color) out.push(`<span class="tag"><span class="dot ${TEAM[m.color]||""}" aria-hidden="true"></span>${esc(t("team", m.color))}</span>`);
+  if(m.place) out.push(`<span class="tag">${ic("map-pin")}${esc(m.place)}</span>`);
+  return out;
+}
+function tags(m, extra){ const l=tagList(m).concat(extra||[]); return l.length ? `<div class="tags">${l.join("")}</div>` : ""; }
+function sevBadge(sev){ const s=SEV[sev]||SEV.info; return `<span class="badge badge-${s[0]}">${ic(s[1])}<span>${t("sev."+sev)}</span></span>`; }
+
+/* ================= 1. chat → events ================= */
+let VIS = SHOW.length, PENDING = false, PLAYING = false, played = false, timer = null;
+function rowHTML(id){
+  const m=MSG[id], ml=msgLang(id), whoKey=WHO_ID[id]||WHO[m.chat];
+  const trn = (ml && ml!==uiLang) ? `<div class="trn"><b>${t("trn")}</b>${esc(t("sum."+id))}</div>` : "";
+  let out;
+  if(m.sev==="high") out=`<p class="out al">${ic("bell")}<span>${t("outAlert")}</span></p>`;
+  else if(TYPE_SEC[m.type]) out=`<p class="out">${ic("list-checks")}<span>${esc(t("outDigest", t("sec."+TYPE_SEC[m.type])))}</span></p>`;
+  else out=`<p class="out">${ic("list-checks")}<span>${t("outCount")}</span></p>`;
+  return `<div class="row" data-id="${id}">
+    <div class="say"><span class="av" aria-hidden="true">${ic("user")}</span>
+      <div><div class="who"><span>${esc(t(whoKey))}</span><span>${m.t}</span></div>
+        <div class="bubble"><div class="msgtext"${ml?` lang="${ml}"`:""}>${esc(m.text)}</div>${trn}</div></div></div>
+    <div class="evc"><span class="arr">${ic("arrow-right")}</span>
+      <div class="ev-sk" aria-hidden="true"><p>${t("reading")}</p><div class="sk"></div><div class="sk"></div></div>
+      <article class="ev sev-${m.sev}" aria-label="${esc(t("t."+m.type))}">
+        <div class="ev-top"><span class="tb">${ic(TYPE_IC[m.type]||"info")}<span>${t("t."+m.type)}</span></span>${sevBadge(m.sev)}</div>
+        ${tags(m)}${out}</article></div></div>`;
+}
+function renderFeed(){
+  $("#rows").innerHTML = SHOW.map(rowHTML).join("");
+  syncFeed();
+}
+function syncFeed(enterIdx){
+  document.querySelectorAll("#rows .row").forEach((r,i)=>{
+    r.hidden = i>=VIS;
+    r.classList.toggle("pending", PENDING && i===VIS-1);
+    r.classList.toggle("enter", i===enterIdx);
   });
+  const alerts = SHOW.filter(id=>MSG[id].sev==="high").length;
+  $("#feedSt").textContent = PLAYING ? t("stPlay", VIS, SHOW.length) : t(played ? "stDone" : "stIdle", SHOW.length, alerts);
+  const fb=$("#feedBtn");
+  fb.innerHTML = PLAYING ? `${ic("chevron-down","ic-s")}<span>${t("showAll")}</span>`
+    : played ? `${ic("rotate-ccw","ic-s")}<span>${t("again")}</span>` : `${ic("play","ic-s")}<span>${t("playMsgs")}</span>`;
+  $("#playLbl").textContent = t(played ? "replay" : "play");
+  document.body.dataset.state = PLAYING ? "playing" : "done";
+}
+const reduced = ()=>window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+function stop(){ clearTimeout(timer); timer=null; PLAYING=false; PENDING=false; VIS=SHOW.length; syncFeed(); }
+function play(){
+  clearTimeout(timer); played = true;
+  if(reduced()){ stop(); return; }              // reduced motion: everything at once, no animation
+  PLAYING = true; VIS = 0; PENDING = false; next();
+}
+function next(){
+  if(!PLAYING) return;
+  VIS++; PENDING = true; syncFeed(VIS-1);
+  const row = document.querySelectorAll("#rows .row")[VIS-1];
+  // keep the newest message in view (not the first one: the page is still scrolling to the chat)
+  if(VIS>1 && row && row.scrollIntoView) row.scrollIntoView({block:"nearest", behavior:"smooth"});
+  timer = setTimeout(()=>{
+    PENDING = false; syncFeed(VIS-1);
+    if(VIS >= SHOW.length){ PLAYING = false; syncFeed(); return; }
+    timer = setTimeout(next, READ_MS);
+  }, STEP_MS);
+}
+$("#playBtn").onclick = ()=>{ const c=$("#chat"); if(c.scrollIntoView) c.scrollIntoView({block:"start", behavior: reduced()?"auto":"smooth"}); play(); };
+$("#feedBtn").onclick = ()=>{ if(PLAYING) stop(); else play(); };
 
-  var saved = lsGet("jetops_lang");
-  applyLang(saved && I18N[saved] ? saved : "en");
+/* ================= 2. the alert ================= */
+function renderAlert(){
+  $("#nfText").textContent = BOT_RUN.alert[ALERT_ID];
+  $("#phDate").textContent = fmtDay(today(), true);
+  $("#rulesList").innerHTML = t("rules").map(r=>`<li>${esc(r)}</li>`).join("");
+}
+
+/* ================= 3. the digest ================= */
+let VIEW = PARAMS.get("digest")==="text" ? "text" : "card", TXT = null;
+function renderDigest(){
+  const D=BOT_RUN.digest, iso=today();
+  const secs = D.sections.map(s=>{
+    const items = s.items.map(it=>{
+      const m=MSG[it.id], more=it.ids.slice(1);
+      const mrg = more.length ? `<div class="mrg"><span>${t("alsoMerged")}</span>${more.map(x=>`<span>${MSG[x].t} · ${esc(t("sum."+x))}</span>`).join("")}</div>` : "";
+      const n = it.ids.length>1 ? [`<span class="tag">${ic("message-circle")}${t("merged", it.ids.length)}</span>`] : [];
+      return `<li class="dg-it"><div class="dg-meta"><time>${m.t}</time>${tagList(m).concat(n).join("")}</div><p>${esc(t("sum."+it.id))}</p>${mrg}</li>`;
+    }).join("");
+    return `<section class="dg-sec${s.k==="high"?" crit":""}" aria-label="${esc(t("sec."+s.k))}"><h4>${ic(SEC_IC[s.k])}<span>${t("sec."+s.k)}</span><span class="cnt">${s.items.length}</span></h4><ul>${items}</ul></section>`;
+  }).join("");
+  $("#dgCard").innerHTML = `<div class="dg-head">
+      <h3 id="dgTitle">${ic("list-checks")}<span>${t("dgTitle")}</span></h3>
+      <p class="dg-date">Phuket Jetski Club · ${esc(fmtDay(iso))} · 18:00</p>
+      <p class="dg-total"><span class="num">${D.total}</span><span>${t("dgTotal")}</span></p>
+      <p class="dg-honest">${t("dgHonest")}</p></div>
+    <div class="dg-secs">${secs}</div>
+    <div class="dg-foot">
+      <p>${ic("ship")}<span>${esc(t("dgRoutine", D.boards, D.masks))}</span></p>
+      <p>${ic("send")}<span>${esc(t("dgQuota", D.quota.used, D.quota.limit))}</span></p>
+      <p>${ic("info")}<span>${t("dgFoot")}</span></p></div>`;
+  renderText();
+}
+function renderText(){
+  const L = TXT || (uiLang==="ru" ? "ru" : "en");
+  $("#ltText").textContent = BOT_RUN.text[L].split("{DATE}").join(today());
+  $("#ltText").lang = L;
+  document.querySelectorAll("#txtLang button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.l===L)));
+  $("#txtNote").hidden = !t("txtNote");
+}
+function syncView(){
+  document.querySelectorAll("#dgView button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.v===VIEW)));
+  $("#dgCard").hidden = VIEW!=="card"; $("#dgText").hidden = VIEW!=="text";
+}
+document.querySelectorAll("#dgView button").forEach(b=>b.onclick=()=>{ VIEW=b.dataset.v; syncView(); });
+document.querySelectorAll("#txtLang button").forEach(b=>b.onclick=()=>{ TXT=b.dataset.l; renderText(); });
+
+/* ================= 4. honest list ================= */
+const HW_IC = { ok:"circle-check", warn:"triangle-alert", info:"info" };
+function renderHonest(){
+  $("#hwList").innerHTML = t("hw").map(r=>`<li><span class="badge badge-${r[0]}">${ic(HW_IC[r[0]])}<span>${esc(r[1])}</span></span><h3>${esc(r[2])}</h3><p>${esc(r[3])}</p></li>`).join("");
+}
+
+/* ================= language ================= */
+function applyLang(l){
+  uiLang = I18N[l] ? l : "en";
+  lsSet("jetops_lang", uiLang);
+  document.documentElement.lang = uiLang;
+  document.title = t("docTitle");
+  document.querySelectorAll("[data-i18n]").forEach(el=>{ const v=t(el.dataset.i18n); if(typeof v==="string") el.innerHTML=v; });
+  document.querySelectorAll("[data-i18n-aria]").forEach(el=>{ const v=t(el.dataset.i18nAria); if(typeof v==="string") el.setAttribute("aria-label", v); });
+  document.querySelectorAll("#uiLang button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.l===uiLang)));
+  document.querySelectorAll("[data-jo-theme-toggle]").forEach(b=>{
+    b.setAttribute("data-label-auto", t("themeAuto")); b.setAttribute("data-label-light", t("themeLight"));
+    b.setAttribute("data-label-dark", t("themeDark")); b.setAttribute("data-label-title", t("themeTitle")); });
+  if(window.joTheme) window.joTheme.relabel();
+  $("#thDraft").hidden = !t("thDraft");
+  TXT = null;
+  renderFeed(); renderAlert(); renderDigest(); renderHonest(); syncView();
+}
+document.querySelectorAll("#uiLang button").forEach(b=>b.onclick=()=>applyLang(b.dataset.l));
+
+/* URL: ?lang=en|th|ru · ?play=1 starts the message sequence on load · ?play=all shows every message and the digest
+   at once (no animation — deterministic screenshots; wait for body[data-state="done"]) · ?digest=text opens the LINE text */
+applyLang(uiLang);
+const P = PARAMS.get("play");
+if(P && P!=="all" && P!=="0") play();
 })();
 </script>
 </body>

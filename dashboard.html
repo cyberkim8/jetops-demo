@@ -3,190 +3,298 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0b141b">
-<title>Phuket Jetski Club — Ops Dashboard (demo)</title>
+<meta name="theme-color" content="#0F2433" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#071219" media="(prefers-color-scheme: dark)">
+<title>Phuket Jetski Club — Operations today (demo)</title>
+<link rel="stylesheet" href="assets/jo/jetops.css">
+<script src="assets/jo/theme.js"></script>
 <style>
-  :root{
-    --bg:#0b141b; --panel:#121e27; --panel2:#0f1922; --line:#1f3242; --ink:#e8f3fa; --muted:#7d95a6;
-    --accent:#22b8f0; --ok:#3ddc78; --warn:#ffb43d; --bad:#ff5d63; --violet:#8e5bd8;
-    --shadow:0 10px 30px rgba(0,0,0,.35); --r:14px;
+  /* Office dashboard — page layout only. Tokens and components (.appbar .seg .btn .card .badge .note .chip .dot
+     .num .empty .footer-note) come from assets/jo/jetops.css. The only raw colours here are DATA colours:
+     the map's sea and land (below, as --map-* tokens with a dark variant) and the team dots (GROUPS in the script). */
+  :root {
+    --map-sea: #D5EBE8; --map-land: #EFE7DA; --map-coast: #C2B39C; --map-land-ink: #5B5043;
+    --map-route: #4D5D6A; --map-edge: #0F2433;
   }
-  *{box-sizing:border-box} html,body{margin:0}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans Thai",sans-serif;
-    background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
-  #app{max-width:1180px;margin:0 auto;padding:0 14px 40px}
-  ::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:#22384a;border-radius:4px}
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --map-sea: #0E2A35; --map-land: #1C3644; --map-coast: #33576A; --map-land-ink: #B3AEA4;
+      --map-route: #8FA9B8; --map-edge: #F3EDE3;
+    }
+  }
+  :root[data-theme="dark"] {
+    --map-sea: #0E2A35; --map-land: #1C3644; --map-coast: #33576A; --map-land-ink: #B3AEA4;
+    --map-route: #8FA9B8; --map-edge: #F3EDE3;
+  }
+  [hidden] { display: none !important; }
+  html { scroll-padding-top: var(--s4); }
 
-  header.top{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:14px 2px 10px}
-  .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.3px}
-  .brand .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#0aa1dd,#0784b8);
-    display:grid;place-items:center;font-size:18px}
-  .brand small{display:block;font-weight:600;color:var(--muted);font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase}
-  .live{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;color:var(--ok);
-    border:1px solid rgba(61,220,120,.35);background:rgba(61,220,120,.08);padding:4px 10px;border-radius:999px}
-  .live .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);animation:pulse 1.6s infinite}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-  .clock{margin-left:auto;text-align:right}
-  .clock .t{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
-  .clock .d{font-size:11px;color:var(--muted)}
-  .langsw{display:inline-flex;gap:4px}
-  .langsw .sbtn{padding:4px 9px;font-size:11.5px}
-  .simbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);
-    border-radius:var(--r);padding:9px 12px;margin-bottom:14px}
-  .simbar .lbl{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.6px}
-  .simbar .stime{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--accent);min-width:52px}
-  .sbtn{border:1px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:9px;
-    padding:6px 12px;font-size:12.5px;font-weight:700;cursor:pointer}
-  .sbtn:hover{border-color:var(--accent)} .sbtn.on{background:var(--accent);color:#04222f;border-color:var(--accent)}
-  .note{font-size:11px;color:var(--muted);margin-left:auto}
+  /* header: one row on a computer, logo row + controls row on a phone */
+  .appbar-in { flex-wrap: wrap; gap: var(--s2) var(--s3); padding-block: var(--s2); }
+  .op-text { min-width: 0; }
+  .ctrls { display: flex; align-items: center; gap: var(--s2); }
+  @media (max-width: 559px) { .appbar .spacer { display: none; } .ctrls { flex-basis: 100%; justify-content: space-between; } }
 
-  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
-  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
-  .kpi .k{font-size:10.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.6px}
-  .kpi .v{font-size:24px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums}
-  .kpi .s{font-size:11px;color:var(--muted)}
-  .kpi.alert .v{color:var(--bad)} .kpi.warn .v{color:var(--warn)} .kpi.good .v{color:var(--ok)}
+  .wrap { max-width: var(--w-page); margin: 0 auto; padding: var(--s4) var(--s4) var(--s5); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s5); }
+  @media (min-width: 1024px) { .wrap { padding: var(--s5); } }
+  @media (max-width: 559px) { .card { padding: var(--s4); } }
+  .sec-h { font-size: var(--fs-h3); margin-bottom: var(--s3); }
+  .card-h { display: grid; gap: var(--s1); }
+  .card-h p { color: var(--muted); font-size: var(--fs-body-s); }
+  .card-top { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--s3); }
+  .badge-n { background: var(--bg-2); color: var(--fg); } /* neutral: a type, not a status */
 
-  .cols{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);gap:14px;margin-bottom:14px}
-  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
-  .panel .head{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--line)}
-  .panel .head .ttl{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}
-  .panel .head .right{margin-left:auto;font-size:11px;color:var(--muted)}
-  .panel .body{padding:12px 14px}
+  /* the moment on screen (demo time) */
+  .now { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s2) var(--s4); }
+  .now-l { display: flex; align-items: center; gap: var(--s3); min-width: 0; }
+  .now-l > .ic { color: var(--muted); }
+  .now-t { font-size: 34px; line-height: 1; font-weight: 800; letter-spacing: -0.02em; }
+  .now-d { display: grid; min-width: 0; }
+  .now-d b { line-height: 1.3; }
+  .now-d span { font-size: var(--fs-body-s); color: var(--muted); font-weight: 600; }
+
+  /* needs attention */
+  .att-list { display: grid; gap: var(--s3); grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); }
+  .att-list .note { align-content: start; }
+  .att-list .note p { font-size: var(--fs-body-s); }
+  .att-list .note .att-meta { font-size: var(--fs-caption); color: var(--muted); font-weight: 600; margin-top: var(--s1); }
+  .att-call { margin-top: var(--s2); }
+  .att-act { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s3); }
+  .att-more { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s3); font-size: var(--fs-body-s); font-weight: 600; color: var(--muted); }
+  .att-list .sk { height: 112px; }
+
+  /* key numbers */
+  .kpis { display: grid; gap: var(--s3); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kpis > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+  @media (min-width: 720px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } .kpis > :last-child:nth-child(odd) { grid-column: auto; } }
+  @media (min-width: 1024px) { .kpis { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+  .tile { padding: var(--s4); display: grid; gap: var(--s1); align-content: start; min-width: 0; }
+  .tile-k { display: flex; align-items: center; gap: var(--s2); font-weight: 700; font-size: var(--fs-body-s); line-height: 1.3; color: var(--muted); }
+  .tile-sub { font-size: var(--fs-body-s); font-weight: 600; color: var(--muted); line-height: 1.4; }
+  .tile .badge { margin-top: var(--s1); }
+
+  /* map + feed side by side on a computer */
+  .main2 { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s5); }
+  @media (min-width: 1160px) {
+    .main2 { grid-template-columns: minmax(0, 1fr) 380px; }
+    .feed-card { contain: size; } /* the feed takes the map card's height and scrolls inside */
+    .feed-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; margin-inline: calc(-1 * var(--s5)); padding-inline: var(--s5); }
+  }
 
   /* map */
-  #map{width:100%;display:block;background:
-    radial-gradient(1200px 500px at 75% -10%, rgba(34,184,240,.10), transparent 60%),
-    linear-gradient(180deg,#0d1c28,#0b1720)}
-  .wstrip{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 14px;border-top:1px solid var(--line);font-size:12.5px}
-  .chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 11px;font-weight:700;font-size:12px;
-    border:1px solid var(--line);background:var(--panel2);color:var(--ink)}
-  .chip.ok{color:var(--ok);border-color:rgba(61,220,120,.4)}
-  .chip.warn{color:var(--warn);border-color:rgba(255,180,61,.4)}
-  .chip.bad{color:var(--bad);border-color:rgba(255,93,99,.4)}
-  .legend{display:flex;flex-wrap:wrap;gap:10px;padding:0 14px 12px;font-size:11px;color:var(--muted)}
-  .legend b{color:var(--ink)}
+  .map-card { display: grid; gap: var(--s4); align-content: start; }
+  .mapbox { margin-inline: calc(-1 * var(--s5)); background: var(--map-sea); border-block: 1px solid var(--line); }
+  @media (max-width: 559px) { .mapbox { margin-inline: calc(-1 * var(--s4)); } }
+  #map { display: block; width: 100%; height: auto; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  #map .m-land { fill: var(--map-land); stroke: var(--map-coast); stroke-width: 1.5; }
+  #map .m-islet { fill: var(--map-land); stroke: var(--map-coast); stroke-width: 1.5; }
+  #map .m-route { fill: none; stroke: var(--map-route); stroke-width: 3; stroke-dasharray: 1 7; stroke-linecap: round; stroke-linejoin: round; }
+  #map .m-xing { fill: none; stroke: var(--warn); stroke-width: 3; stroke-dasharray: 7 6; }
+  #map .m-stop { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
+  #map .m-stop-x { stroke: var(--fg); stroke-width: 2.5; }
+  #map .m-ic { color: var(--fg); pointer-events: none; }
+  #map .m-dot { stroke: var(--map-edge); stroke-width: 2.5; }
+  #map text { font-family: var(--font); font-size: var(--mfs, 15px); paint-order: stroke; stroke: var(--map-sea); stroke-width: 4px; stroke-linejoin: round; pointer-events: none; }
+  #map .m-lbl { fill: var(--fg); font-weight: 800; }
+  #map .m-sub, #map .m-shore { fill: var(--muted); font-weight: 600; }
+  #map .m-it { font-style: italic; }
+  #map .m-cross { fill: var(--warn); font-weight: 700; }
+  #map .m-side { fill: var(--map-land-ink); font-weight: 800; stroke: var(--map-land); }
+  #map.compact text { display: none; } /* on a phone labels would be smaller than 14 px: tap the map instead */
+  .map-pick { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-body-s); font-weight: 600; margin-top: calc(-1 * var(--s1)); }
+  .map-pick .ic { color: var(--muted); }
+  .teams-h { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 var(--s3); }
+  .teams-h h3 { font-size: var(--fs-body); font-weight: 800; }
+  .teams-h span { font-size: var(--fs-caption); color: var(--muted); font-weight: 600; }
+  .teams { list-style: none; margin: var(--s2) 0 0; padding: 0; display: grid; gap: var(--s1) var(--s4); grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); }
+  .teams li { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: var(--s3); align-items: center; padding: var(--s1) 0; }
+  .teams .dot { grid-row: span 2; }
+  .teams b { font-size: var(--fs-body-s); line-height: 1.35; }
+  .teams .tw { font-size: var(--fs-caption); color: var(--muted); font-weight: 600; line-height: 1.4; }
+  .teams .sk { height: 40px; }
+  .wx { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s4); padding-top: var(--s4); border-top: 1px solid var(--line); font-size: var(--fs-body-s); font-weight: 600; }
+  .wx-i { display: inline-flex; align-items: center; gap: 6px; }
+  .wx-i .ic { width: 20px; height: 20px; color: var(--muted); }
+  .wx-i.live .ic { color: var(--ok); }
+  .wx-tide { flex-basis: 100%; align-items: flex-start; }
+  .wx-tide .ic { margin-top: 2px; }
+  .wx .sk { height: 28px; width: 120px; }
 
-  /* feed */
-  #feedwrap{max-height:520px;overflow-y:auto}
-  .ev{display:flex;gap:10px;padding:9px 14px;border-bottom:1px solid rgba(31,50,66,.55);font-size:13px;line-height:1.45;
-    border-left:3px solid transparent;animation:slidein .3s ease}
-  @keyframes slidein{from{opacity:0;transform:translateY(-6px)}to{opacity:1}}
-  .ev .t{color:var(--muted);font-variant-numeric:tabular-nums;font-size:11.5px;padding-top:2px;min-width:38px}
-  .ev.weather{border-left-color:var(--accent)} .ev.breakdown{border-left-color:var(--warn)}
-  .ev.incident{border-left-color:var(--bad)} .ev.photo{border-left-color:var(--violet)}
-  .ev.shift{border-left-color:#5bd8c5} .ev.office{border-left-color:#7d95a6} .ev.client{border-left-color:#ff8fb3}
-  .ev b{font-weight:700}
+  /* event feed */
+  .feed-card { display: flex; flex-direction: column; gap: var(--s3); min-width: 0; }
+  #feedF { gap: 6px; }
+  .feed-card .chip { padding: 0 10px; min-width: 48px; justify-content: center; }
+  .feed-list { list-style: none; margin: 0; padding: 0; }
+  .ev { display: grid; grid-template-columns: 50px minmax(0, 1fr); gap: var(--s3); padding: var(--s3) 0; border-top: 1px solid var(--line); }
+  .ev:first-child { border-top: 0; }
+  .ev-t { font-weight: 800; font-size: var(--fs-body-s); padding-top: 3px; }
+  .ev-h { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s2); }
+  .ev-who { display: inline-flex; align-items: center; gap: var(--s2); font-weight: 700; font-size: var(--fs-body-s); }
+  .ev-who .dot, .r-t .dot { width: 14px; height: 14px; }
+  .ev-x { font-size: var(--fs-body-s); line-height: 1.5; margin-top: var(--s1); overflow-wrap: anywhere; }
+  .ev.new { animation: ev-in .4s ease; }
+  @keyframes ev-in { from { opacity: 0; transform: translateY(-4px); } }
+  @media (prefers-reduced-motion: reduce) { .ev.new { animation: none; } }
+  .feed-foot { display: flex; justify-content: center; }
+  .feed-card .empty { padding: var(--s5) var(--s3); }
 
-  .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:14px}
-  table.mini{width:100%;border-collapse:collapse;font-size:12.5px}
-  table.mini td{padding:7px 4px;border-bottom:1px solid rgba(31,50,66,.5);vertical-align:top}
-  .badge{display:inline-block;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;border:1px solid var(--line)}
-  .badge.open{color:var(--warn);border-color:rgba(255,180,61,.45)}
-  .badge.shop{color:var(--bad);border-color:rgba(255,93,99,.45)}
-  .badge.watch{color:var(--accent);border-color:rgba(34,184,240,.45)}
-  .badge.done{color:var(--ok);border-color:rgba(61,220,120,.45)}
-  .miss{color:var(--bad);font-weight:700} .okt{color:var(--ok);font-weight:700}
-  .dotc{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:0}
+  /* tech board, photos, shifts: short lists (no dense tables) */
+  .grid3 { display: grid; gap: var(--s5); grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); align-items: start; }
+  .rows { list-style: none; margin: var(--s2) 0 0; padding: 0; }
+  .rows li { display: grid; gap: 2px; padding: var(--s3) 0; border-top: 1px solid var(--line); }
+  .rows li:first-child { border-top: 0; }
+  .r-t { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s2); }
+  .r-t b { font-size: var(--fs-body); font-weight: 800; }
+  .r-x { font-size: var(--fs-body-s); }
+  .r-m { font-size: var(--fs-caption); color: var(--muted); font-weight: 600; }
+  .rows-h { font-size: var(--fs-body-s); font-weight: 800; color: var(--muted); margin-top: var(--s4); }
+  .grid3 .empty { padding: var(--s5) var(--s2); }
+  .wait-note { font-size: var(--fs-body-s); color: var(--muted); margin-top: var(--s3); }
 
-  pre.eod{background:#0a1219;border:1px solid var(--line);color:#dcebf5;border-radius:12px;padding:14px;
-    font-size:12px;line-height:1.55;white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,Menlo,monospace;margin:0;
-    max-height:420px;overflow:auto}
-  .btn{border:0;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:800;cursor:pointer;background:var(--accent);color:#04222f}
-  .btn.ghost{background:var(--panel2);border:1px solid var(--line);color:var(--ink)}
-  .foot{font-size:11.5px;color:var(--muted);line-height:1.6;padding:8px 2px}
-  a.backlink{color:var(--accent);text-decoration:none;font-size:12px;font-weight:700}
-  @media (max-width:940px){ .cols{grid-template-columns:1fr} .grid3{grid-template-columns:1fr} .kpis{grid-template-columns:repeat(2,1fr)} #feedwrap{max-height:320px} }
-  /* phones: the map keeps a readable scale and scrolls sideways inside its own box (no page overflow) */
-  @media (max-width:600px){
-    .mapwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-    .mapwrap::after{content:"← swipe the map →";display:block;text-align:center;font-size:10.5px;color:var(--muted);padding:4px 0 2px}
-    #map{min-width:760px}
-    #map .msub{display:none} #map .mlbl{font-size:11.5px} #map .mshore{font-size:10.5px}
-    .simbar .note{margin-left:0;flex-basis:100%}
-    .clock{flex-basis:100%;text-align:left}
+  /* evening report: the one main action of the page */
+  .eod-card { display: grid; gap: var(--s4); grid-template-columns: minmax(0, 1fr); }
+  .eod-side { display: grid; gap: var(--s4); align-content: start; }
+  @media (min-width: 1024px) { /* the report text on the right, title + language + the copy button on the left */
+    .eod-card { grid-template-columns: 340px minmax(0, 1fr); grid-template-areas: "side box" "act box"; grid-template-rows: auto 1fr; column-gap: var(--s5); }
+    .eod-side { grid-area: side; } #eodBox { grid-area: box; } .eod-act { grid-area: act; align-content: start; }
+    .eod-act .btn { width: 100%; }
   }
+  .eod-lang { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3); }
+  .msg { white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--fs-body-s); line-height: 1.55; }
+  .eod-act { display: grid; gap: var(--s3); }
+  @media (min-width: 720px) and (max-width: 1023px) { .eod-act .btn { justify-self: start; } }
+  .eod-card .empty .btn { margin-top: var(--s1); }
+
+  /* demo-only controls, clearly set apart from the product */
+  .demo { border: 1.5px dashed var(--border); border-radius: var(--r-lg); padding: var(--s5); display: grid; gap: var(--s4); justify-items: start; }
+  .demo p { max-width: 70ch; }
+  .demo-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3); }
+  #speedSeg button { min-width: 52px; }
+  .demo-g { display: grid; gap: var(--s2); justify-items: start; }
+  .demo-links { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--s2); }
+  .demo-links a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--s2); font-weight: 700; }
+  .footer-note { max-width: var(--w-read); margin: 0 auto; padding-top: 0; }
+  .footer-note p + p { margin-top: var(--s2); }
+  .footer-note a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 700; }
 </style>
 </head>
 <body>
-<div id="app">
-  <header class="top">
-    <div class="brand">
-      <img class="logo" src="assets/logo.png" alt="Phuket Jetski Club" style="width:auto;height:28px;background:#fff;padding:4px 8px;border-radius:8px;box-sizing:content-box">
-      <span><small data-i18n="brand.small">Ops Dashboard · demo</small></span>
-    </div>
-    <span class="live"><span class="dot"></span> LIVE</span>
-    <span class="langsw" id="langsw">
-      <button class="sbtn" data-lang="en">EN</button>
-      <button class="sbtn" data-lang="th">ไทย</button>
-      <button class="sbtn" data-lang="ru">RU</button>
-    </span>
-    <div class="clock"><div class="t" id="rtClock">--:--</div><div class="d" id="rtDate">Asia/Bangkok</div></div>
-  </header>
-  <div style="margin:-4px 0 10px"><a class="backlink" href="index.html" data-i18n="nav.photo">← photo demo</a> · <a class="backlink" href="weather.html" data-i18n="nav.weather">weather board</a> · <a class="backlink" href="bot.html" data-i18n="nav.bot">LINE bot →</a></div>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><!-- Lucide icons (ISC), copied from assets/jo/icons.svg; pause, play, utensils from Lucide too (not yet in the shared set) --><symbol id="i-anchor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V8" /><path d="M5 12H2a10 10 0 0 0 20 0h-3" /><circle cx="12" cy="5" r="3" /></symbol><symbol id="i-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></symbol><symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></symbol><symbol id="i-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></symbol><symbol id="i-circle-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></symbol><symbol id="i-circle-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="m9 12 2 2 4-4" /></symbol><symbol id="i-circle-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="m15 9-6 6" /><path d="m9 9 6 6" /></symbol><symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></symbol><symbol id="i-cloud" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" /></symbol><symbol id="i-cloud-rain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" /><path d="M16 14v6" /><path d="M8 14v6" /><path d="M12 16v6" /></symbol><symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></symbol><symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" /></symbol><symbol id="i-images" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 22H4a2 2 0 0 1-2-2V6" /><path d="m22 13-1.296-1.296a2.41 2.41 0 0 0-3.408 0L11 18" /><circle cx="12" cy="8" r="2" /><rect width="16" height="16" x="6" y="2" rx="2" /></symbol><symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></symbol><symbol id="i-life-buoy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="m4.93 4.93 4.24 4.24" /><path d="m14.83 9.17 4.24-4.24" /><path d="m14.83 14.83 4.24 4.24" /><path d="m9.17 14.83-4.24 4.24" /><circle cx="12" cy="12" r="4" /></symbol><symbol id="i-list-checks" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4" /><path d="m3 7 2 2 4-4" /><path d="M13 6h8" /><path d="M13 12h8" /><path d="M13 18h8" /></symbol><symbol id="i-map-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" /><circle cx="12" cy="10" r="3" /></symbol><symbol id="i-message-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" /></symbol><symbol id="i-pause" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="14" y="4" width="4" height="16" rx="1" /><rect x="6" y="4" width="4" height="16" rx="1" /></symbol><symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></symbol><symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3" /></symbol><symbol id="i-rotate-ccw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></symbol><symbol id="i-sailboat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 18H2a4 4 0 0 0 4 4h12a4 4 0 0 0 4-4Z" /><path d="M21 14 10 2 3 14h18Z" /><path d="M10 2v16" /></symbol><symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z" /><path d="m21.854 2.147-10.94 10.939" /></symbol><symbol id="i-ship" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" /><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76" /><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6" /><path d="M12 10v4" /><path d="M12 2v3" /></symbol><symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" /></symbol><symbol id="i-sunset" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 10V2" /><path d="m4.93 10.93 1.41 1.41" /><path d="M2 18h2" /><path d="M20 18h2" /><path d="m19.07 10.93-1.41 1.41" /><path d="M22 22H2" /><path d="m16 6-4 4-4-4" /><path d="M16 18a4 4 0 0 0-8 0" /></symbol><symbol id="i-triangle-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /><path d="M12 9v4" /><path d="M12 17h.01" /></symbol><symbol id="i-umbrella" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12a10.06 10.06 1 0 0-20 0Z" /><path d="M12 12v8a2 2 0 0 0 4 0" /><path d="M12 2v1" /></symbol><symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></symbol><symbol id="i-utensils" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" /><path d="M7 2v20" /><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" /></symbol><symbol id="i-waves" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" /><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" /><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" /></symbol><symbol id="i-wifi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h.01" /><path d="M2 8.82a15 15 0 0 1 20 0" /><path d="M5 12.859a10 10 0 0 1 14 0" /><path d="M8.5 16.429a5 5 0 0 1 7 0" /></symbol><symbol id="i-wind" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.8 19.6A2 2 0 1 0 14 16H2" /><path d="M17.5 8a2.5 2.5 0 1 1 2 4H2" /><path d="M9.8 4.4A2 2 0 1 1 11 8H2" /></symbol><symbol id="i-wrench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></symbol></svg>
 
-  <div class="simbar">
-    <span class="lbl" data-i18n="sim.title">Day simulation</span>
-    <span class="stime" id="simClock">07:45</span>
-    <button class="sbtn on" id="btnPlay">⏸ pause</button>
-    <button class="sbtn" id="btnX1">×1</button>
-    <button class="sbtn on" id="btnX2">×2</button>
-    <button class="sbtn" id="btnEOD" data-i18n="btn.skip">⏭ skip to evening</button>
-    <button class="sbtn" id="btnReset" data-i18n="btn.reset">↺ restart</button>
-    <span class="note"><span data-i18n="sim.scenario">weather scenario:</span>
-      <button class="sbtn scenbtn" data-scen="ok" style="color:var(--ok);padding:3px 8px">🟢</button>
-      <button class="sbtn scenbtn" data-scen="warn" style="color:var(--warn);padding:3px 8px">🟡</button>
-      <button class="sbtn scenbtn" data-scen="bad" style="color:var(--bad);padding:3px 8px">🔴</button>
-      <button class="sbtn scenbtn" data-scen="live" style="color:var(--accent);padding:3px 8px">⟳live</button>
-      <span data-i18n="sim.note">· restarts the day · in production events come from the chat bot, photo uploader and weather API</span></span>
+<header class="appbar">
+  <div class="appbar-in">
+    <img class="op-logo" src="assets/logo.png" alt="" width="63" height="36">
+    <div class="op-text"><div class="op-name">Phuket Jetski Club</div><div class="op-sub" data-i18n="opSub">Operations today</div></div>
+    <div class="spacer"></div>
+    <div class="ctrls">
+      <div class="seg" id="langsw" role="group" aria-label="Language" data-i18n-aria="langLabel"><button type="button" data-lang="en" lang="en">EN</button><button type="button" data-lang="th" lang="th">ไทย</button><button type="button" data-lang="ru" lang="ru">RU</button></div>
+      <button type="button" class="btn btn-quiet btn-s" data-jo-theme-toggle data-label-auto="Auto" data-label-light="Light" data-label-dark="Dark" data-label-title="Theme"></button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="app">
+  <h1 class="sr-only" data-i18n="opSub">Operations today</h1>
+
+  <div class="now">
+    <div class="now-l">
+      <svg class="ic ic-l" aria-hidden="true"><use href="#i-clock"/></svg>
+      <span class="now-t" id="simClock">07:45</span>
+      <div class="now-d"><b id="todayD"></b><span id="simState"></span></div>
+    </div>
+    <a class="btn btn-quiet btn-s" href="#demo"><svg class="ic ic-s" aria-hidden="true"><use href="#i-chevron-down"/></svg><span data-i18n="toDemo">Demo controls</span></a>
   </div>
 
-  <div class="kpis">
-    <div class="kpi"><div class="k" data-i18n="kpi.groups">Teams on water</div><div class="v" id="kGroups">0</div><div class="s" id="kGroupsS" data-i18n="kpi.groups.wait">waiting for departure</div></div>
-    <div class="kpi"><div class="k" data-i18n="kpi.clients">Clients today</div><div class="v" id="kClients">0</div><div class="s" id="kClientsS" data-i18n="kpi.clients.s">morning + afternoon</div></div>
-    <div class="kpi"><div class="k" data-i18n="kpi.photos">Photos uploaded</div><div class="v" id="kPhotos">0</div><div class="s" id="kPhotosS" data-i18n="kpi.photos.s">uploader · live</div></div>
-    <div class="kpi warn"><div class="k" data-i18n="kpi.defects">Open defects</div><div class="v" id="kIssues">2</div><div class="s" data-i18n="kpi.defects.s">tech board</div></div>
-    <div class="kpi good"><div class="k" data-i18n="kpi.inc">Incidents</div><div class="v" id="kInc">0</div><div class="s" id="kIncS" data-i18n="kpi.inc.s">today</div></div>
-  </div>
+  <section aria-labelledby="attH">
+    <h2 class="sec-h" id="attH" data-i18n="att.h">Needs attention</h2>
+    <div class="att-list" id="attList" aria-live="polite"></div>
+  </section>
 
-  <div class="cols">
-    <div class="panel">
-      <div class="head"><span class="ttl" data-i18n="panel.map">Route map · Sirey → Ao Po → Monkey</span><span class="right" data-i18n="panel.map.r">positions: schedule + captain reports (v2 — geo pings)</span></div>
-      <div class="mapwrap"><svg id="map" viewBox="0 0 820 470" aria-label="route map"></svg></div>
-      <div class="wstrip" id="wstrip"><span class="chip">weather: loading…</span></div>
-      <div class="legend" id="legend"></div>
+  <section aria-labelledby="kpiH">
+    <h2 class="sr-only" id="kpiH" data-i18n="kpi.h">Today in numbers</h2>
+    <div class="kpis">
+      <div class="card tile"><div class="tile-k"><svg class="ic ic-s" aria-hidden="true"><use href="#i-sailboat"/></svg><span data-i18n="kpi.groups">Teams on the water</span></div>
+        <span class="num" id="kGroups">0</span><div class="tile-sub" id="kGroupsS"></div></div>
+      <div class="card tile"><div class="tile-k"><svg class="ic ic-s" aria-hidden="true"><use href="#i-users"/></svg><span data-i18n="kpi.clients">Guests today</span></div>
+        <span class="num" id="kClients">0</span><div class="tile-sub" data-i18n="kpi.clients.s">Morning + afternoon trips</div></div>
+      <div class="card tile"><div class="tile-k"><svg class="ic ic-s" aria-hidden="true"><use href="#i-images"/></svg><span data-i18n="kpi.photos">Photos uploaded</span></div>
+        <span class="num" id="kPhotos">0</span><div class="tile-sub" data-i18n="kpi.photos.s">From the guides' phones</div><div id="kPhotosB"></div></div>
+      <div class="card tile"><div class="tile-k"><svg class="ic ic-s" aria-hidden="true"><use href="#i-wrench"/></svg><span data-i18n="kpi.defects">Machines in repair</span></div>
+        <span class="num" id="kIssues">2</span><div class="tile-sub" data-i18n="kpi.defects.s">See the tech board below</div><div id="kIssuesB"></div></div>
+      <div class="card tile"><div class="tile-k"><svg class="ic ic-s" aria-hidden="true"><use href="#i-life-buoy"/></svg><span data-i18n="kpi.inc">Incidents today</span></div>
+        <span class="num" id="kInc">0</span><div class="tile-sub" data-i18n="kpi.inc.s">Logged with time and place</div><div id="kIncB"></div></div>
     </div>
-    <div class="panel">
-      <div class="head"><span class="ttl" data-i18n="panel.feed">Event feed</span><span class="right" id="feedCount">0</span></div>
-      <div id="feedwrap"></div>
-    </div>
+  </section>
+
+  <div class="main2">
+    <section class="card map-card" aria-labelledby="mapH">
+      <div class="card-h"><h2 class="h3" id="mapH" data-i18n="map.h">Where the teams are</h2><p data-i18n="map.sub"></p></div>
+      <div class="mapbox"><svg id="map" viewBox="0 0 820 470" role="img" aria-label="Route map"></svg></div>
+      <p class="map-pick" id="mapPick" aria-live="polite" hidden></p>
+      <div>
+        <div class="teams-h"><h3 id="teamsH"></h3><span id="teamsSum"></span></div>
+        <ul class="teams" id="teamList"></ul>
+      </div>
+      <div class="wx" id="wstrip"></div>
+    </section>
+
+    <section class="card feed-card" id="feedCard" aria-labelledby="feedH">
+      <div class="card-top"><h2 class="h3" id="feedH" data-i18n="panel.feed" tabindex="-1">Event feed</h2><span class="caption muted" id="feedCount"></span></div>
+      <div class="chips" id="feedF" role="group" aria-label="Show events" data-i18n-aria="f.label">
+        <button type="button" class="chip" data-f="all" data-i18n="f.all">All</button><button type="button" class="chip" data-f="prob" data-i18n="f.prob">Problems</button><button type="button" class="chip" data-f="photo" data-i18n="f.photo">Photos</button><button type="button" class="chip" data-f="wx" data-i18n="f.wx">Weather</button>
+      </div>
+      <ul class="feed-list" id="feedwrap"></ul>
+      <div class="feed-foot" id="feedFoot"></div>
+    </section>
   </div>
 
   <div class="grid3">
-    <div class="panel">
-      <div class="head"><span class="ttl" data-i18n="panel.tech">🔧 Tech board — defects</span><span class="right" data-i18n="panel.tech.r">chat → tickets</span></div>
-      <div class="body"><table class="mini" id="techTable"></table></div>
-    </div>
-    <div class="panel">
-      <div class="head"><span class="ttl" data-i18n="panel.photo">📸 Photo compliance</span><span class="right" data-i18n="panel.photo.r">uploader · by team</span></div>
-      <div class="body"><table class="mini" id="photoTable"></table></div>
-    </div>
-    <div class="panel">
-      <div class="head"><span class="ttl" data-i18n="panel.shifts">👥 Shifts</span><span class="right" id="shiftTimes">08:30 / 12:45</span></div>
-      <div class="body"><table class="mini" id="shiftTable"></table></div>
-    </div>
+    <section class="card" aria-labelledby="techH">
+      <div class="card-h"><h2 class="h3" id="techH" data-i18n="panel.tech">Machines in repair</h2><p data-i18n="panel.tech.r"></p></div>
+      <ul class="rows" id="techList"></ul>
+    </section>
+    <section class="card" aria-labelledby="photoH">
+      <div class="card-h"><h2 class="h3" id="photoH" data-i18n="panel.photo">Photos by team</h2><p data-i18n="panel.photo.r"></p></div>
+      <div id="photoBody"></div>
+    </section>
+    <section class="card" aria-labelledby="shiftH">
+      <div class="card-h"><h2 class="h3" id="shiftH" data-i18n="panel.shifts">Guides on shift</h2><p id="shiftTimes"></p></div>
+      <ul class="rows" id="shiftList"></ul>
+    </section>
   </div>
 
-  <div class="panel" style="margin-bottom:14px">
-    <div class="head"><span class="ttl" data-i18n="panel.eod">📋 EOD — daily report (auto at 18:00)</span>
-      <span class="right"><button class="sbtn" id="eodLang" title="report language"><b>EN</b> · RU</button> <button class="btn ghost" id="eodCopy">📋 copy</button></span></div>
-    <div class="body"><pre class="eod" id="eodText">The report is generated by the evening of the simulation (or press "⏭ skip to evening").</pre></div>
-  </div>
+  <section class="card eod-card" aria-labelledby="eodH">
+    <div class="eod-side">
+      <div class="card-h"><h2 class="h3" id="eodH" data-i18n="panel.eod">Evening report</h2><p data-i18n="eod.sub"></p></div>
+      <div class="eod-lang"><span class="caption muted" id="eodLangL" data-i18n="eod.langTitle">Report language</span>
+        <div class="seg" id="eodLang" role="group" aria-labelledby="eodLangL"><button type="button" data-l="en" lang="en">EN</button><button type="button" data-l="th" lang="th">ไทย</button><button type="button" data-l="ru" lang="ru">RU</button></div></div>
+    </div>
+    <div id="eodBox"></div>
+    <div class="eod-act">
+      <button type="button" class="btn btn-primary" id="eodCopy"></button>
+      <div class="note note-ok" id="eodNote" role="status" hidden></div>
+    </div>
+  </section>
 
-  <div class="foot" data-i18n="foot">
-    Where the data comes from in production: ① chat-bot monitor of the work chats (guides' WhatsApp / staff LINE) — captain reports, breakdowns, incidents, shifts; ② photo uploader (module A) — photo counters + a geo ping on every upload; ③ weather API (module B) — Sirey→Monkey corridor. The simulation is built from real patterns of 20 months of work-chat history (anonymized). Wave/wind thresholds are preliminary — being calibrated with the lead guide. GPS trackers are a phase-2 option — not required for the demo.
-  </div>
-</div>
+  <section class="demo" id="demo" aria-labelledby="demoH">
+    <h2 class="h3" id="demoH" data-i18n="demo.h">Demo controls</h2>
+    <p class="body-s muted" data-i18n="demo.p"></p>
+    <div class="demo-row">
+      <button type="button" class="btn btn-secondary btn-s" id="btnPlay"></button>
+      <div class="seg" id="speedSeg" role="group" aria-label="Speed" data-i18n-aria="demo.speed"><button type="button" id="btnX1" data-x="1">×1</button><button type="button" id="btnX2" data-x="2">×2</button></div>
+      <button type="button" class="btn btn-quiet btn-s" id="btnEOD"><svg class="ic ic-s" aria-hidden="true"><use href="#i-sunset"/></svg><span data-i18n="btn.skip">Skip to evening</span></button>
+      <button type="button" class="btn btn-quiet btn-s" id="btnReset"><svg class="ic ic-s" aria-hidden="true"><use href="#i-rotate-ccw"/></svg><span data-i18n="btn.reset">Restart the day</span></button>
+    </div>
+    <div class="demo-g">
+      <span class="caption muted" id="scenL" data-i18n="sim.scenario">Weather for the demo day</span>
+      <div class="seg" id="scenSeg" role="group" aria-labelledby="scenL"><button type="button" class="scenbtn" data-scen="live" data-i18n="scen.live">Live</button><button type="button" class="scenbtn" data-scen="ok" data-i18n="scen.ok">Calm</button><button type="button" class="scenbtn" data-scen="warn" data-i18n="scen.warn">Borderline</button><button type="button" class="scenbtn" data-scen="bad" data-i18n="scen.bad">Storm</button></div>
+      <p class="caption muted" data-i18n="sim.note"></p>
+    </div>
+    <nav class="demo-links" aria-label="Other demo screens" data-i18n-aria="otherScreens"><span class="body-s muted" data-i18n="otherScreens">Other demo screens:</span><a href="index.html" data-i18n="nav.photo">Photo demo</a><a href="weather.html" id="navWx" data-i18n="nav.weather">Weather board</a><a href="bot.html" data-i18n="nav.bot">LINE bot</a></nav>
+    <p class="caption muted" id="rtLine"></p>
+  </section>
+</main>
+<footer class="footer-note" id="foot"></footer>
 
 <script>
 (function(){
@@ -200,7 +308,15 @@
    (wave = significant wave height, m; wind = sustained wind at 10 m, kn): placeholders until
    calibrated with the lead guide during the season. Keep both pages in sync.
    SESSIONS — session start times (changed 12.10.2026 from 08:20 / 12:30). Shown in the UI and used as the
-   simulated departure of each trip (a simplification — real pier departures are ~09:30 / ~14:05). */
+   simulated departure of each trip (a simplification — real pier departures are ~09:30 / ~14:05).
+
+   URL parameters (all optional):
+     ?wx=ok|warn|bad   demo weather (wave/wind/rain only — the low-tide time stays live when available)
+     ?t=HH:MM          jump the simulated day to that time (07:45–18:30) and pause there — e.g. ?wx=warn&t=10:45
+                       is a busy moment with an open incident (for screenshots); press Play to continue
+     ?speed=1|2        simulation speed
+     ?lang=en|th|ru    interface language (also saved as the shared demo language "jetops_lang")
+   When the day has started (and jumped, if ?t is set) <body> gets data-ready="1". */
 const CONFIG={
   API_BASE:"https://api.open-meteo.com/v1/forecast",
   MARINE_BASE:"https://marine-api.open-meteo.com/v1/marine",
@@ -208,6 +324,7 @@ const CONFIG={
   SESSIONS:{ m:"08:30", a:"12:45" }
 };
 const TZ="Asia/Bangkok";
+const PARAMS=new URLSearchParams(location.search);
 /* Real geography (WGS84), verified against OpenStreetMap (2026-07-14, coastlines +
    Ko Li Pe refined 2026-07-27):
    Ko Sireh 7.883/98.428 · Ko Maphrao/Coconut 7.941/98.422 (hugs Phuket's east coast) ·
@@ -229,195 +346,290 @@ function prj(lat,lon){ // equirect → viewBox 820×470
 }
 // Route S→N up the channel, then the open crossing from Ao Po to Monkey.
 // nk/sk = I18N keys for translated labels; proper names (Rang Yai, Naka…) stay as the team writes them.
+// icon = Lucide symbol id; lb = where the label sits (presentation only — the coordinates are the real ones);
+// wk = I18N key of the short name used in "near …" (the team list).
 const STOPS=[
-  {lat:7.883,lon:98.428,name:"Pier · Koh Sirey",nk:"stop.pier",icon:"⚓"},
-  {lat:7.906,lon:98.436,name:"Laem Nga",icon:"📸"},
-  {lat:7.941,lon:98.422,name:"Coconut Is. (Maphrao)",nk:"stop.coconut",icon:"📸"},
-  {lat:7.956,lon:98.447,name:"Rang Yai",icon:"⛱",sk:"sub.rangyai"},
-  {lat:7.965,lon:98.452,name:"Rang Noi",icon:"📸"},
-  {lat:8.027,lon:98.460,name:"Naka Noi",icon:"📸",sk:"sub.nakanoi"},
-  {lat:8.051,lon:98.466,name:"Naka Yai",icon:"🍜",sk:"sub.nakayai"},
-  {lat:8.069,lon:98.445,name:"Ao Po · Grand Marina",icon:"🛥"},
-  {lat:8.1158,lon:98.4234,name:"Monkey Is.",nk:"stop.monkey",icon:"🐒"}
+  {lat:7.883,lon:98.428,name:"Pier · Koh Sirey",nk:"stop.pier",wk:"w.pier",icon:"anchor",lb:"below"},
+  {lat:7.906,lon:98.436,name:"Laem Nga",icon:"camera",lb:"right"},
+  {lat:7.941,lon:98.422,name:"Coconut Is. (Maphrao)",nk:"stop.coconut",wk:"w.coconut",icon:"camera",lb:"below"},
+  {lat:7.956,lon:98.447,name:"Rang Yai",icon:"umbrella",sk:"sub.rangyai",lb:"rightlow"},
+  {lat:7.965,lon:98.452,name:"Rang Noi",icon:"camera",lb:"right"},
+  {lat:8.027,lon:98.460,name:"Naka Noi",icon:"camera",sk:"sub.nakanoi",lb:"right"},
+  {lat:8.051,lon:98.466,name:"Naka Yai",icon:"utensils",sk:"sub.nakayai",lb:"right"},
+  {lat:8.069,lon:98.445,name:"Ao Po · Grand Marina",wk:"w.aopo",icon:"ship",lb:"left"},
+  {lat:8.1158,lon:98.4234,name:"Monkey Is.",nk:"stop.monkey",wk:"w.monkey",icon:"map-pin",lb:"right"}
 ].map(s=>Object.assign(s,prj(s.lat,s.lon)));
 // t by cumulative distance along the route
 (function(){let d=0;const ds=[0];
   for(let i=1;i<STOPS.length;i++){d+=Math.hypot(STOPS[i].x-STOPS[i-1].x,STOPS[i].y-STOPS[i-1].y);ds.push(d);}
   STOPS.forEach((s,i)=>s.t=+(ds[i]/d).toFixed(4));})();
 const AOPOR_IDX=7, T_AOPOR=STOPS[AOPOR_IDX].t, MONKEY_CAP=Math.min(T_AOPOR+0.03,0.99);
-const GROUPS=[ // team names → I18N "team.<id>"
-  {id:"Y",emoji:"💛",hex:"#f5c518"},
-  {id:"P",emoji:"💜",hex:"#8e5bd8"},
-  {id:"B",emoji:"💙",hex:"#3f8ef7"},
-  {id:"K",emoji:"🩷",hex:"#ef7fb3"},
-  {id:"O",emoji:"🧡",hex:"#f08c2e"},
-  {id:"G",emoji:"💚",hex:"#3ddc78"}
+// small islands and shore names (verified: Bang Rong Pier 8.050/98.416; Laem Khat cape 8.101/98.427 —
+// re-verified 2026-07-27, two independent sources agree; it sits NORTH of Bang Rong, near Ao Po;
+// Khai Nai 7.908/98.550; Ko Li Pe 7.9554/98.5151 — see the header note)
+const ISLETS=[[7.908,98.550,"Khai Nai"],[7.9554,98.5151,"Ko Li Pe"]];
+const SHORE=[[8.050,98.416,"Bang Rong Pier",0,3],[8.101,98.427,"Laem Khat",-2,24]]; // [lat, lon, name, dx, dy of the label]
+const GROUPS=[ // team names → I18N "team.<id>"; hex = the team's wristband colour (data, not decoration)
+  {id:"Y",hex:"#f5c518"},
+  {id:"P",hex:"#8e5bd8"},
+  {id:"B",hex:"#3f8ef7"},
+  {id:"K",hex:"#ef7fb3"},
+  {id:"O",hex:"#f08c2e"},
+  {id:"G",hex:"#3ddc78"}
 ];
+const GHEX={}; GROUPS.forEach(g=>GHEX[g.id]=g.hex);
 const hm=s=>{const p=String(s).split(":");return (+p[0])*60+(+p[1]);};
 const TRIP_MIN=235, START_M=hm(CONFIG.SESSIONS.m), START_A=hm(CONFIG.SESSIONS.a), STAGGER=4;
 const END_M=START_M+TRIP_MIN+STAGGER*5, END_A=START_A+TRIP_MIN+STAGGER*5; // last team back (6 teams per trip in the demo)
+const DAY_START=7*60+45, DAY_END=18*60+30;
 const $=s=>document.querySelector(s);
 
 /* ================= I18N =================
    EN complete (default). TH = machine-drafted, needs proofreading by a native speaker
-   (see 14_localization_tasks.md). RU = Russian guides. Keep all Thai/Cyrillic inside I18N.
-   Values may be functions → runtime text (feed, chips, tables, EOD report) is built per language. */
+   (see 14_localization_tasks.md); the Thai draft marker is in the subtitle and the footer.
+   RU = Russian guides. Keep all Thai/Cyrillic inside I18N.
+   Values may be functions → runtime text (feed, lists, the evening report) is built per language.
+   The interface uses Lucide icons only; the evening report is a chat message, so it keeps its emoji. */
 const MU=s=>'<span style="color:var(--muted)">'+s+'</span>';
 const ruN=(n,one,few,many)=>{const a=n%10,b=n%100;return a===1&&b!==11?one:(a>=2&&a<=4&&(b<12||b>14))?few:many;};
-const RULE="──────────────────────────────────────────";
+const RULE="────────────────────"; // short enough not to wrap in the report box on a 375 px phone
 const I18N={
   en:{
-    "brand.small":"Ops Dashboard · demo",
-    "nav.photo":"← photo demo","nav.weather":"weather board","nav.bot":"LINE bot →",
-    "sim.title":"Day simulation","btn.pause":"⏸ pause","btn.play":"▶ play",
-    "btn.skip":"⏭ skip to evening","btn.reset":"↺ restart",
-    "sim.scenario":"weather scenario:",
-    "sim.note":"· restarts the day · in production events come from the chat bot, photo uploader and weather API",
-    "kpi.groups":"Teams on water","kpi.clients":"Clients today","kpi.clients.s":"morning + afternoon",
-    "kpi.photos":"Photos uploaded","kpi.photos.s":"uploader · live",
-    "kpi.defects":"Open defects","kpi.defects.s":"tech board","kpi.inc":"Incidents","kpi.inc.s":"today",
-    "kpi.groups.wait":"waiting for departure","kpi.groups.split":(m,a)=>`${m} morning · ${a} afternoon`,"kpi.groups.port":"all in port",
-    "panel.map":"Route map · Sirey → Ao Po → Monkey","panel.map.r":"positions: schedule + captain reports (v2 — geo pings)",
-    "panel.feed":"Event feed","feed.count":n=>`${n} events`,
-    "panel.tech":"🔧 Tech board — defects","panel.tech.r":"chat → tickets",
-    "panel.photo":"📸 Photo compliance","panel.photo.r":"uploader · by team",
-    "panel.shifts":"👥 Shifts",
-    "panel.eod":"📋 EOD — daily report (auto at 18:00)","btn.copy":"📋 copy","copy.ok":"✓ copied","copy.fail":"✗ copy failed","eod.langTitle":"report language",
-    "eod.placeholder":"The report is generated by the evening of the simulation (or press \"⏭ skip to evening\").",
-    "foot":"Where the data comes from in production: ① chat-bot monitor of the work chats (guides' WhatsApp / staff LINE) — captain reports, breakdowns, incidents, shifts; ② photo uploader (module A) — photo counters + a geo ping on every upload; ③ weather API (module B) — Sirey→Monkey corridor. The simulation is built from real patterns of 20 months of work-chat history (anonymized). Wave/wind thresholds are preliminary — being calibrated with the lead guide. GPS trackers are a phase-2 option — not required for the demo.",
-    "team.Y":"Yellow","team.P":"Purple","team.B":"Blue","team.K":"Pink","team.O":"Orange","team.G":"Green",
-    "map.aria":"route map","map.phuket":"PHUKET · east coast","map.yao":"KOH YAO YAI","map.png":"↗ Phang Nga Bay","map.cross":"open crossing · swell",
+    docTitle:"Phuket Jetski Club — Operations today (demo)",
+    opSub:"Operations today", langLabel:"Language",
+    themeAuto:"Auto", themeLight:"Light", themeDark:"Dark", themeTitle:"Theme",
+    toDemo:"Demo controls",
+    "clock.run":x=>`Demo day · running at ×${x}`, "clock.pause":"Demo day · paused", "clock.end":"Demo day · finished", "clock.load":"Loading the weather…",
+    "att.h":"Needs attention",
+    "att.quiet":"All quiet on the water", "att.quietB":"No open incidents or breakdowns. New problems show up here first.",
+    "att.done":n=>`${n} handled today.`,
+    "att.more":n=>`${n} more ${n===1?"problem":"problems"} in the event feed.`, "att.showAll":"Show all problems",
+    "act.call":"Call the lead guide", "act.done":"Mark handled", "act.wx":"Open the weather board",
+    "call.demo":tm=>`Calls aren't connected in the demo. In the live system this rings the lead guide of the ${tm} team.`,
+    handled:"Handled",
+    "p.storm.t":"Weather · storm, no crossing to Monkey", "p.storm.b":"All teams take the Inside Program (sheltered route). Trips go ahead — don't cancel.",
+    "p.h100.t":"Repair · H100 won't go over 65 km/h", "p.h100.b":"The captain reported it from the water. Added to the tech board from the chat message.",
+    "p.inc1.t":tm=>`Incident · ${tm} · Rang Yai`, "p.inc1.b":"A client fell on a wave — bruise, treated on site, no speedboat needed. Logged in case of a refund dispute.",
+    "p.short.t":"Staff · afternoon trip is 1 guide short", "p.short.b":"A guide is ill. Standby has been asked to come in.",
+    "p.mdone.t":"Photos · missing from 2 teams", "p.mdone.b":(g,o)=>`${g}: Monkey stop. ${o}: Rang Noi stop. The guides got an automatic reminder.`,
+    "p.k18.t":"Repair · K18 to the workshop", "p.k18.b":"Heavy steering after a collision. Swapped for the backup jet ski.",
+    "p.compl.t":"Complaint · rain on the afternoon trip", "p.compl.b":"“Why wasn't it cancelled because of the rain?” The guide sent the briefing text and offered a morning reschedule.",
+    "p.evac.t":(tm,pl)=>`Incident · ${tm} · ${pl}`, "p.evac.b":"Seasickness. A speedboat was called and took the client back — OK.",
+    "kpi.h":"Today in numbers",
+    "kpi.groups":"Teams on the water","kpi.clients":"Guests today","kpi.clients.s":"Morning + afternoon trips",
+    "kpi.photos":"Photos uploaded","kpi.photos.s":"From the guides' phones",
+    "kpi.defects":"Machines in repair","kpi.defects.s":"See the tech board below","kpi.inc":"Incidents today","kpi.inc.s":"Logged with time and place",
+    "kpi.groups.wait":s=>`Morning trip leaves at ${s}`,"kpi.groups.split":(m,a)=>`${m} morning · ${a} afternoon`,"kpi.groups.port":"All teams in port",
+    "b.shop":n=>`${n} in the workshop`,"b.incOpen":n=>`${n} open`,"b.incDone":"All handled","b.photoMiss":n=>`Missing from ${n} teams`,
+    "map.h":"Where the teams are","map.sub":"Pier at Koh Sirey → Ao Po → Monkey Island. Positions come from the schedule and captain reports.",
+    "map.aria":"Route map: from the pier at Koh Sirey up the channel to Ao Po, then the open crossing to Monkey Island",
+    "map.phuket":"Phuket · east coast","map.yao":"Koh Yao Yai","map.png":"Phang Nga Bay","map.cross":"open crossing · swell",
+    "map.tap":"Tap a place or a team on the map to see its name.",
     "stop.pier":"Pier · Koh Sirey","stop.coconut":"Coconut Is. (Maphrao)","stop.monkey":"Monkey Is.",
-    "sub.rangyai":"shelter · backup 🐒","sub.nakanoi":"nearer Sirey","sub.nakayai":"lunch · tide-sensitive",
-    "legend.ring":"<b>white ring</b> = afternoon trip · <b>⚓</b> in port",
-    "legend.coords":"real coordinates (Monkey Island — from the client's map link) · guide waypoints to be linked during rollout",
-    "dot.title":(team,skis,cl,skip)=>`${team} team · ${skis} jet skis · ${cl} clients${skip?" · no monkey":""}`,
-    "scen.ok":"🟢 calm","scen.warn":"🟡 borderline","scen.bad":"🔴 storm",
-    "wx.ok":"🟢 Monkey OK","wx.warn":"🟡 Monkey borderline","wx.bad":"🔴 NO MONKEY","wx.gusts":g=>`(gusts ${g})`,
-    "wx.rain":"🌧 rain","wx.norain":"☀️ no rain","wx.live":"● live Open-Meteo","wx.scen":s=>`scenario: ${s}`,"wx.sample":"sample data (offline)",
-    "wx.low":lt=>`🌊 low tide ${lt} · gates: Monkey·photos·mangroves·Naka`,"tide.demo":"~12:00 (demo curve)","u.kn":"kn","u.m":"m",
-    "tech.machine":"machine","tech.defect":"defect","tech.status":"status","tech.open":d=>`open ${d}d`,
-    "st.shop":"🛑 workshop","st.open":"🔧 in progress","st.watch":"👁 monitoring","st.done":"✓ closed",
+    "sub.rangyai":"shelter · backup monkeys","sub.nakanoi":"nearer Sirey","sub.nakayai":"lunch · tide-sensitive",
+    "w.pier":"the pier","w.coconut":"Coconut Island","w.aopo":"Ao Po","w.monkey":"Monkey Island",
+    "where.wait":s=>`Leaves at ${s}`,"where.out":n=>`Heading out · near ${n}`,"where.back":n=>`Heading back · near ${n}`,
+    "where.turn":"At Ao Po — no Monkey today","where.monkey":"At Monkey Island","where.port":"Back in port",
+    "teams.h.m":s=>`Morning trip ${s}`,"teams.h.a":s=>`Afternoon trip ${s}`,
+    "teams.sum":(n,sk,cl)=>`${n} teams · ${sk} jet skis · ${cl} guests`,
+    "dot.title":(tm,skis,cl,skip)=>`${tm} · ${skis} jet skis · ${cl} guests${skip?" · no Monkey":""}`,
+    "pick.team":(tm,w)=>`${tm}: ${w}`,
+    "wx.ok":"Monkey: good to go","wx.warn":"Monkey: wave building","wx.bad":"No crossing to Monkey",
+    "wx.wind":(k,g)=>`Wind ${k} kn, gusts ${g}`,"wx.wave":w=>`Wave ${w} m`,
+    "wx.rain":"Rain","wx.norain":"No rain","wx.live":"Live · Open-Meteo","wx.scen":s=>`Demo day: ${s}`,"wx.sample":"Sample data",
+    "wx.low":lt=>`Low tide ${lt} — check the Monkey landing, photo stops, mangroves and Naka parking`,"tide.demo":"~12:00 (sample curve)","u.kn":"kn","u.m":"m",
+    "panel.feed":"Event feed","feed.count":n=>`${n} ${n===1?"event":"events"}`,
+    "f.label":"Show events","f.all":"All","f.prob":"Problems","f.photo":"Photos","f.wx":"Weather",
+    "feed.emptyT":"The day hasn't started yet","feed.empty":s=>`The first event is the weather brief at 07:50. The morning trip leaves at ${s}.`,
+    "feed.none":"Nothing of this kind yet today.","feed.showAll":"Show all events","feed.more":n=>`Show all ${n} events`,"feed.less":"Show fewer",
+    "ty.weather":"Weather","ty.trip":"Trip","ty.photo":"Photos","ty.breakdown":"Repair","ty.incident":"Incident","ty.client":"Complaint","ty.shift":"Staff","ty.report":"Report",
+    "who.office":"Office","who.tide":"Tide table","who.teams":n=>`${n} teams`,"who.m":"Morning trip","who.a":"Afternoon trip","teamN":tm=>`${tm} team`,
+    "team.Y":"Yellow","team.P":"Purple","team.B":"Blue","team.K":"Pink","team.O":"Orange","team.G":"Green",
+    "ev.brief":(w,p)=>`Morning brief: ${w}. ${p} ${MU("Auto-post from the weather module.")}`,
+    "ev.brief.bad":"high waves and wind","ev.brief.wx":(w,k)=>`waves ${w} m, wind ${k} kn`,
+    "ev.plan.bad":"<b>Inside Program</b>, Monkey cancelled.","ev.plan.warn":"Monkey borderline — the lead decides on the water.","ev.plan.ok":"Full 9-island route.",
+    "ev.depM":(skis,cl)=>`<b>Morning trip left the pier:</b> 6 teams, ${skis} jet skis, ${cl} guests.`,
+    "ev.photoY":`38 photos uploaded at Coconut Island. ${MU("Location saved.")}`,
+    "ev.h100":"“Won't go over 65” — reported by the captain. Added to the tech board from the chat message.",
+    "ev.swell":`Waves building past Grand Marina, side swell. ${MU("Report from the chat.")}`,
+    "ev.noMonkey":aft=>aft?"<b>No Monkey</b> on the afternoon trip — turned at Grand Marina.":"<b>No Monkey</b> — big waves, turned at Grand Marina.",
+    "ev.monkeyOk":aft=>`<b>Monkey Island reached</b>${aft?" on the afternoon trip":""}.`,
+    "ev.inc1":`<b>A client fell on a wave</b> near Rang Yai — bruise, treated on site, no speedboat needed. ${MU("Logged in case of a refund dispute.")}`,
+    "ev.low":lt=>`<b>Low tide ${lt}:</b> little parking at Naka (snorkelling from the jet skis); afternoon trip — watch the Monkey landing and the mangrove entry. ${MU("From the tide table.")}`,
+    "ev.short":"<b>1 guide short</b> on the afternoon shift (illness) — standby asked to come in.",
+    "ev.sbok":"<b>Standby confirmed</b> — the afternoon trip is fully staffed, 6 of 6.",
+    "ev.mdone":(g,o)=>`<b>Morning trip finished.</b> Photos complete for 4 of 6 teams; ${g}: Monkey missing, ${o}: Rang Noi missing. The guides got an automatic reminder. ${MU("The admin used to chase this by hand.")}`,
+    "ev.depA":cl=>`<b>Afternoon trip left the pier:</b> 6 teams, ${cl} guests.`,
+    "ev.k18":"<b>Heavy steering after a collision</b> — sent to the workshop, swapped for the backup jet ski.",
+    "ev.complaint":`“Why wasn't it cancelled because of the rain?” — the guide sent the briefing text and offered a morning reschedule. ${MU("Template from the weather module.")}`,
+    "ev.evac":pl=>`<b>Seasickness:</b> speedboat called to ${pl}, the client was taken back — OK.`,
+    "ev.photoA":`+176 photos from Coconut, Rang Yai and Rang Noi. ${MU("Locations saved.")}`,
+    "ev.adone":"<b>Afternoon trip finished.</b> Photos complete for 6 of 6 teams — the reminders worked.",
+    "ev.eod":"<b>Evening report ready</b> and sent to the office, tech and the lead guide (below).",
+    "panel.tech":"Machines in repair","panel.tech.r":"Filled in from the work chat.",
+    "tech.open":d=>d?`open ${d} ${d===1?"day":"days"}`:"opened today",
+    "st.shop":"In the workshop","st.open":"Being fixed","st.watch":"Watching","st.done":"Fixed",
     "issue.Y62":"hood latch pops open in wind (repeat #2!)","issue.H29":"sensor — constant alarm",
-    "issue.H100":"won't go over 65 km/h — flagged by captain","issue.K18":"heavy steering after K18↔K24 contact — inspection needed",
-    "eod.shop":"WORKSHOP","eod.open":"OPEN",
-    "photo.aft":"(afternoon)","photo.missing":l=>`⚠ missing: ${l}`,"photo.ok":"✓ complete","photo.wait":"teams still at sea — counters grow as photos are uploaded…",
-    "shift.m":s=>`Morning ${s}`,"shift.a":s=>`Afternoon ${s}`,"shift.tom":"Tomorrow","shift.sb":"Standby","shift.sbv":"1 guide + 1 freelancer",
-    "shift.full":"6/6 ✓","shift.short":"5/6 ⚠ (looking for 1)","shift.tomShort":"5/6 ⚠ 1 guide needed","shift.conf":"6/6 ✓ (standby confirmed)",
-    "ev.brief":(w,p)=>`🏢 <b>Office:</b> morning brief — ${w}. ${p} ${MU("(auto-post from the weather module)")}`,
-    "ev.brief.bad":"HIGH WAVES AND WIND","ev.brief.wx":(w,k)=>`waves ${w} m, wind ${k} kn`,
-    "ev.plan.bad":"<b>🚨 Inside Program</b>, Monkey cancelled","ev.plan.warn":"Monkey borderline — decision on the water","ev.plan.ok":"full 9-islands route",
-    "ev.depM":(skis,cl)=>`🚤 <b>Morning trip departed:</b> 6 teams · ${skis} jet skis · ${cl} clients`,
-    "ev.photoY":tm=>`📸 <b>${tm}</b> · Coconut Is.: 38 photos uploaded ${MU("· geo ping ✓")}`,
-    "ev.h100":`🔧 <b>H100:</b> "won't go over 65" — flagged by captain → tech ticket created from the chat message`,
-    "ev.swell":tm=>`🌊 <b>${tm}</b> (from the water): waves building past Grand Marina, side swell ${MU("· report from chat")}`,
-    "ev.noMonkey":(e,tm,aft)=>aft?`${e} <b>${tm} (afternoon): NO MONKEY</b> — turnaround at Grand Marina`:`${e} <b>${tm}: NO MONKEY</b> — big waves, turnaround at Grand Marina`,
-    "ev.monkeyOk":(e,tm,aft)=>`${e} <b>${tm}${aft?" (afternoon)":""}:</b> Monkey OK ✓`,
-    "ev.inc1":tm=>`🚑 <b>Incident · ${tm} · Rang Yai:</b> client fell on a wave — bruise, treated on site, no speedboat needed. ${MU("Logged (refund-dispute protection)")}`,
-    "ev.low":lt=>`🌊 <b>Low tide ${lt}:</b> Naka — parking limited (snorkeling from the jet skis); afternoon trip — watch the Monkey landing and the mangrove entry ${MU("· auto from tide table")}`,
-    "ev.short":"👥 <b>Afternoon shift:</b> 1 guide short (illness) — standby requested",
-    "ev.sbok":"👥 <b>Standby confirmed</b> — afternoon trip fully staffed 6/6 ✓",
-    "ev.mdone":(g,o)=>`📸 <b>Morning trip finished:</b> photo compliance — <span class="okt">4/6 teams complete</span>, <span class="miss">${g}: Monkey missing ("forget" 🙈)</span>, <span class="miss">${o}: Rang Noi missing</span> → auto-reminder sent to guides ${MU("(the admin used to chase this manually)")}`,
-    "ev.depA":cl=>`🚤 <b>Afternoon trip departed:</b> 6 teams · ${cl} clients`,
-    "ev.k18":"🔧 <b>K18:</b> steering after collision → <b>to workshop</b>, swapped for the backup jet ski",
-    "ev.complaint":`💬 <b>Complaint (afternoon):</b> "why wasn't it cancelled because of the rain?" → guide sent the briefing text, morning reschedule offered ${MU("· template from the weather module")}`,
-    "ev.evac":(tm,pl)=>`🤢 <b>Seasickness · ${tm}:</b> speedboat called to ${pl}, client evacuated — OK`,
-    "ev.photoA":"📸 Afternoon teams: +176 photos (Coconut, Rang Yai, Rang Noi) · geo pings ✓",
-    "ev.adone":"📸 <b>Afternoon trip finished:</b> 6/6 teams — photos complete ✓ (reminders worked)",
-    "ev.eod":"📋 <b>EOD report generated</b> and sent: office + tech + lead guide (panel below)",
+    "issue.H100":"won't go over 65 km/h — flagged by captain","issue.K18":"heavy steering after K18–K24 contact — inspection needed",
+    "eod.shop":"workshop","eod.open":"open",
+    "panel.photo":"Photos by team","panel.photo.r":"Uploaded and expected photos for each team.",
+    "photo.of":(u,e)=>`${u} of ${e} photos`,"photo.missing":l=>`Missing: ${l}`,"photo.ok":"Complete",
+    "photo.waitT":"No photos counted yet","photo.wait":"The teams are at sea. Counts appear here after each trip, when the guides upload.",
+    "photo.waitA":"The afternoon teams are at sea — their counts come after the trip.",
+    "panel.shifts":"Guides on shift","panel.shifts.r":(m,a)=>`Trips at ${m} and ${a}`,
+    "shift.m":s=>`Morning trip ${s}`,"shift.a":s=>`Afternoon trip ${s}`,"shift.tom":"Tomorrow","shift.sb":"Standby","shift.sbv":"1 guide + 1 freelancer",
+    "sv.of":(a,b)=>`${a} of ${b} guides`,"sw.full":"Full","sw.short":"Looking for 1","sw.tomShort":"1 guide needed","sw.conf":"Full · standby came in",
+    "panel.eod":"Evening report","eod.sub":"Built automatically at 18:00 from the day's events and sent to the office, tech and the lead guide.",
+    "eod.langTitle":"Report language",
+    "eod.waitT":"The report is ready at 18:00","eod.wait":"It's built from today's events. To see it now, use “Skip to evening” in the demo controls.","eod.toDemo":"Go to demo controls",
+    "btn.copy":"Copy evening report","btn.copyWait":"Report ready at 18:00",
+    "copy.ok":"Copied. Paste it into the office chat.","copy.fail":"Couldn't copy. Select the text above and copy it by hand.",
+    "demo.h":"Demo controls","demo.p":"A simulated day, built from real patterns of 20 months of work-chat history (anonymised). In the live system the events come from the chat bot, the photo uploader and the weather service.",
+    "demo.speed":"Speed","btn.pause":"Pause","btn.play":"Play","btn.skip":"Skip to evening","btn.reset":"Restart the day",
+    "sim.scenario":"Weather for the demo day","scen.live":"Live","scen.ok":"Calm","scen.warn":"Borderline","scen.bad":"Storm",
+    "sim.note":"Changing the weather restarts the day.",
+    otherScreens:"Other demo screens:","nav.photo":"Photo demo","nav.weather":"Weather board","nav.bot":"LINE bot",
+    rt:(tm,d)=>`Real time in Phuket: ${tm}, ${d}.`,
+    foot:"Where the data comes from in the live system: a bot that reads the work chats (guides' WhatsApp, staff LINE) — captain reports, breakdowns, incidents and shifts; the photo uploader — photo counts and a location ping on every upload; the weather service — the Sirey → Monkey corridor. GPS trackers are a phase-2 option, not needed for the demo.",
+    "foot.coords":"The map uses real coordinates (Monkey Island from the client's map link). Guide waypoints will be linked during rollout.",
+    srcThresh:(w1,w2,k1,k2)=>`Limits (wave ${w1} / ${w2} m, wind ${k1} / ${k2} kn) are preliminary — we are calibrating them with the lead guide.`,
+    attrib:"Weather data: <a href=\"https://open-meteo.com/\" target=\"_blank\" rel=\"noopener\">Open-Meteo</a> (CC BY 4.0)",
+    powered:"Powered by JetOps", thDraft:"",
     "eod.report":(d,date,WX,lt)=>
-`PHUKET JETSKI CLUB — DAILY OPS REPORT · ${date}
+`Phuket Jetski Club — daily ops report · ${date}
 ${RULE}
-WEATHER & ROUTE  ${WX.cls==="bad"?"🔴":WX.cls==="warn"?"🟡":"🟢"}
+Weather & route  ${WX.cls==="bad"?"🔴":WX.cls==="warn"?"🟡":"🟢"}
   Wind ${WX.wind} kn (gusts ${WX.gust}) · waves ${WX.wave.toFixed(1)} m ${WX.live?"(live)":WX.scen?"(scenario)":"(sample)"}
   Monkey Island: ${d.skipped}/${d.total} groups skipped · ${WX.cls==="bad"?"Inside Program used":"regular route"}
   Low tide ${lt} — gates: Monkey landing / Rang Yai photos / mangrove entry / Naka parking
 
-CLIENTS & SAFETY
+Clients & safety
   Clients today: ${d.clients} · Incidents: ${d.inc}
   1) Fall on wave near Rang Yai (${d.tm("K")}) — bruise, treated on site, logged
   2) Seasickness (${d.evac}) — speedboat evac OK
   → both logged with time/place/outcome (refund-dispute protection)
 
-TECH / MAINTENANCE — action required
+Tech / maintenance — action required
 ${d.tech}
-  ⚠ Y62 hood latch = REPEAT case (2nd time) — priority fix
+  ⚠ Y62 hood latch = repeat case (2nd time) — priority fix
 
-PHOTOS (uploader)
+Photos (uploader)
   Uploaded today: ${d.photos} · morning 4/6 groups complete
   Missing: ${d.tm("G")} — Monkey stop; ${d.tm("O")} — Rang Noi stop (guides auto-reminded)
   Afternoon: 6/6 complete ✓
 
-SHIFTS
+Shifts
   Morning 6/6 ✓ · Afternoon 6/6 ✓ (standby used)
   Tomorrow: 5/6 — 1 guide needed (illness) → confirm standby tonight
 
-CLIENT FLAGS
+Client flags
   1 weather complaint (rain) — briefing text issued, morning reschedule offered
 ${RULE}
 auto-generated from work chats + uploader + weather API · full log in dashboard`
   },
   th:{
-    "brand.small":"แดชบอร์ดงานประจำวัน · เดโม · 📝 ภาษาไทยฉบับร่าง",
-    "nav.photo":"← เดโมรูปภาพ","nav.weather":"บอร์ดสภาพอากาศ","nav.bot":"บอท LINE →",
-    "sim.title":"จำลองหนึ่งวัน","btn.pause":"⏸ หยุด","btn.play":"▶ เล่น",
-    "btn.skip":"⏭ ข้ามไปตอนเย็น","btn.reset":"↺ เริ่มใหม่",
-    "sim.scenario":"สถานการณ์อากาศ:",
-    "sim.note":"· เริ่มวันใหม่ · ในระบบจริง ข้อมูลมาจากบอทแชท ระบบอัปโหลดรูป และ API สภาพอากาศ",
+    docTitle:"Phuket Jetski Club — งานวันนี้ (เดโม)",
+    opSub:"งานวันนี้ · ภาษาไทยฉบับร่าง", langLabel:"ภาษา",
+    themeAuto:"อัตโนมัติ", themeLight:"สว่าง", themeDark:"มืด", themeTitle:"ธีม",
+    toDemo:"ปุ่มควบคุมเดโม",
+    "clock.run":x=>`วันจำลอง · เดินที่ ×${x}`, "clock.pause":"วันจำลอง · หยุดอยู่", "clock.end":"วันจำลอง · จบแล้ว", "clock.load":"กำลังโหลดสภาพอากาศ…",
+    "att.h":"ต้องดูตอนนี้",
+    "att.quiet":"ทะเลเรียบร้อยดี", "att.quietB":"ไม่มีเหตุการณ์หรือเครื่องเสียที่ค้างอยู่ ถ้ามีปัญหาใหม่จะขึ้นที่นี่ก่อน",
+    "att.done":n=>`วันนี้จัดการแล้ว ${n} เรื่อง`,
+    "att.more":n=>`มีอีก ${n} เรื่องในฟีดเหตุการณ์`, "att.showAll":"ดูปัญหาทั้งหมด",
+    "act.call":"โทรหาหัวหน้าไกด์", "act.done":"จัดการแล้ว", "act.wx":"เปิดบอร์ดสภาพอากาศ",
+    "call.demo":tm=>`ในเดโมยังโทรไม่ได้ ในระบบจริงปุ่มนี้จะโทรหาหัวหน้าไกด์ของทีม${tm}`,
+    handled:"จัดการแล้ว",
+    "p.storm.t":"อากาศ · พายุ ไม่ข้ามไปเกาะลิง", "p.storm.b":"ทุกทีมใช้ Inside Program (เส้นทางในที่กำบัง) ทริปออกตามปกติ — ไม่ยกเลิก",
+    "p.h100.t":"ซ่อม · H100 วิ่งไม่เกิน 65 กม./ชม.", "p.h100.b":"กัปตันแจ้งจากบนน้ำ ขึ้นบอร์ดซ่อมจากข้อความในแชทแล้ว",
+    "p.inc1.t":tm=>`เหตุการณ์ · ${tm} · Rang Yai`, "p.inc1.b":"ลูกค้าตกจากเจ็ตสกีเพราะคลื่น — ฟกช้ำ ปฐมพยาบาลที่จุดแล้ว ไม่ต้องเรียกสปีดโบ๊ท บันทึกไว้กันข้อพิพาทเรื่องคืนเงิน",
+    "p.short.t":"กะงาน · รอบบ่ายขาดไกด์ 1 คน", "p.short.b":"ไกด์ป่วย 1 คน ขอสแตนด์บายให้มาแทนแล้ว",
+    "p.mdone.t":"รูป · ขาดรูป 2 ทีม", "p.mdone.b":(g,o)=>`ทีม${g}: จุดเกาะลิง ทีม${o}: จุด Rang Noi ส่งเตือนไกด์อัตโนมัติแล้ว`,
+    "p.k18.t":"ซ่อม · K18 ส่งอู่", "p.k18.b":"พวงมาลัยหนักหลังชน เปลี่ยนเป็นเจ็ตสกีสำรองแล้ว",
+    "p.compl.t":"ร้องเรียน · ฝนตกรอบบ่าย", "p.compl.b":"“ฝนตกทำไมไม่ยกเลิก?” ไกด์ส่งข้อความบรีฟแล้ว และเสนอเลื่อนไปรอบเช้า",
+    "p.evac.t":(tm,pl)=>`เหตุการณ์ · ${tm} · ${pl}`, "p.evac.b":"เมาเรือ เรียกสปีดโบ๊ทรับลูกค้ากลับแล้ว — ปลอดภัย",
+    "kpi.h":"ตัวเลขวันนี้",
     "kpi.groups":"ทีมที่อยู่บนน้ำ","kpi.clients":"ลูกค้าวันนี้","kpi.clients.s":"รอบเช้า + รอบบ่าย",
-    "kpi.photos":"รูปที่อัปโหลด","kpi.photos.s":"ระบบอัปโหลด · สด",
-    "kpi.defects":"ปัญหาเครื่องที่ค้าง","kpi.defects.s":"บอร์ดช่าง","kpi.inc":"เหตุการณ์","kpi.inc.s":"วันนี้",
-    "kpi.groups.wait":"รอออกเดินทาง","kpi.groups.split":(m,a)=>`รอบเช้า ${m} · รอบบ่าย ${a}`,"kpi.groups.port":"ทุกทีมอยู่ที่ท่า",
-    "panel.map":"แผนที่เส้นทาง · Sirey → Ao Po → Monkey","panel.map.r":"ตำแหน่ง: ตามตารางเวลา + รายงานกัปตัน (v2 — ส่งตำแหน่ง)",
-    "panel.feed":"ฟีดเหตุการณ์","feed.count":n=>`${n} เหตุการณ์`,
-    "panel.tech":"🔧 บอร์ดช่าง — ปัญหาเครื่อง","panel.tech.r":"แชท → ใบแจ้งซ่อม",
-    "panel.photo":"📸 ความครบของรูป","panel.photo.r":"ระบบอัปโหลด · แยกตามทีม",
-    "panel.shifts":"👥 กะงาน",
-    "panel.eod":"📋 รายงานประจำวัน (อัตโนมัติ 18:00)","btn.copy":"📋 คัดลอก","copy.ok":"✓ คัดลอกแล้ว","copy.fail":"✗ คัดลอกไม่ได้","eod.langTitle":"ภาษาของรายงาน",
-    "eod.placeholder":"รายงานจะสร้างเมื่อการจำลองถึงตอนเย็น (หรือกด \"⏭ ข้ามไปตอนเย็น\")",
-    "foot":"ข้อมูลในระบบจริงมาจาก: ① บอทที่อ่านแชทงาน (WhatsApp ของไกด์ / LINE ของสตาฟ) — รายงานกัปตัน เครื่องเสีย เหตุการณ์ กะงาน; ② ระบบอัปโหลดรูป (โมดูล A) — ตัวนับรูป + ส่งตำแหน่งทุกครั้งที่อัปโหลด; ③ API สภาพอากาศ (โมดูล B) — เส้นทาง Sirey→Monkey การจำลองสร้างจากรูปแบบจริงของแชทงาน 20 เดือน (ไม่ระบุตัวตน) เกณฑ์คลื่น/ลมยังเป็นค่าเบื้องต้น กำลังปรับร่วมกับหัวหน้าไกด์ ส่วน GPS tracker เป็นตัวเลือกในเฟส 2 — ไม่จำเป็นสำหรับเดโม",
-    "team.Y":"เหลือง","team.P":"ม่วง","team.B":"น้ำเงิน","team.K":"ชมพู","team.O":"ส้ม","team.G":"เขียว",
-    "map.aria":"แผนที่เส้นทาง","map.phuket":"ภูเก็ต · ฝั่งตะวันออก","map.yao":"เกาะยาวใหญ่","map.png":"↗ อ่าวพังงา","map.cross":"ช่วงข้ามทะเลเปิด · คลื่นยาว",
+    "kpi.photos":"รูปที่อัปโหลด","kpi.photos.s":"จากโทรศัพท์ของไกด์",
+    "kpi.defects":"เครื่องที่ซ่อมอยู่","kpi.defects.s":"ดูบอร์ดช่างด้านล่าง","kpi.inc":"เหตุการณ์วันนี้","kpi.inc.s":"บันทึกเวลาและสถานที่",
+    "kpi.groups.wait":s=>`รอบเช้าออก ${s}`,"kpi.groups.split":(m,a)=>`รอบเช้า ${m} · รอบบ่าย ${a}`,"kpi.groups.port":"ทุกทีมอยู่ที่ท่า",
+    "b.shop":n=>`อยู่อู่ ${n} ลำ`,"b.incOpen":n=>`ค้าง ${n} เรื่อง`,"b.incDone":"จัดการครบแล้ว","b.photoMiss":n=>`ขาดรูป ${n} ทีม`,
+    "map.h":"ทีมอยู่ตรงไหน","map.sub":"ท่าเรือเกาะสิเหร่ → Ao Po → เกาะลิง ตำแหน่งมาจากตารางเวลาและรายงานของกัปตัน",
+    "map.aria":"แผนที่เส้นทาง: จากท่าเรือเกาะสิเหร่ขึ้นไปทาง Ao Po แล้วข้ามทะเลเปิดไปเกาะลิง",
+    "map.phuket":"ภูเก็ต · ฝั่งตะวันออก","map.yao":"เกาะยาวใหญ่","map.png":"อ่าวพังงา","map.cross":"ช่วงข้ามทะเลเปิด · คลื่นยาว",
+    "map.tap":"แตะจุดหรือทีมบนแผนที่เพื่อดูชื่อ",
     "stop.pier":"ท่าเรือ · เกาะสิเหร่","stop.coconut":"เกาะมะพร้าว","stop.monkey":"เกาะลิง",
-    "sub.rangyai":"หลบคลื่น · ลิงสำรอง 🐒","sub.nakanoi":"ใกล้สิเหร่","sub.nakayai":"อาหารกลางวัน · ขึ้นกับน้ำ",
-    "legend.ring":"<b>วงขาว</b> = รอบบ่าย · <b>⚓</b> อยู่ที่ท่า",
-    "legend.coords":"พิกัดจริง (Monkey Island — จากลิงก์แผนที่ของบริษัท) · จุดแวะของไกด์จะเชื่อมตอนเริ่มใช้งานจริง",
-    "dot.title":(team,skis,cl,skip)=>`ทีม${team} · เจ็ตสกี ${skis} ลำ · ลูกค้า ${cl} คน${skip?" · no monkey":""}`,
-    "scen.ok":"🟢 ทะเลสงบ","scen.warn":"🟡 ก้ำกึ่ง","scen.bad":"🔴 พายุ",
-    "wx.ok":"🟢 Monkey ได้","wx.warn":"🟡 Monkey ก้ำกึ่ง","wx.bad":"🔴 NO MONKEY","wx.gusts":g=>`(กระโชก ${g})`,
-    "wx.rain":"🌧 ฝนตก","wx.norain":"☀️ ไม่มีฝน","wx.live":"● ข้อมูลจริง Open-Meteo","wx.scen":s=>`สถานการณ์จำลอง: ${s}`,"wx.sample":"ข้อมูลตัวอย่าง (ออฟไลน์)",
-    "wx.low":lt=>`🌊 น้ำลงต่ำสุด ${lt} · จุดที่ขึ้นกับน้ำ: Monkey·รูป·ป่าชายเลน·Naka`,"tide.demo":"~12:00 (กราฟจำลอง)","u.kn":"นอต","u.m":"ม.",
-    "tech.machine":"เครื่อง","tech.defect":"ปัญหา","tech.status":"สถานะ","tech.open":d=>`ค้าง ${d} วัน`,
-    "st.shop":"🛑 ส่งอู่","st.open":"🔧 กำลังซ่อม","st.watch":"👁 เฝ้าดู","st.done":"✓ ปิดแล้ว",
+    "sub.rangyai":"หลบคลื่น · ลิงสำรอง","sub.nakanoi":"ใกล้สิเหร่","sub.nakayai":"อาหารกลางวัน · ขึ้นกับน้ำ",
+    "w.pier":"ท่าเรือ","w.coconut":"เกาะมะพร้าว","w.aopo":"Ao Po","w.monkey":"เกาะลิง",
+    "where.wait":s=>`ออก ${s}`,"where.out":n=>`ขาไป · ใกล้ ${n}`,"where.back":n=>`ขากลับ · ใกล้ ${n}`,
+    "where.turn":"ที่ Ao Po — วันนี้ไม่ไปเกาะลิง","where.monkey":"ที่เกาะลิง","where.port":"กลับถึงท่าแล้ว",
+    "teams.h.m":s=>`รอบเช้า ${s}`,"teams.h.a":s=>`รอบบ่าย ${s}`,
+    "teams.sum":(n,sk,cl)=>`${n} ทีม · เจ็ตสกี ${sk} ลำ · ลูกค้า ${cl} คน`,
+    "dot.title":(tm,skis,cl,skip)=>`${tm} · เจ็ตสกี ${skis} ลำ · ลูกค้า ${cl} คน${skip?" · ไม่ไปเกาะลิง":""}`,
+    "pick.team":(tm,w)=>`${tm}: ${w}`,
+    "wx.ok":"เกาะลิง: ไปได้","wx.warn":"เกาะลิง: คลื่นเริ่มแรง","wx.bad":"ไม่ข้ามไปเกาะลิง",
+    "wx.wind":(k,g)=>`ลม ${k} นอต กระโชก ${g}`,"wx.wave":w=>`คลื่น ${w} ม.`,
+    "wx.rain":"ฝนตก","wx.norain":"ไม่มีฝน","wx.live":"ข้อมูลสด · Open-Meteo","wx.scen":s=>`วันจำลอง: ${s}`,"wx.sample":"ข้อมูลตัวอย่าง",
+    "wx.low":lt=>`น้ำลงต่ำสุด ${lt} — ระวังจุดขึ้นฝั่งเกาะลิง จุดถ่ายรูป ป่าชายเลน และที่จอด Naka`,"tide.demo":"~12:00 (กราฟตัวอย่าง)","u.kn":"นอต","u.m":"ม.",
+    "panel.feed":"ฟีดเหตุการณ์","feed.count":n=>`${n} เหตุการณ์`,
+    "f.label":"แสดงเหตุการณ์","f.all":"ทั้งหมด","f.prob":"ปัญหา","f.photo":"รูป","f.wx":"สภาพอากาศ",
+    "feed.emptyT":"วันนี้ยังไม่เริ่ม","feed.empty":s=>`เหตุการณ์แรกคือบรีฟสภาพอากาศเวลา 07:50 รอบเช้าออก ${s}`,
+    "feed.none":"วันนี้ยังไม่มีเหตุการณ์ประเภทนี้","feed.showAll":"ดูเหตุการณ์ทั้งหมด","feed.more":n=>`ดูทั้งหมด ${n} เหตุการณ์`,"feed.less":"ย่อรายการ",
+    "ty.weather":"อากาศ","ty.trip":"ทริป","ty.photo":"รูป","ty.breakdown":"ซ่อม","ty.incident":"เหตุการณ์","ty.client":"ร้องเรียน","ty.shift":"กะงาน","ty.report":"รายงาน",
+    "who.office":"ออฟฟิศ","who.tide":"ตารางน้ำ","who.teams":n=>`${n} ทีม`,"who.m":"รอบเช้า","who.a":"รอบบ่าย","teamN":tm=>`ทีม${tm}`,
+    "team.Y":"เหลือง","team.P":"ม่วง","team.B":"น้ำเงิน","team.K":"ชมพู","team.O":"ส้ม","team.G":"เขียว",
+    "ev.brief":(w,p)=>`บรีฟตอนเช้า: ${w} ${p} ${MU("โพสต์อัตโนมัติจากโมดูลสภาพอากาศ")}`,
+    "ev.brief.bad":"คลื่นสูงและลมแรง","ev.brief.wx":(w,k)=>`คลื่น ${w} ม. ลม ${k} นอต`,
+    "ev.plan.bad":"<b>Inside Program</b> งดเกาะลิง","ev.plan.warn":"เกาะลิงก้ำกึ่ง — หัวหน้าไกด์ตัดสินใจบนน้ำ","ev.plan.ok":"เส้นทางเต็ม 9 เกาะ",
+    "ev.depM":(skis,cl)=>`<b>รอบเช้าออกจากท่าแล้ว:</b> 6 ทีม เจ็ตสกี ${skis} ลำ ลูกค้า ${cl} คน`,
+    "ev.photoY":`อัปโหลด 38 รูปที่เกาะมะพร้าว ${MU("บันทึกตำแหน่งแล้ว")}`,
+    "ev.h100":"“วิ่งไม่เกิน 65” — กัปตันแจ้ง ขึ้นบอร์ดซ่อมจากข้อความในแชทแล้ว",
+    "ev.swell":`หลัง Grand Marina คลื่นเริ่มแรงขึ้น มีคลื่นด้านข้าง ${MU("รายงานจากแชท")}`,
+    "ev.noMonkey":aft=>aft?"<b>ไม่ไปเกาะลิง</b> รอบบ่าย — กลับลำที่ Grand Marina":"<b>ไม่ไปเกาะลิง</b> — คลื่นใหญ่ กลับลำที่ Grand Marina",
+    "ev.monkeyOk":aft=>`<b>ถึงเกาะลิงแล้ว</b>${aft?" (รอบบ่าย)":""}`,
+    "ev.inc1":`<b>ลูกค้าตกจากเจ็ตสกีเพราะคลื่น</b> ใกล้ Rang Yai — ฟกช้ำ ปฐมพยาบาลที่จุดแล้ว ไม่ต้องเรียกสปีดโบ๊ท ${MU("บันทึกแล้ว (ป้องกันข้อพิพาทเรื่องคืนเงิน)")}`,
+    "ev.low":lt=>`<b>น้ำลงต่ำสุด ${lt}:</b> Naka ที่จอดมีจำกัด (ดำน้ำตื้นจากเจ็ตสกี) รอบบ่าย — ระวังจุดขึ้นฝั่งเกาะลิงและทางเข้าป่าชายเลน ${MU("อัตโนมัติจากตารางน้ำ")}`,
+    "ev.short":"<b>กะบ่ายขาดไกด์ 1 คน</b> (ป่วย) — ขอสแตนด์บายแล้ว",
+    "ev.sbok":"<b>สแตนด์บายยืนยันแล้ว</b> — รอบบ่ายคนครบ 6 จาก 6",
+    "ev.mdone":(g,o)=>`<b>รอบเช้าจบแล้ว</b> รูปครบ 4 จาก 6 ทีม ทีม${g}: ขาดรูปเกาะลิง ทีม${o}: ขาดรูป Rang Noi ส่งเตือนไกด์อัตโนมัติแล้ว ${MU("เมื่อก่อนแอดมินต้องตามเอง")}`,
+    "ev.depA":cl=>`<b>รอบบ่ายออกจากท่าแล้ว:</b> 6 ทีม ลูกค้า ${cl} คน`,
+    "ev.k18":"<b>พวงมาลัยหนักหลังชน</b> — ส่งอู่ เปลี่ยนเป็นเจ็ตสกีสำรอง",
+    "ev.complaint":`“ฝนตกทำไมไม่ยกเลิก?” — ไกด์ส่งข้อความบรีฟ และเสนอเลื่อนไปรอบเช้า ${MU("ข้อความจากโมดูลสภาพอากาศ")}`,
+    "ev.evac":pl=>`<b>เมาเรือ:</b> เรียกสปีดโบ๊ทไปที่ ${pl} รับลูกค้ากลับแล้ว — ปลอดภัย`,
+    "ev.photoA":`+176 รูปจาก Coconut, Rang Yai, Rang Noi ${MU("บันทึกตำแหน่งแล้ว")}`,
+    "ev.adone":"<b>รอบบ่ายจบแล้ว</b> รูปครบ 6 จาก 6 ทีม — การเตือนได้ผล",
+    "ev.eod":"<b>รายงานประจำวันพร้อมแล้ว</b> ส่งให้ออฟฟิศ ช่าง และหัวหน้าไกด์แล้ว (ดูด้านล่าง)",
+    "panel.tech":"เครื่องที่ซ่อมอยู่","panel.tech.r":"ข้อมูลมาจากแชทงาน",
+    "tech.open":d=>d?`ค้าง ${d} วัน`:"เปิดวันนี้",
+    "st.shop":"อยู่ที่อู่","st.open":"กำลังซ่อม","st.watch":"เฝ้าดู","st.done":"ซ่อมแล้ว",
     "issue.Y62":"ตัวล็อกฝากระโปรงเด้งเปิดเวลาลมแรง (ซ้ำครั้งที่ 2!)","issue.H29":"เซ็นเซอร์ — เตือนตลอด",
     "issue.H100":"วิ่งไม่เกิน 65 กม./ชม. — กัปตันแจ้ง","issue.K18":"พวงมาลัยหนักหลัง K18 ชนกับ K24 — ต้องตรวจเช็ก",
     "eod.shop":"ส่งอู่","eod.open":"ค้าง",
-    "photo.aft":"(รอบบ่าย)","photo.missing":l=>`⚠ ขาด: ${l}`,"photo.ok":"✓ ครบ","photo.wait":"ทีมยังอยู่ในทะเล — ตัวเลขจะเพิ่มเมื่ออัปโหลดรูป…",
+    "panel.photo":"รูปแยกตามทีม","panel.photo.r":"รูปที่อัปโหลดเทียบกับที่ควรมี ของแต่ละทีม",
+    "photo.of":(u,e)=>`${u} จาก ${e} รูป`,"photo.missing":l=>`ขาด: ${l}`,"photo.ok":"ครบ",
+    "photo.waitT":"ยังไม่มีรูป","photo.wait":"ทีมยังอยู่ในทะเล ตัวเลขจะขึ้นหลังจบแต่ละรอบ เมื่อไกด์อัปโหลดรูป",
+    "photo.waitA":"ทีมรอบบ่ายยังอยู่ในทะเล — ตัวเลขจะขึ้นหลังจบทริป",
+    "panel.shifts":"ไกด์ในกะ","panel.shifts.r":(m,a)=>`ทริปเวลา ${m} และ ${a}`,
     "shift.m":s=>`รอบเช้า ${s}`,"shift.a":s=>`รอบบ่าย ${s}`,"shift.tom":"พรุ่งนี้","shift.sb":"สแตนด์บาย","shift.sbv":"ไกด์ 1 + ฟรีแลนซ์ 1",
-    "shift.full":"6/6 ✓","shift.short":"5/6 ⚠ (กำลังหา 1 คน)","shift.tomShort":"5/6 ⚠ ต้องการไกด์ 1 คน","shift.conf":"6/6 ✓ (สแตนด์บายยืนยันแล้ว)",
-    "ev.brief":(w,p)=>`🏢 <b>ออฟฟิศ:</b> บรีฟตอนเช้า — ${w} ${p} ${MU("(โพสต์อัตโนมัติจากโมดูลสภาพอากาศ)")}`,
-    "ev.brief.bad":"คลื่นสูงและลมแรง","ev.brief.wx":(w,k)=>`คลื่น ${w} ม. ลม ${k} นอต`,
-    "ev.plan.bad":"<b>🚨 Inside Program</b> งด Monkey","ev.plan.warn":"Monkey ก้ำกึ่ง — ตัดสินใจบนน้ำ","ev.plan.ok":"เส้นทางเต็ม 9 เกาะ",
-    "ev.depM":(skis,cl)=>`🚤 <b>รอบเช้าออกแล้ว:</b> 6 ทีม · เจ็ตสกี ${skis} ลำ · ลูกค้า ${cl} คน`,
-    "ev.photoY":tm=>`📸 <b>ทีม${tm}</b> · Coconut Is.: อัปโหลด 38 รูป ${MU("· ส่งตำแหน่ง ✓")}`,
-    "ev.h100":`🔧 <b>H100:</b> "วิ่งไม่เกิน 65" — กัปตันแจ้ง → เปิดใบแจ้งซ่อมจากข้อความในแชทแล้ว`,
-    "ev.swell":tm=>`🌊 <b>ทีม${tm}</b> (จากบนน้ำ): หลัง Grand Marina คลื่นเริ่มแรงขึ้น มีคลื่นด้านข้าง ${MU("· รายงานจากแชท")}`,
-    "ev.noMonkey":(e,tm,aft)=>aft?`${e} <b>ทีม${tm} (รอบบ่าย): NO MONKEY</b> — กลับลำที่ Grand Marina`:`${e} <b>ทีม${tm}: NO MONKEY</b> — คลื่นใหญ่ กลับลำที่ Grand Marina`,
-    "ev.monkeyOk":(e,tm,aft)=>`${e} <b>ทีม${tm}${aft?" (รอบบ่าย)":""}:</b> Monkey ได้ ✓`,
-    "ev.inc1":tm=>`🚑 <b>เหตุการณ์ · ทีม${tm} · Rang Yai:</b> ลูกค้าตกจากเจ็ตสกีเพราะคลื่น — ฟกช้ำ ปฐมพยาบาลที่จุดแล้ว ไม่ต้องเรียกสปีดโบ๊ท ${MU("บันทึกแล้ว (ป้องกันข้อพิพาทเรื่องคืนเงิน)")}`,
-    "ev.low":lt=>`🌊 <b>น้ำลงต่ำสุด ${lt}:</b> Naka — ที่จอดมีจำกัด (ดำน้ำตื้นจากเจ็ตสกี) รอบบ่าย — ระวังจุดขึ้นฝั่ง Monkey และทางเข้าป่าชายเลน ${MU("· อัตโนมัติจากตารางน้ำ")}`,
-    "ev.short":"👥 <b>กะบ่าย:</b> ขาดไกด์ 1 คน (ป่วย) — ขอสแตนด์บายแล้ว",
-    "ev.sbok":"👥 <b>สแตนด์บายยืนยันแล้ว</b> — รอบบ่ายคนครบ 6/6 ✓",
-    "ev.mdone":(g,o)=>`📸 <b>รอบเช้าจบแล้ว:</b> ความครบของรูป — <span class="okt">ครบ 4/6 ทีม</span>, <span class="miss">ทีม${g}: ขาดรูป Monkey ("ลืม" 🙈)</span>, <span class="miss">ทีม${o}: ขาดรูป Rang Noi</span> → ส่งเตือนไกด์อัตโนมัติแล้ว ${MU("(เมื่อก่อนแอดมินต้องตามเอง)")}`,
-    "ev.depA":cl=>`🚤 <b>รอบบ่ายออกแล้ว:</b> 6 ทีม · ลูกค้า ${cl} คน`,
-    "ev.k18":"🔧 <b>K18:</b> พวงมาลัยหนักหลังชน → <b>ส่งอู่</b> เปลี่ยนเป็นเจ็ตสกีสำรอง",
-    "ev.complaint":`💬 <b>ลูกค้าร้องเรียน (รอบบ่าย):</b> "ฝนตกทำไมไม่ยกเลิก?" → ไกด์ส่งข้อความบรีฟ เสนอเลื่อนไปรอบเช้า ${MU("· ข้อความจากโมดูลสภาพอากาศ")}`,
-    "ev.evac":(tm,pl)=>`🤢 <b>เมาเรือ · ทีม${tm}:</b> เรียกสปีดโบ๊ทไปที่ ${pl} รับลูกค้ากลับแล้ว — ปลอดภัย`,
-    "ev.photoA":"📸 ทีมรอบบ่าย: +176 รูป (Coconut, Rang Yai, Rang Noi) · ส่งตำแหน่ง ✓",
-    "ev.adone":"📸 <b>รอบบ่ายจบแล้ว:</b> 6/6 ทีม — รูปครบ ✓ (การเตือนได้ผล)",
-    "ev.eod":"📋 <b>สร้างรายงานประจำวันแล้ว</b> และส่งให้: ออฟฟิศ + ช่าง + หัวหน้าไกด์ (ดูด้านล่าง)",
+    "sv.of":(a,b)=>`ไกด์ ${a} จาก ${b} คน`,"sw.full":"ครบ","sw.short":"กำลังหา 1 คน","sw.tomShort":"ต้องการไกด์ 1 คน","sw.conf":"ครบ · สแตนด์บายมาแล้ว",
+    "panel.eod":"รายงานประจำวัน","eod.sub":"สร้างอัตโนมัติเวลา 18:00 จากเหตุการณ์ของวัน และส่งให้ออฟฟิศ ช่าง และหัวหน้าไกด์",
+    "eod.langTitle":"ภาษาของรายงาน",
+    "eod.waitT":"รายงานพร้อมเวลา 18:00","eod.wait":"รายงานสร้างจากเหตุการณ์วันนี้ ถ้าอยากดูตอนนี้ ให้กด “ข้ามไปตอนเย็น” ในปุ่มควบคุมเดโม","eod.toDemo":"ไปที่ปุ่มควบคุมเดโม",
+    "btn.copy":"คัดลอกรายงานประจำวัน","btn.copyWait":"รายงานพร้อมเวลา 18:00",
+    "copy.ok":"คัดลอกแล้ว วางในแชทออฟฟิศได้เลย","copy.fail":"คัดลอกไม่ได้ — กรุณาเลือกข้อความด้านบนแล้วคัดลอกเอง",
+    "demo.h":"ปุ่มควบคุมเดโม","demo.p":"วันจำลองที่สร้างจากรูปแบบจริงของแชทงาน 20 เดือน (ไม่ระบุตัวตน) ในระบบจริง เหตุการณ์มาจากบอทแชท ระบบอัปโหลดรูป และบริการสภาพอากาศ",
+    "demo.speed":"ความเร็ว","btn.pause":"หยุด","btn.play":"เล่น","btn.skip":"ข้ามไปตอนเย็น","btn.reset":"เริ่มวันใหม่",
+    "sim.scenario":"สภาพอากาศของวันจำลอง","scen.live":"ข้อมูลสด","scen.ok":"ทะเลสงบ","scen.warn":"ก้ำกึ่ง","scen.bad":"พายุ",
+    "sim.note":"เปลี่ยนสภาพอากาศแล้ววันจะเริ่มใหม่",
+    otherScreens:"หน้าจอเดโมอื่น:","nav.photo":"เดโมรูปภาพ","nav.weather":"บอร์ดสภาพอากาศ","nav.bot":"บอท LINE",
+    rt:(tm,d)=>`เวลาจริงที่ภูเก็ต: ${tm} ${d}`,
+    foot:"ข้อมูลในระบบจริงมาจาก: บอทที่อ่านแชทงาน (WhatsApp ของไกด์ / LINE ของสตาฟ) — รายงานกัปตัน เครื่องเสีย เหตุการณ์ กะงาน; ระบบอัปโหลดรูป — ตัวนับรูปและตำแหน่งทุกครั้งที่อัปโหลด; บริการสภาพอากาศ — เส้นทาง Sirey → Monkey ส่วน GPS tracker เป็นตัวเลือกในเฟส 2 — ไม่จำเป็นสำหรับเดโม",
+    "foot.coords":"แผนที่ใช้พิกัดจริง (Monkey Island จากลิงก์แผนที่ของบริษัท) จุดแวะของไกด์จะเชื่อมตอนเริ่มใช้งานจริง",
+    srcThresh:(w1,w2,k1,k2)=>`เกณฑ์ (คลื่น ${w1} / ${w2} ม. ลม ${k1} / ${k2} นอต) เป็นค่าเบื้องต้น กำลังปรับร่วมกับหัวหน้าไกด์`,
+    attrib:"ข้อมูลสภาพอากาศ: <a href=\"https://open-meteo.com/\" target=\"_blank\" rel=\"noopener\">Open-Meteo</a> (CC BY 4.0)",
+    powered:"ขับเคลื่อนโดย JetOps", thDraft:"ภาษาไทยในหน้านี้เป็นฉบับร่าง รอเจ้าของภาษาตรวจทาน",
     "eod.report":(d,date,WX,lt)=>
-`PHUKET JETSKI CLUB — รายงานประจำวัน · ${date}
+`Phuket Jetski Club — รายงานประจำวัน · ${date}
 ${RULE}
 สภาพอากาศและเส้นทาง  ${WX.cls==="bad"?"🔴":WX.cls==="warn"?"🟡":"🟢"}
   ลม ${WX.wind} นอต (กระโชก ${WX.gust}) · คลื่น ${WX.wave.toFixed(1)} ม. ${WX.live?"(ข้อมูลจริง)":WX.scen?"(จำลอง)":"(ตัวอย่าง)"}
@@ -449,135 +661,191 @@ ${RULE}
 สร้างอัตโนมัติจากแชทงาน + ระบบอัปโหลด + API สภาพอากาศ · ดูบันทึกทั้งหมดในแดชบอร์ด`
   },
   ru:{
-    "brand.small":"Ops-дашборд · демо",
-    "nav.photo":"← фото-демо","nav.weather":"погодный борт","nav.bot":"LINE-бот →",
-    "sim.title":"Симуляция дня","btn.pause":"⏸ пауза","btn.play":"▶ пуск",
-    "btn.skip":"⏭ к вечеру","btn.reset":"↺ заново",
-    "sim.scenario":"сценарий погоды:",
-    "sim.note":"· день перезапустится · в проде — события из чат-бота, аплоадера и погодного API",
-    "kpi.groups":"Групп на воде","kpi.clients":"Клиентов сегодня","kpi.clients.s":"утро + день",
-    "kpi.photos":"Фото загружено","kpi.photos.s":"аплоадер · live",
-    "kpi.defects":"Открытые дефекты","kpi.defects.s":"доска тех.отдела","kpi.inc":"Инциденты","kpi.inc.s":"за сегодня",
-    "kpi.groups.wait":"ждём выхода","kpi.groups.split":(m,a)=>`${m} утро · ${a} день`,"kpi.groups.port":"все в порту",
-    "panel.map":"Карта маршрута · Sirey → Ao Po → Monkey","panel.map.r":"позиции: расписание + рапорты (v2 — гео-пинги)",
-    "panel.feed":"Лента событий","feed.count":n=>`${n} ${ruN(n,"событие","события","событий")}`,
-    "panel.tech":"🔧 Тех.отдел — дефекты","panel.tech.r":"из чата → тикеты",
-    "panel.photo":"📸 Фото-комплаенс","panel.photo.r":"аплоадер · по группам",
-    "panel.shifts":"👥 Смены",
-    "panel.eod":"📋 EOD — отчёт дня (авто в 18:00)","btn.copy":"📋 копировать","copy.ok":"✓ скопировано","copy.fail":"✗ не скопировалось","eod.langTitle":"язык отчёта",
-    "eod.placeholder":"Отчёт сформируется к вечеру симуляции (или нажми «⏭ к вечеру»).",
-    "foot":"Откуда данные в проде: ① бот-монитор рабочих чатов (WhatsApp гидов / LINE стаффа) — рапорты, поломки, инциденты, смены; ② аплоадер фото (модуль A) — счётчики фото + гео-пинг на каждой загрузке; ③ погодный API (модуль B) — коридор Sirey→Monkey. Симуляция собрана из реальных паттернов 20 месяцев рабочего чата (обезличено). Пороги волны/ветра — предварительные, калибруются с лидом. GPS-трекеры — опция фазы 2, для демо не требуются.",
-    "team.Y":"Жёлтый","team.P":"Фиолетовый","team.B":"Синий","team.K":"Розовый","team.O":"Оранжевый","team.G":"Зелёный",
-    "map.aria":"карта маршрута","map.phuket":"PHUKET · восточный берег","map.yao":"KOH YAO YAI","map.png":"↗ залив Phang Nga","map.cross":"открытый переход · зыбь",
+    docTitle:"Phuket Jetski Club — Работа сегодня (демо)",
+    opSub:"Работа сегодня", langLabel:"Язык",
+    themeAuto:"Авто", themeLight:"Светлая", themeDark:"Тёмная", themeTitle:"Тема",
+    toDemo:"Управление демо",
+    "clock.run":x=>`Демо-день · идёт ×${x}`, "clock.pause":"Демо-день · на паузе", "clock.end":"Демо-день · закончился", "clock.load":"Загружаем погоду…",
+    "att.h":"Требует внимания",
+    "att.quiet":"На воде всё спокойно", "att.quietB":"Открытых инцидентов и поломок нет. Новые проблемы появятся здесь первыми.",
+    "att.done":n=>`Сегодня решено: ${n}.`,
+    "att.more":n=>`Ещё ${n} в ленте событий.`, "att.showAll":"Показать все проблемы",
+    "act.call":"Позвонить лиду", "act.done":"Отметить: решено", "act.wx":"Открыть погодный борт",
+    "call.demo":tm=>`В демо звонки не подключены. В рабочей системе кнопка звонит лиду группы «${tm}».`,
+    handled:"Решено",
+    "p.storm.t":"Погода · шторм, к Monkey не идём", "p.storm.b":"Все группы идут по Inside Program (закрытый маршрут). Поездки не отменяем.",
+    "p.h100.t":"Ремонт · H100 не едет быстрее 65 км/ч", "p.h100.b":"Капитан сообщил с воды. Попало на тех.доску из сообщения в чате.",
+    "p.inc1.t":tm=>`Инцидент · ${tm} · Rang Yai`, "p.inc1.b":"Клиент упал на волне — ушиб, обработан на месте, спидбот не нужен. Записано в журнал на случай спора о возврате.",
+    "p.short.t":"Смена · на дневной рейс не хватает 1 гида", "p.short.b":"Гид заболел. Standby попросили выйти.",
+    "p.mdone.t":"Фото · нет фото у 2 групп", "p.mdone.b":(g,o)=>`${g}: стоянка Monkey. ${o}: стоянка Rang Noi. Гидам ушло авто-напоминание.`,
+    "p.k18.t":"Ремонт · K18 в цех", "p.k18.b":"Тяжёлый руль после столкновения. Заменён резервным гидроциклом.",
+    "p.compl.t":"Жалоба · дождь на дневном рейсе", "p.compl.b":"«Почему не отменили из-за дождя?» Гид отправил текст брифинга и предложил перенос на утро.",
+    "p.evac.t":(tm,pl)=>`Инцидент · ${tm} · ${pl}`, "p.evac.b":"Укачивание. Вызвали спидбот, клиента забрали — всё в порядке.",
+    "kpi.h":"Цифры дня",
+    "kpi.groups":"Групп на воде","kpi.clients":"Клиентов сегодня","kpi.clients.s":"Утро + день",
+    "kpi.photos":"Фото загружено","kpi.photos.s":"С телефонов гидов",
+    "kpi.defects":"Машины в ремонте","kpi.defects.s":"Доска тех.отдела ниже","kpi.inc":"Инциденты сегодня","kpi.inc.s":"В журнале: время и место",
+    "kpi.groups.wait":s=>`Утренний рейс выходит в ${s}`,"kpi.groups.split":(m,a)=>`${m} утро · ${a} день`,"kpi.groups.port":"Все в порту",
+    "b.shop":n=>`${n} в цеху`,"b.incOpen":n=>`Открыто: ${n}`,"b.incDone":"Все решены","b.photoMiss":n=>`Нет фото у ${n} ${ruN(n,"группы","групп","групп")}`,
+    "map.h":"Где группы","map.sub":"Пирс Koh Sirey → Ao Po → Monkey Island. Позиции — по расписанию и рапортам капитанов.",
+    "map.aria":"Карта маршрута: от пирса на Koh Sirey вверх по проливу к Ao Po, затем открытый переход к Monkey Island",
+    "map.phuket":"Phuket · восточный берег","map.yao":"Koh Yao Yai","map.png":"Залив Phang Nga","map.cross":"открытый переход · зыбь",
+    "map.tap":"Нажмите на место или группу на карте, чтобы увидеть название.",
     "stop.pier":"Пирс · Koh Sirey","stop.coconut":"Coconut Is. (Maphrao)","stop.monkey":"Monkey Is.",
-    "sub.rangyai":"укрытие · запасные 🐒","sub.nakanoi":"ближе к Sirey","sub.nakayai":"обед · зависит от прилива",
-    "legend.ring":"<b>белое кольцо</b> = дневной рейс · <b>⚓</b> в порту",
-    "legend.coords":"реальные координаты (Monkey Island — по ссылке клиента на карту) · точки маршрута гидов подключим при внедрении",
-    "dot.title":(team,skis,cl,skip)=>`${team} · ${skis} ${ruN(skis,"гидроцикл","гидроцикла","гидроциклов")} · ${cl} ${ruN(cl,"клиент","клиента","клиентов")}${skip?" · no monkey":""}`,
-    "scen.ok":"🟢 штиль","scen.warn":"🟡 на грани","scen.bad":"🔴 шторм",
-    "wx.ok":"🟢 Monkey ОК","wx.warn":"🟡 Monkey на грани","wx.bad":"🔴 NO MONKEY","wx.gusts":g=>`(порывы ${g})`,
-    "wx.rain":"🌧 дождь","wx.norain":"☀️ без дождя","wx.live":"● live Open-Meteo","wx.scen":s=>`сценарий: ${s}`,"wx.sample":"пример данных (офлайн)",
-    "wx.low":lt=>`🌊 отлив ${lt} · гейты: Monkey·фото·мангры·Naka`,"tide.demo":"~12:00 (демо-кривая)","u.kn":"уз","u.m":"м",
-    "tech.machine":"машина","tech.defect":"дефект","tech.status":"статус","tech.open":d=>`открыт ${d} дн.`,
-    "st.shop":"🛑 в цеху","st.open":"🔧 в работе","st.watch":"👁 наблюдаем","st.done":"✓ закрыт",
+    "sub.rangyai":"укрытие · запасные обезьяны","sub.nakanoi":"ближе к Sirey","sub.nakayai":"обед · зависит от прилива",
+    "w.pier":"пирса","w.coconut":"Coconut Island","w.aopo":"Ao Po","w.monkey":"Monkey Island",
+    "where.wait":s=>`Выход в ${s}`,"where.out":n=>`Туда · у ${n}`,"where.back":n=>`Обратно · у ${n}`,
+    "where.turn":"У Ao Po — сегодня без Monkey","where.monkey":"На Monkey Island","where.port":"Вернулась в порт",
+    "teams.h.m":s=>`Утренний рейс ${s}`,"teams.h.a":s=>`Дневной рейс ${s}`,
+    "teams.sum":(n,sk,cl)=>`${n} ${ruN(n,"группа","группы","групп")} · ${sk} ${ruN(sk,"гидроцикл","гидроцикла","гидроциклов")} · ${cl} ${ruN(cl,"клиент","клиента","клиентов")}`,
+    "dot.title":(tm,skis,cl,skip)=>`${tm} · ${skis} ${ruN(skis,"гидроцикл","гидроцикла","гидроциклов")} · ${cl} ${ruN(cl,"клиент","клиента","клиентов")}${skip?" · без Monkey":""}`,
+    "pick.team":(tm,w)=>`${tm}: ${w}`,
+    "wx.ok":"Monkey: можно идти","wx.warn":"Monkey: волна растёт","wx.bad":"К Monkey не идём",
+    "wx.wind":(k,g)=>`Ветер ${k} уз, порывы ${g}`,"wx.wave":w=>`Волна ${w} м`,
+    "wx.rain":"Дождь","wx.norain":"Без дождя","wx.live":"Живые данные · Open-Meteo","wx.scen":s=>`Демо-день: ${s}`,"wx.sample":"Пример данных",
+    "wx.low":lt=>`Отлив ${lt} — проверить высадку на Monkey, фото-стоянки, мангры и парковку на Naka`,"tide.demo":"~12:00 (пример кривой)","u.kn":"уз","u.m":"м",
+    "panel.feed":"Лента событий","feed.count":n=>`${n} ${ruN(n,"событие","события","событий")}`,
+    "f.label":"Показать события","f.all":"Все","f.prob":"Проблемы","f.photo":"Фото","f.wx":"Погода",
+    "feed.emptyT":"День ещё не начался","feed.empty":s=>`Первое событие — погодный брифинг в 07:50. Утренний рейс выходит в ${s}.`,
+    "feed.none":"Таких событий сегодня ещё не было.","feed.showAll":"Показать все события","feed.more":n=>`Показать все ${n} ${ruN(n,"событие","события","событий")}`,"feed.less":"Свернуть",
+    "ty.weather":"Погода","ty.trip":"Рейс","ty.photo":"Фото","ty.breakdown":"Ремонт","ty.incident":"Инцидент","ty.client":"Жалоба","ty.shift":"Смена","ty.report":"Отчёт",
+    "who.office":"Офис","who.tide":"Таблица приливов","who.teams":n=>`${n} ${ruN(n,"группа","группы","групп")}`,"who.m":"Утренний рейс","who.a":"Дневной рейс","teamN":tm=>tm,
+    "team.Y":"Жёлтый","team.P":"Фиолетовый","team.B":"Синий","team.K":"Розовый","team.O":"Оранжевый","team.G":"Зелёный",
+    "ev.brief":(w,p)=>`Утренний брифинг: ${w}. ${p} ${MU("Авто-пост из погодного модуля.")}`,
+    "ev.brief.bad":"высокая волна и ветер","ev.brief.wx":(w,k)=>`волна ${w} м, ветер ${k} уз`,
+    "ev.plan.bad":"<b>Inside Program</b>, Monkey отменён.","ev.plan.warn":"Monkey на грани — лид решает на воде.","ev.plan.ok":"Полный маршрут, 9 островов.",
+    "ev.depM":(skis,cl)=>`<b>Утренний рейс вышел:</b> 6 групп, ${skis} ${ruN(skis,"гидроцикл","гидроцикла","гидроциклов")}, ${cl} ${ruN(cl,"клиент","клиента","клиентов")}.`,
+    "ev.photoY":`Загружено 38 фото на Coconut Island. ${MU("Геопозиция сохранена.")}`,
+    "ev.h100":"«Не едет больше 65» — сообщил капитан. Попало на тех.доску из сообщения в чате.",
+    "ev.swell":`За Grand Marina растёт волна, боковая зыбь. ${MU("Рапорт из чата.")}`,
+    "ev.noMonkey":aft=>aft?"<b>Без Monkey</b> на дневном рейсе — разворот у Grand Marina.":"<b>Без Monkey</b> — большая волна, разворот у Grand Marina.",
+    "ev.monkeyOk":aft=>`<b>Дошли до Monkey Island</b>${aft?" (дневной рейс)":""}.`,
+    "ev.inc1":`<b>Клиент упал на волне</b> у Rang Yai — ушиб, обработан на месте, спидбот не нужен. ${MU("В журнале (защита от споров о возврате).")}`,
+    "ev.low":lt=>`<b>Отлив ${lt}:</b> на Naka мало места для стоянки (снорклинг с гидроциклов); дневной рейс — следить за высадкой на Monkey и заходом в мангры. ${MU("Авто из таблицы приливов.")}`,
+    "ev.short":"<b>Не хватает 1 гида</b> на дневную смену (болезнь) — запрошен standby.",
+    "ev.sbok":"<b>Standby подтверждён</b> — дневной рейс укомплектован, 6 из 6.",
+    "ev.mdone":(g,o)=>`<b>Утренний рейс завершён.</b> Фото полные у 4 из 6 групп; ${g}: нет Monkey, ${o}: нет Rang Noi. Гидам ушло авто-напоминание. ${MU("Раньше админ гонялся за этим вручную.")}`,
+    "ev.depA":cl=>`<b>Дневной рейс вышел:</b> 6 групп, ${cl} ${ruN(cl,"клиент","клиента","клиентов")}.`,
+    "ev.k18":"<b>Тяжёлый руль после столкновения</b> — в цех, заменён резервным гидроциклом.",
+    "ev.complaint":`«Почему не отменили из-за дождя?» — гид отправил текст брифинга, предложен перенос на утро. ${MU("Шаблон из погодного модуля.")}`,
+    "ev.evac":pl=>`<b>Укачивание:</b> спидбот вызван к ${pl}, клиента забрали — ок.`,
+    "ev.photoA":`+176 фото с Coconut, Rang Yai и Rang Noi. ${MU("Геопозиции сохранены.")}`,
+    "ev.adone":"<b>Дневной рейс завершён.</b> Фото полные у 6 из 6 групп — напоминания сработали.",
+    "ev.eod":"<b>Отчёт дня готов</b> и отправлен: офис, тех.отдел, лид (ниже).",
+    "panel.tech":"Машины в ремонте","panel.tech.r":"Заполняется из рабочего чата.",
+    "tech.open":d=>d?`открыт ${d} ${ruN(d,"день","дня","дней")}`:"открыт сегодня",
+    "st.shop":"В цеху","st.open":"В работе","st.watch":"Наблюдаем","st.done":"Исправлено",
     "issue.Y62":"защёлка капота открывается на ветру (повтор №2!)","issue.H29":"датчик — постоянная тревога",
-    "issue.H100":"не едет быстрее 65 км/ч — сообщил капитан","issue.K18":"тяжёлый руль после контакта K18↔K24 — нужен осмотр",
-    "eod.shop":"В ЦЕХУ","eod.open":"ОТКРЫТ",
-    "photo.aft":"(день)","photo.missing":l=>`⚠ нет: ${l}`,"photo.ok":"✓ полные","photo.wait":"группы ещё в море — счётчики растут по мере загрузки фото…",
-    "shift.m":s=>`Утро ${s}`,"shift.a":s=>`День ${s}`,"shift.tom":"Завтра","shift.sb":"Standby","shift.sbv":"1 гид + 1 фрилансер",
-    "shift.full":"6/6 ✓","shift.short":"5/6 ⚠ (ищем 1)","shift.tomShort":"5/6 ⚠ нужен 1 гид","shift.conf":"6/6 ✓ (standby подтверждён)",
-    "ev.brief":(w,p)=>`🏢 <b>Офис:</b> утренний брифинг — ${w}. ${p} ${MU("(авто-пост из погодного модуля)")}`,
-    "ev.brief.bad":"ВЫСОКАЯ ВОЛНА И ВЕТЕР","ev.brief.wx":(w,k)=>`волна ${w} м, ветер ${k} уз`,
-    "ev.plan.bad":"<b>🚨 Inside Program</b>, Monkey отменён","ev.plan.warn":"Monkey на грани — решение на воде","ev.plan.ok":"полный маршрут 9 островов",
-    "ev.depM":(skis,cl)=>`🚤 <b>Утренний рейс вышел:</b> 6 групп · ${skis} ${ruN(skis,"гидроцикл","гидроцикла","гидроциклов")} · ${cl} ${ruN(cl,"клиент","клиента","клиентов")}`,
-    "ev.photoY":tm=>`📸 <b>${tm}</b> · Coconut Is.: загружено 38 фото ${MU("· гео-пинг ✓")}`,
-    "ev.h100":`🔧 <b>H100:</b> «не едет больше 65» — сообщил капитан → тикет в тех.отдел создан из сообщения в чате`,
-    "ev.swell":tm=>`🌊 <b>${tm}</b> (с воды): за Grand Marina растёт волна, боковая зыбь ${MU("· рапорт из чата")}`,
-    "ev.noMonkey":(e,tm,aft)=>aft?`${e} <b>${tm} (день): NO MONKEY</b> — разворот у Grand Marina`:`${e} <b>${tm}: NO MONKEY</b> — большая волна, разворот у Grand Marina`,
-    "ev.monkeyOk":(e,tm,aft)=>`${e} <b>${tm}${aft?" (день)":""}:</b> Monkey ОК ✓`,
-    "ev.inc1":tm=>`🚑 <b>Инцидент · ${tm} · Rang Yai:</b> клиент упал на волне — ушиб, обработан на месте, спидбот не нужен. ${MU("В журнале (защита от споров о возврате)")}`,
-    "ev.low":lt=>`🌊 <b>Отлив ${lt}:</b> Naka — мало места для стоянки (снорклинг с гидроциклов); дневной рейс — следить за высадкой на Monkey и заходом в мангры ${MU("· авто из таблицы приливов")}`,
-    "ev.short":"👥 <b>Дневная смена:</b> не хватает 1 гида (болезнь) — запрошен standby",
-    "ev.sbok":"👥 <b>Standby подтверждён</b> — дневной рейс укомплектован 6/6 ✓",
-    "ev.mdone":(g,o)=>`📸 <b>Утренний рейс завершён:</b> фото-комплаенс — <span class="okt">4/6 групп полные</span>, <span class="miss">${g}: нет Monkey («forget» 🙈)</span>, <span class="miss">${o}: нет Rang Noi</span> → гидам ушло авто-напоминание ${MU("(раньше админ гонялся за этим вручную)")}`,
-    "ev.depA":cl=>`🚤 <b>Дневной рейс вышел:</b> 6 групп · ${cl} ${ruN(cl,"клиент","клиента","клиентов")}`,
-    "ev.k18":"🔧 <b>K18:</b> руль после столкновения → <b>в цех</b>, заменён резервным гидроциклом",
-    "ev.complaint":`💬 <b>Жалоба (день):</b> «почему не отменили из-за дождя?» → гид отправил текст брифинга, предложен перенос на утро ${MU("· шаблон из погодного модуля")}`,
-    "ev.evac":(tm,pl)=>`🤢 <b>Укачивание · ${tm}:</b> спидбот вызван к ${pl}, клиент эвакуирован — ОК`,
-    "ev.photoA":"📸 Дневные группы: +176 фото (Coconut, Rang Yai, Rang Noi) · гео-пинги ✓",
-    "ev.adone":"📸 <b>Дневной рейс завершён:</b> 6/6 групп — фото полные ✓ (напоминания сработали)",
-    "ev.eod":"📋 <b>EOD-отчёт сформирован</b> и отправлен: офис + тех.отдел + лид (панель ниже)",
+    "issue.H100":"не едет быстрее 65 км/ч — сообщил капитан","issue.K18":"тяжёлый руль после контакта K18–K24 — нужен осмотр",
+    "eod.shop":"в цеху","eod.open":"открыт",
+    "panel.photo":"Фото по группам","panel.photo.r":"Сколько фото загружено и сколько ожидалось.",
+    "photo.of":(u,e)=>`${u} из ${e} фото`,"photo.missing":l=>`Нет: ${l}`,"photo.ok":"Полные",
+    "photo.waitT":"Фото ещё не посчитаны","photo.wait":"Группы в море. Счётчики появятся после каждого рейса, когда гиды загрузят фото.",
+    "photo.waitA":"Дневные группы в море — их счётчики появятся после рейса.",
+    "panel.shifts":"Гиды на смене","panel.shifts.r":(m,a)=>`Рейсы в ${m} и ${a}`,
+    "shift.m":s=>`Утренний рейс ${s}`,"shift.a":s=>`Дневной рейс ${s}`,"shift.tom":"Завтра","shift.sb":"Standby","shift.sbv":"1 гид + 1 фрилансер",
+    "sv.of":(a,b)=>`${a} из ${b} гидов`,"sw.full":"Полный состав","sw.short":"Ищем 1","sw.tomShort":"Нужен 1 гид","sw.conf":"Полный · вышел standby",
+    "panel.eod":"Отчёт дня","eod.sub":"Собирается сам в 18:00 из событий дня и уходит в офис, тех.отдел и лиду.",
+    "eod.langTitle":"Язык отчёта",
+    "eod.waitT":"Отчёт будет готов в 18:00","eod.wait":"Он собирается из событий дня. Чтобы увидеть сейчас, нажмите «К вечеру» в управлении демо.","eod.toDemo":"К управлению демо",
+    "btn.copy":"Скопировать отчёт дня","btn.copyWait":"Отчёт будет в 18:00",
+    "copy.ok":"Скопировано. Вставьте в чат офиса.","copy.fail":"Не скопировалось. Выделите текст выше и скопируйте вручную.",
+    "demo.h":"Управление демо","demo.p":"Симуляция дня по реальным паттернам 20 месяцев рабочего чата (обезличено). В рабочей системе события приходят из чат-бота, аплоадера фото и погодного сервиса.",
+    "demo.speed":"Скорость","btn.pause":"Пауза","btn.play":"Пуск","btn.skip":"К вечеру","btn.reset":"Начать день заново",
+    "sim.scenario":"Погода демо-дня","scen.live":"Живые данные","scen.ok":"Штиль","scen.warn":"На грани","scen.bad":"Шторм",
+    "sim.note":"При смене погоды день начнётся заново.",
+    otherScreens:"Другие экраны демо:","nav.photo":"Фото-демо","nav.weather":"Погодный борт","nav.bot":"LINE-бот",
+    rt:(tm,d)=>`Реальное время на Пхукете: ${tm}, ${d}.`,
+    foot:"Откуда данные в рабочей системе: бот читает рабочие чаты (WhatsApp гидов, LINE стаффа) — рапорты, поломки, инциденты, смены; аплоадер фото — счётчики фото и геопозиция на каждой загрузке; погодный сервис — коридор Sirey → Monkey. GPS-трекеры — опция фазы 2, для демо не нужны.",
+    "foot.coords":"На карте реальные координаты (Monkey Island — по ссылке клиента на карту). Точки маршрута гидов подключим при внедрении.",
+    srcThresh:(w1,w2,k1,k2)=>`Пороги (волна ${w1} / ${w2} м, ветер ${k1} / ${k2} уз) предварительные — калибруем с лидом.`,
+    attrib:"Данные о погоде: <a href=\"https://open-meteo.com/\" target=\"_blank\" rel=\"noopener\">Open-Meteo</a> (CC BY 4.0)",
+    powered:"Работает на JetOps", thDraft:"",
     "eod.report":(d,date,WX,lt)=>
-`PHUKET JETSKI CLUB — ОТЧЁТ ДНЯ · ${date}
+`Phuket Jetski Club — отчёт дня · ${date}
 ${RULE}
-ПОГОДА И МАРШРУТ  ${WX.cls==="bad"?"🔴":WX.cls==="warn"?"🟡":"🟢"}
+Погода и маршрут  ${WX.cls==="bad"?"🔴":WX.cls==="warn"?"🟡":"🟢"}
   Ветер ${WX.wind} уз (порывы ${WX.gust}) · волна ${WX.wave.toFixed(1)} м ${WX.live?"(live)":WX.scen?"(сценарий)":"(пример)"}
   Monkey: пропустили ${d.skipped}/${d.total} групп · ${WX.cls==="bad"?"Inside Program":"обычный маршрут"}
   Отлив ${lt} — гейты: высадка Monkey / фото Rang Yai / заход в мангры / парковка Naka
 
-КЛИЕНТЫ И БЕЗОПАСНОСТЬ
+Клиенты и безопасность
   Клиентов: ${d.clients} · Инцидентов: ${d.inc}
   1) Падение на волне у Rang Yai (${d.tm("K")}) — ушиб, обработан, в журнале
   2) Укачивание (${d.evac}) — эвакуация спидботом, ок
   → оба в журнале: время/место/исход (защита от претензий)
 
-ТЕХ.ОТДЕЛ — требует действий
+Тех.отдел — требует действий
 ${d.tech}
-  ⚠ Y62 защёлка капота — ПОВТОРНЫЙ случай (2-й раз) — приоритет
+  ⚠ Y62 защёлка капота — повторный случай (2-й раз) — приоритет
 
-ФОТО (аплоадер)
+Фото (аплоадер)
   Загружено: ${d.photos} · утро: 4/6 групп полные
   Пропуски: ${d.tm("G")} — Monkey; ${d.tm("O")} — Rang Noi (гидам ушло авто-напоминание)
   День: 6/6 полные ✓
 
-СМЕНЫ
+Смены
   Утро 6/6 ✓ · День 6/6 ✓ (standby)
   Завтра: 5/6 — нужен 1 гид (болезнь) → подтвердить standby сегодня
 
-КЛИЕНТСКИЕ ФЛАГИ
+Клиентские флаги
   1 погодная претензия (дождь) — выдан брифинг, предложен перенос
 ${RULE}
 сформировано автоматически: чаты + аплоадер + погодный API · полный лог в дашборде`
   }
 };
-const LOCALE={en:"en-GB",th:"th-TH",ru:"ru-RU"}, LANG_LBL={en:"EN",th:"ไทย",ru:"RU"};
+const LOCALE={en:"en-GB",th:"th-TH",ru:"ru-RU"};
 // localStorage may be blocked (private mode / storage disabled) — never let it throw during init
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
-let LANG=lsGet("jetops_lang")||"en";
+// "jetops_lang" is shared with index.html, weather.html and bot.html (values en | th | ru)
+let LANG=(I18N[PARAMS.get("lang")]&&PARAMS.get("lang"))||lsGet("jetops_lang")||"en";
 if(!I18N[LANG])LANG="en";
 let booted=false;
 function raw(lang,key){const d=I18N[lang];return (d&&d[key]!=null)?d[key]:(I18N.en[key]!=null?I18N.en[key]:key);}
 function tl(lang,key){const v=raw(lang,key);return typeof v==="function"?v.apply(null,Array.prototype.slice.call(arguments,2)):v;}
 function t(key){const v=raw(LANG,key);return typeof v==="function"?v.apply(null,Array.prototype.slice.call(arguments,1)):v;}
 const team=id=>t("team."+id);
+const teamN=id=>t("teamN",team(id));
+
+/* ---- small view helpers: Lucide icon, status badge (icon + word + colour) ---- */
+const ic=(id,cls)=>`<svg class="ic${cls?" "+cls:""}" aria-hidden="true"><use href="#i-${id}"/></svg>`;
+const ST_IC={ok:"circle-check",warn:"triangle-alert",crit:"circle-alert",info:"info",n:"info"};
+const badge=(st,txt,icon)=>`<span class="badge badge-${st}">${ic(icon||ST_IC[st])}<span>${txt}</span></span>`;
+const dotH=hex=>`<span class="dot" style="background:${hex}" aria-hidden="true"></span>`;
+function setParam(k,v){ // keep ?wx= in the address bar so the view can be shared; harmless if blocked (file://)
+  try{ const u=new URL(location.href); if(v==null) u.searchParams.delete(k); else u.searchParams.set(k,v); history.replaceState(null,"",u.href); }catch(e){}
+}
+
 function applyLang(lang){
   LANG=I18N[lang]?lang:"en";
   lsSet("jetops_lang",LANG);
   document.documentElement.lang=LANG;
-  document.querySelectorAll("[data-i18n]").forEach(n=>{const v=t(n.dataset.i18n);if(typeof v==="string")n.textContent=v;});
-  document.querySelectorAll("#langsw .sbtn").forEach(b=>b.classList.toggle("on",b.dataset.lang===LANG));
-  $("#btnPlay").textContent=sim&&sim.playing?t("btn.pause"):t("btn.play");
-  $("#eodCopy").textContent=t("btn.copy");
-  $("#eodLang").title=t("eod.langTitle");
-  $("#map").setAttribute("aria-label",t("map.aria"));
+  document.title=t("docTitle");
+  document.querySelectorAll("[data-i18n]").forEach(n=>{const v=t(n.dataset.i18n);if(typeof v==="string")n.innerHTML=v;});
+  document.querySelectorAll("[data-i18n-aria]").forEach(n=>{const v=t(n.dataset.i18nAria);if(typeof v==="string")n.setAttribute("aria-label",v);});
+  document.querySelectorAll("#langsw button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.lang===LANG)));
+  document.querySelectorAll("[data-jo-theme-toggle]").forEach(b=>{
+    b.setAttribute("data-label-auto",t("themeAuto")); b.setAttribute("data-label-light",t("themeLight"));
+    b.setAttribute("data-label-dark",t("themeDark")); b.setAttribute("data-label-title",t("themeTitle")); });
+  if(window.joTheme) window.joTheme.relabel();
+  $("#shiftTimes").textContent=t("panel.shifts.r",CONFIG.SESSIONS.m,CONFIG.SESSIONS.a);
   eodLang=LANG; paintEodLang();
-  if(booted){ buildMap(); drawGroups(); renderWX(); renderTech(); renderPhoto(); renderShift(); renderFeed(); }
-  if(eodReady) genEOD(); else $("#eodText").textContent=t("eod.placeholder");
-  rtClock();
+  if(booted) renderAll();
 }
 
 /* ================= WEATHER (live, fallback sample) =================
-   Scenarios (?wx=ok|warn|bad and the 🟢🟡🔴 buttons) override wave/wind/rain ONLY —
+   Scenarios (?wx=ok|warn|bad and the demo buttons) override wave/wind/rain ONLY —
    the low-tide time always comes from the live marine model when it is available. */
 const SAMPLE_WX={live:false,wind:16,gust:22,wave:1.2,rain:0.2,cls:"warn"};
 const WX_SCEN={ ok:{scen:"ok",wind:9,gust:13,wave:0.5,rain:0},
   warn:{scen:"warn",wind:16,gust:23,wave:1.3,rain:0.4},
   bad:{scen:"bad",wind:24,gust:34,wave:2.1,rain:4.2} };
-const WX_OVERRIDE=new URLSearchParams(location.search).get("wx");
+const WX_OVERRIDE=PARAMS.get("wx");
 let SCEN=(WX_OVERRIDE&&WX_SCEN[WX_OVERRIDE])?WX_OVERRIDE:null;
 let LIVE_WX=null, LIVE_LOW=null; // last successful live values: wave/wind; low tide {hh, lv}
 let WX=Object.assign({},SAMPLE_WX);
+let WX_LOADING=true;
 function wxClass(wave,wind){ const T=CONFIG.THRESH;
   if(wave>=T.wave.bad||wind>=T.wind.bad)return"bad"; if(wave>=T.wave.warn||wind>=T.wind.warn)return"warn"; return"ok"; }
 function pickWX(){
@@ -626,29 +894,54 @@ async function loadWXLive(){
 }
 async function loadWX(){
   try{ await loadWXLive(); }catch(e){}
+  WX_LOADING=false;
   pickWX();
   try{ renderWX(); }catch(e){}
 }
-// low-tide label in a given language; without live marine data → clearly labelled demo value
+// low-tide label in a given language; without live marine data → clearly labelled sample value
 const fmtLow=(lt,lang)=>lt?`${lt.hh} (${lt.lv.toFixed(1)} ${tl(lang,"u.m")})`:tl(lang,"tide.demo");
 const lowTide=lang=>fmtLow(WX.lowTide,lang);
+const WX_ST={ok:"ok",warn:"warn",bad:"crit"}, WX_IC={ok:"circle-check",warn:"triangle-alert",bad:"circle-x"};
 function renderWX(){
-  const v=WX.cls;
-  $("#wstrip").innerHTML=
-    `<span class="chip ${v}">${t("wx."+v)}</span>
-     <span class="chip">💨 ${WX.wind} ${t("u.kn")} <span style="color:var(--muted)">${t("wx.gusts",WX.gust)}</span></span>
-     <span class="chip">🌊 ${WX.wave.toFixed(1)} ${t("u.m")}</span>
-     <span class="chip">${WX.rain>0.2?t("wx.rain"):t("wx.norain")}</span>
-     <span class="chip">${WX.live?t("wx.live"):(WX.scen?t("wx.scen",t("scen."+WX.scen)):t("wx.sample"))}</span>
-     <span class="chip">${t("wx.low",lowTide(LANG))}</span>`;
+  const w=$("#wstrip");
+  if(WX_LOADING){ w.setAttribute("aria-busy","true"); w.innerHTML=`<span class="wx-i">${ic("cloud")}<span>${t("clock.load")}</span></span><span class="sk"></span><span class="sk"></span>`; return; }
+  w.removeAttribute("aria-busy");
+  const v=WX.cls, rain=WX.rain>0.2;
+  const src=WX.live?`<span class="wx-i live">${ic("wifi")}<span>${t("wx.live")}</span></span>`
+    :WX.scen?badge("info",t("wx.scen",t("scen."+WX.scen)),"info"):badge("warn",t("wx.sample"),"triangle-alert");
+  w.innerHTML=badge(WX_ST[v],t("wx."+v),WX_IC[v])
+    +`<span class="wx-i">${ic("wind")}<span>${t("wx.wind",WX.wind,WX.gust)}</span></span>`
+    +`<span class="wx-i">${ic("waves")}<span>${t("wx.wave",WX.wave.toFixed(1))}</span></span>`
+    +`<span class="wx-i">${ic(rain?"cloud-rain":"sun")}<span>${rain?t("wx.rain"):t("wx.norain")}</span></span>`
+    +src
+    +`<span class="wx-i wx-tide">${ic("clock")}<span>${t("wx.low",lowTide(LANG))}</span></span>`;
 }
 
-/* ================= MAP ================= */
+/* ================= MAP =================
+   Sea, land, route and label colours come from CSS tokens (light + dark). Labels are drawn at ≥14 px on screen:
+   their font size follows the map's scale; when they would have to be bigger than the map can hold
+   (a phone), they are hidden and a tap on the map names the nearest place or team instead. */
 const NS="http://www.w3.org/2000/svg";
 function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);(parent||$("#map")).appendChild(e);return e;}
 let routePath, routeLen;
+// Narrow screens see a crop of the same map (x 30…605: Phuket's coast, the whole route, Ko Li Pe) — a viewport,
+// not a change of geometry: every coordinate stays as projected by prj().
+const VB_FULL=[0,0,820,470], VB_CROP=[30,0,575,470];
+let MS={vb:VB_FULL,s:1,fs:14.5,compact:false};
+function measureMap(){
+  const w=$("#map").getBoundingClientRect().width||820;
+  let vb=VB_FULL, s=w/vb[2], fs=14.5/s;
+  if(fs>17.2){ vb=VB_CROP; s=w/vb[2]; fs=14.5/s; }
+  return {vb, s, fs:Math.max(14.5,Math.round(fs*100)/100), compact:fs>17.2};
+}
+function lbl(x,y,cls,txt,anchor,parent){ const e=el("text",{class:cls,x:Math.round(x),y:Math.round(y),"text-anchor":anchor||"middle"},parent); e.textContent=txt; return e; }
 function buildMap(){
   const map=$("#map"); map.innerHTML="";
+  map.setAttribute("viewBox",MS.vb.join(" "));
+  map.style.setProperty("--mfs",MS.fs+"px");
+  map.classList.toggle("compact",MS.compact);
+  map.setAttribute("aria-label",t("map.aria"));
+  const fs=MS.fs, C=MS.compact;
   const P=(lat,lon)=>prj(lat,lon);
   // Phuket — east coast, refined from OSM coastline data (2026-07-22): anchored on
   // verified points Ao Po Grand Marina 8.069/98.445, Bang Rong Pier 8.050/98.416
@@ -657,57 +950,53 @@ function buildMap(){
     [8.050,98.416],[8.036,98.415],[8.010,98.424],[7.996,98.426],[7.984,98.445],[7.965,98.437],
     [7.943,98.432],[7.930,98.411],[7.920,98.414],[7.906,98.421],[7.896,98.426],[7.887,98.419],
     [7.878,98.416],[7.868,98.402]].map(a=>P(a[0],a[1]));
-  el("path",{d:`M0,0 L${shore[0].x},0 `+shore.map(p=>`L${p.x},${p.y}`).join(" ")+` L${shore[shore.length-1].x},470 L0,470 Z`,
-    fill:"#122530",stroke:"#1d3a4c","stroke-width":"1.5"},map);
-  el("text",{class:"mside",x:26,y:250,fill:"#37596e","font-size":"13","font-weight":"700",transform:"rotate(-90 26 250)"},map).textContent=t("map.phuket");
+  el("path",{class:"m-land",d:`M0,0 L${shore[0].x},0 `+shore.map(p=>`L${p.x},${p.y}`).join(" ")+` L${shore[shore.length-1].x},470 L0,470 Z`},map);
+  const sx=MS.vb[0]+26;
+  lbl(sx,300,"m-side",t("map.phuket"),"middle",map).setAttribute("transform",`rotate(-90 ${sx} 300)`);
   // Koh Yao Yai — western coast, refined from OSM coastline data (2026-07-22).
   // Verified anchor: northern tip 8.117/98.529. The coast bulges west near 8.09 then
   // draws back east south of ~8.0 — Ko Li Pe (below) sits in the channel, not on Yao Yai itself.
   const yao=[[8.135,98.540],[8.117,98.529],[8.104,98.538],[8.095,98.549],[8.087,98.558],
     [8.067,98.542],[8.055,98.545],[8.030,98.556],[8.000,98.567],[7.975,98.560],
     [7.953,98.567],[7.930,98.556],[7.900,98.560],[7.868,98.550]].map(a=>P(a[0],a[1]));
-  el("path",{d:`M820,0 L${yao[0].x},0 `+yao.map(p=>`L${p.x},${p.y}`).join(" ")+` L${yao[yao.length-1].x},470 L820,470 Z`,
-    fill:"#122530",stroke:"#1d3a4c","stroke-width":"1.5"},map);
-  el("text",{class:"mside",x:790,y:250,fill:"#37596e","font-size":"12","font-weight":"700",transform:"rotate(90 790 250)"},map).textContent=t("map.yao");
+  el("path",{class:"m-land",d:`M820,0 L${yao[0].x},0 `+yao.map(p=>`L${p.x},${p.y}`).join(" ")+` L${yao[yao.length-1].x},470 L820,470 Z`},map);
+  lbl(790,250,"m-side",t("map.yao"),"middle",map).setAttribute("transform","rotate(90 790 250)");
   // Phang Nga Bay lies to the NE — the open water Naka Yai faces
   const png=P(8.100,98.500);
-  el("text",{class:"mshore",x:png.x,y:png.y,"text-anchor":"middle",fill:"#3f6478","font-size":"10.5","font-style":"italic"},map).textContent=t("map.png");
-  // shore labels (verified: Bang Rong Pier 8.050/98.416; Laem Khat cape 8.101/98.427 —
-  // re-verified 2026-07-27, two independent sources agree; it sits NORTH of Bang Rong,
-  // near Ao Po, not south of it as an earlier version had it). Laem Khat's point projects
-  // close to the Monkey Is. stop label, so it gets its own upward offset to clear it.
-  [[8.050,98.416,"Bang Rong Pier",0,3],[8.101,98.427,"Laem Khat",-4,-10]].forEach(a=>{
-    const p=P(a[0],a[1]); el("text",{class:"mshore",x:p.x-6+a[3],y:p.y+a[4],"text-anchor":"end",fill:"#54788e","font-size":"9.5"},map).textContent=a[2];});
-  // Khai Nai (verified 7.908/98.550) and Ko Li Pe (7.9554/98.5151 — east of Rang Yai,
-  // halfway to Yao Yai; client's local name, swiftlet bird's-nest island — see header note.
-  // Different island from the tourist "Ko Lipe" in Satun, ~400km south).
-  [[7.908,98.550,"Khai Nai"],[7.9554,98.5151,"Ko Li Pe"]].forEach(a=>{
-    const p=P(a[0],a[1]);
-    el("circle",{cx:p.x,cy:p.y,r:10,fill:"#16303f",stroke:"#27506a","stroke-width":"1"},map);
-    el("text",{class:"mshore",x:p.x,y:p.y+22,"text-anchor":"middle",fill:"#54788e","font-size":"9.5"},map).textContent=a[2];
-  });
+  lbl(png.x,png.y,"m-shore m-it",t("map.png"),"middle",map);
+  // shore labels (Laem Khat's point projects close to the Monkey Is. stop, so its label sits below-left of it)
+  SHORE.forEach(a=>{ const p=P(a[0],a[1]); lbl(p.x-6+a[3],p.y+a[4],"m-shore",a[2],"end",map); });
+  // Khai Nai and Ko Li Pe (east of Rang Yai, halfway to Yao Yai; client's local name, swiftlet bird's-nest island —
+  // see the header note. Different island from the tourist "Ko Lipe" in Satun, ~400km south).
+  ISLETS.forEach(a=>{ const p=P(a[0],a[1]);
+    el("circle",{class:"m-islet",cx:p.x,cy:p.y,r:10},map);
+    lbl(p.x,p.y+10+fs,"m-shore",a[2],"middle",map); });
   // route: polyline Sirey → … → Ao Po
   const main=STOPS.slice(0,AOPOR_IDX+1);
-  routePath=el("path",{d:"M"+main.map(s=>`${s.x},${s.y}`).join(" L"),fill:"none",stroke:"#2a4a60","stroke-width":"2.5","stroke-dasharray":"1 7","stroke-linecap":"round","stroke-linejoin":"round"},map);
+  routePath=el("path",{class:"m-route",d:"M"+main.map(s=>`${s.x},${s.y}`).join(" L")},map);
   routeLen=routePath.getTotalLength();
   // open crossing Ao Po → Monkey
   const ap=STOPS[AOPOR_IDX], mk=STOPS[STOPS.length-1];
-  el("path",{d:`M${ap.x},${ap.y} L${mk.x},${mk.y}`,fill:"none",stroke:"#5a4a2a","stroke-width":"2.5","stroke-dasharray":"6 6"},map);
-  el("text",{class:"mcross",x:(ap.x+mk.x)/2+10,y:(ap.y+mk.y)/2,fill:"#c9a35a","font-size":"10.5","font-weight":"700"},map).textContent=t("map.cross");
+  el("path",{class:"m-xing",d:`M${ap.x},${ap.y} L${mk.x},${mk.y}`},map);
+  lbl((ap.x+mk.x)/2+10,(ap.y+mk.y)/2,"m-cross",t("map.cross"),"start",map);
   // stops (proper names stay Latin, as the team writes them; descriptive labels are translated)
+  const R=C?Math.min(24,Math.max(16,9/MS.s)):16;
   STOPS.forEach((s,i)=>{
-    const last=i===STOPS.length-1;
-    el("circle",{cx:s.x,cy:s.y,r:last?19:16,fill:last?"#1c2f24":"#16303f",stroke:last?"#3a6b4e":"#27506a","stroke-width":"1.3",opacity:".9"},map);
-    el("text",{class:"micon",x:s.x,y:s.y+4,"text-anchor":"middle","font-size":"12"},map).textContent=s.icon;
-    el("text",{class:"mlbl",x:s.x,y:s.y+30,"text-anchor":"middle",fill:"#8fb0c4","font-size":"10","font-weight":"700"},map).textContent=s.nk?t(s.nk):s.name;
-    if(s.sk) el("text",{class:"msub",x:s.x,y:s.y+42,"text-anchor":"middle",fill:"#54788e","font-size":"9"},map).textContent=t(s.sk);
+    const last=i===STOPS.length-1, r=last?R+3:R, isz=Math.round(r*1.15);
+    el("circle",{class:"m-stop"+(last?" m-stop-x":""),cx:s.x,cy:s.y,r},map);
+    el("use",{href:"#i-"+s.icon,class:"m-ic",x:s.x-isz/2,y:s.y-isz/2,width:isz,height:isz},map);
+    if(C) return;
+    const name=s.nk?t(s.nk):s.name, sub=s.sk?t(s.sk):"";
+    let x,y,a;
+    if(s.lb==="right"){ x=s.x+r+6; y=s.y+fs*0.35; a="start"; }
+    else if(s.lb==="left"){ x=s.x-r-6; y=s.y+fs*0.35; a="end"; }
+    else if(s.lb==="rightlow"){ x=s.x+r+4; y=s.y+r+fs*0.6; a="start"; }
+    else { x=s.x; y=s.y+r+fs; a="middle"; }
+    lbl(x,y,"m-lbl",name,a,map);
+    if(sub) lbl(x,y+fs*1.15,"m-sub",sub,a,map);
   });
-  // groups layer
+  // teams layer
   el("g",{id:"gdots"},map);
-  // legend
-  $("#legend").innerHTML = GROUPS.map(g=>`<span><span class="dotc" style="background:${g.hex}"></span>${team(g.id)}</span>`).join("")+
-    `<span style="margin-left:auto">${t("legend.ring")}</span>`+
-    `<span style="flex-basis:100%;margin-top:2px">${t("legend.coords")}</span>`;
 }
 function posAt(t){ // t 0..1 along the whole route, incl. the open crossing
   if(t<=T_AOPOR){ return routePath.getPointAtLength(routeLen*(t/T_AOPOR)); }
@@ -715,9 +1004,32 @@ function posAt(t){ // t 0..1 along the whole route, incl. the open crossing
   const ap=STOPS[AOPOR_IDX], mk=STOPS[STOPS.length-1];
   return {x:ap.x+(mk.x-ap.x)*u, y:ap.y+(mk.y-ap.y)*u};
 }
+// tap / click on the map → name the nearest team or place (the only way to read names on a phone)
+let PICK=null;
+function renderPick(){
+  const p=$("#mapPick");
+  if(PICK){ p.hidden=false; p.innerHTML=(PICK.hex?dotH(PICK.hex):ic("map-pin","ic-s"))+`<span>${PICK.txt()}</span>`; }
+  else if(MS.compact){ p.hidden=false; p.innerHTML=ic("info","ic-s")+`<span>${t("map.tap")}</span>`; }
+  else p.hidden=true;
+}
+$("#map").addEventListener("click",e=>{
+  const svg=$("#map"), m=svg.getScreenCTM(); if(!m) return;
+  const pt=svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY;
+  const q=pt.matrixTransform(m.inverse());
+  const c=[];
+  sim.waves.forEach(gr=>{ const tt=groupT(gr); if(tt===null) return; const p=posAt(tt);
+    c.push({x:p.x,y:p.y,hex:gr.g.hex,txt:()=>t("pick.team",teamN(gr.g.id),where(gr))}); });
+  STOPS.forEach(s=>c.push({x:s.x,y:s.y,bias:6,txt:()=>{const n=s.nk?t(s.nk):s.name; return s.sk?`${n} — ${t(s.sk)}`:n;}}));
+  ISLETS.concat(SHORE).forEach(a=>{const p=prj(a[0],a[1]); c.push({x:p.x,y:p.y,bias:10,txt:()=>a[2]});});
+  let best=null,bd=Infinity;
+  c.forEach(o=>{const d=Math.hypot(o.x-q.x,o.y-q.y)+(o.bias||0); if(d<bd){bd=d;best=o;}});
+  PICK=(best&&bd<=Math.max(34,30/MS.s))?best:null;
+  renderPick();
+});
 
 /* ================= SIM STATE ================= */
-let sim={min:7*60+45, speed:2, playing:true, fired:new Set(), feed:[], counters:{clients:0,photos:0,inc:0,issues:2}, waves:[]};
+const SPEED0=PARAMS.get("speed")==="1"?1:2;
+let sim={min:DAY_START, speed:SPEED0, playing:true, fired:new Set(), feed:[], counters:{clients:0,photos:0,inc:0,issues:2}, waves:[], probs:[]};
 function makeWaves(){
   const skipAll=WX.cls==="bad";
   const skipHalf=WX.cls==="warn";
@@ -739,105 +1051,234 @@ function groupT(gr){
   const cap=gr.skip?MONKEY_CAP:1.0;
   return Math.min(t,cap);
 }
+// where a team is, in words (the team list and the map tap)
+function where(gr){
+  const e=sim.min-gr.dep;
+  if(e<=0) return t("where.wait",fmt(gr.dep));
+  if(e>=TRIP_MIN) return t("where.port");
+  const tt=groupT(gr);
+  if(gr.skip&&tt>=MONKEY_CAP-1e-6) return t("where.turn");
+  let b=0; STOPS.forEach((s,i)=>{ if(Math.abs(s.t-tt)<Math.abs(STOPS[b].t-tt)) b=i; });
+  const s=STOPS[b];
+  if(b===STOPS.length-1&&Math.abs(s.t-tt)<0.04) return t("where.monkey");
+  return t(e/TRIP_MIN<=0.5?"where.out":"where.back", s.wk?t(s.wk):s.name);
+}
+let LAST_TEAMS="";
 function drawGroups(){
-  const layer=$("#gdots"); while(layer.firstChild)layer.removeChild(layer.firstChild);
+  const layer=$("#gdots"); if(!layer) return;
+  while(layer.firstChild)layer.removeChild(layer.firstChild);
+  const r=MS.compact?Math.min(16,Math.max(8,5.5/MS.s)):8;
   let onWater=0;
   sim.waves.forEach(gr=>{
     const tt=groupT(gr); if(tt===null)return;
     onWater++;
     const p=posAt(tt);
-    const c=el("circle",{cx:p.x,cy:p.y,r:8,fill:gr.g.hex,stroke:gr.wave==="a"?"#ffffff":"#0b141b","stroke-width":gr.wave==="a"?"2.5":"1.5"},layer);
-    el("title",{},c).textContent=t("dot.title",team(gr.g.id),gr.skis,gr.clients,gr.skip);
+    const c=el("circle",{class:"m-dot",cx:p.x,cy:p.y,r,fill:gr.g.hex},layer);
+    el("title",{},c).textContent=t("dot.title",teamN(gr.g.id),gr.skis,gr.clients,gr.skip);
   });
   $("#kGroups").textContent=onWater;
-  if(!sim.waves.length){ $("#kGroupsS").textContent=t("kpi.groups.wait"); return; }
-  $("#kGroupsS").textContent=onWater?t("kpi.groups.split",sim.waves.filter(g=>groupT(g)!==null&&g.wave==="m").length,sim.waves.filter(g=>groupT(g)!==null&&g.wave==="a").length):t("kpi.groups.port");
+  // team list: the trip that is out now (or the next one)
+  let html;
+  if(!sim.waves.length){
+    $("#kGroupsS").textContent=t("kpi.groups.wait",CONFIG.SESSIONS.m);
+    $("#teamsH").textContent=t("teams.h.m",CONFIG.SESSIONS.m); $("#teamsSum").textContent="";
+    html=[0,1,2,3,4,5].map(()=>`<li class="sk" aria-hidden="true"></li>`).join("");
+  } else {
+    const mOn=sim.waves.filter(g=>groupT(g)!==null&&g.wave==="m").length, aOn=sim.waves.filter(g=>groupT(g)!==null&&g.wave==="a").length;
+    $("#kGroupsS").textContent=onWater?t("kpi.groups.split",mOn,aOn):(sim.min<START_M?t("kpi.groups.wait",CONFIG.SESSIONS.m):t("kpi.groups.port"));
+    const trip=sim.min<END_M?"m":"a", list=sim.waves.filter(g=>g.wave===trip);
+    $("#teamsH").textContent=t(trip==="m"?"teams.h.m":"teams.h.a",CONFIG.SESSIONS[trip]);
+    $("#teamsSum").textContent=t("teams.sum",list.length,list.reduce((s,g)=>s+g.skis,0),list.reduce((s,g)=>s+g.clients,0));
+    html=list.map(gr=>`<li>${dotH(gr.g.hex)}<b>${team(gr.g.id)}</b><span class="tw">${where(gr)}</span></li>`).join("");
+  }
+  if(html!==LAST_TEAMS){ $("#teamList").innerHTML=html; LAST_TEAMS=html; }
 }
 
 /* ================= EVENTS ================= */
 function fmt(min){const h=Math.floor(min/60),m=Math.round(min%60);return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0");}
-// feed entries keep a render function (not frozen HTML) so a language switch re-renders the whole feed
-function feedEl(e){const d=document.createElement("div");d.className="ev "+e.type;d.innerHTML=`<span class="t">${fmt(e.min)}</span><span>${e.fn()}</span>`;return d;}
-function feed(type,min,fn){
-  sim.feed.unshift({type,min,fn});
-  const w=$("#feedwrap");
-  w.insertBefore(feedEl(sim.feed[0]),w.firstChild);
-  $("#feedCount").textContent=t("feed.count",sim.feed.length);
+// feed entries keep render functions (not frozen HTML) so a language switch re-renders the whole feed.
+// sev: crit | warn | ok | null (neutral) — the badge colour; type → icon + word; who → team / machine / trip.
+const TYPE_IC={weather:"waves",trip:"sailboat",photo:"images",breakdown:"wrench",incident:"life-buoy",client:"message-circle",shift:"users",report:"send"};
+let FEED_F="all", FEED_ALL=false;
+const WIDE=window.matchMedia("(min-width: 1160px)"); // two columns: the feed scrolls inside its card
+function feed(type,min,fn,o){
+  o=o||{};
+  sim.feed.unshift({type,min,fn,sev:o.sev||null,who:o.who||(()=>""),pid:o.pid||null,fresh:true});
+  renderFeed();
+}
+const teamWho=id=>()=>dotH(GHEX[id])+`<span>${teamN(id)}</span>`;
+function feedMatch(e){
+  if(FEED_F==="prob") return e.sev==="crit"||e.sev==="warn";
+  if(FEED_F==="photo") return e.type==="photo";
+  if(FEED_F==="wx") return e.type==="weather";
+  return true;
+}
+function evRow(e){
+  const p=e.pid&&sim.probs.find(x=>x.id===e.pid);
+  const row=`<li class="ev${e.fresh?" new":""}"><span class="ev-t">${fmt(e.min)}</span><div class="ev-b">
+    <div class="ev-h">${badge(e.sev||"n",t("ty."+e.type),TYPE_IC[e.type])}<span class="ev-who">${e.who()}</span>${p&&p.handled?badge("ok",t("handled"),"check"):""}</div>
+    <p class="ev-x">${e.fn()}</p></div></li>`;
+  e.fresh=false;
+  return row;
 }
 function renderFeed(){
-  const w=$("#feedwrap"); w.innerHTML="";
-  sim.feed.forEach(e=>w.appendChild(feedEl(e)));
-  $("#feedCount").textContent=sim.feed.length?t("feed.count",sim.feed.length):"0";
+  const w=$("#feedwrap"), foot=$("#feedFoot");
+  document.querySelectorAll("#feedF .chip").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.f===FEED_F)));
+  $("#feedCount").textContent=t("feed.count",sim.feed.length);
+  foot.innerHTML="";
+  if(!sim.feed.length){
+    w.innerHTML=`<li class="empty"><span class="ic-wrap">${ic("clock","ic-l")}</span><h3 class="h3">${t("feed.emptyT")}</h3><p>${t("feed.empty",CONFIG.SESSIONS.m)}</p></li>`;
+    return;
+  }
+  const list=sim.feed.filter(feedMatch);
+  if(!list.length){
+    w.innerHTML=`<li class="empty"><p>${t("feed.none")}</p><button type="button" class="btn btn-secondary btn-s" data-fset="all">${t("feed.showAll")}</button></li>`;
+    return;
+  }
+  const lim=(WIDE.matches||FEED_ALL)?Infinity:6;
+  w.innerHTML=list.slice(0,lim).map(evRow).join("");
+  list.slice(lim).forEach(e=>e.fresh=false);
+  if(!WIDE.matches&&list.length>6)
+    foot.innerHTML=`<button type="button" class="btn btn-quiet btn-s" data-fmore>${ic(FEED_ALL?"chevron-down":"list-checks","ic-s")}<span>${FEED_ALL?t("feed.less"):t("feed.more",list.length)}</span></button>`;
 }
+$("#feedF").addEventListener("click",e=>{const b=e.target.closest(".chip"); if(!b) return; FEED_F=b.dataset.f; renderFeed();});
+$("#feedCard").addEventListener("click",e=>{
+  if(e.target.closest("[data-fset]")){ FEED_F="all"; renderFeed(); }
+  else if(e.target.closest("[data-fmore]")){ FEED_ALL=!FEED_ALL; renderFeed(); }
+});
+if(WIDE.addEventListener) WIDE.addEventListener("change",()=>renderFeed());
+
+/* ---- needs attention: open problems, most serious first ---- */
+function addProb(p){ if(!sim.probs.some(x=>x.id===p.id)) sim.probs.push(Object.assign({handled:false,called:false},p)); renderAtt(); }
+function resolveProb(id){ const p=sim.probs.find(x=>x.id===id); if(p){ p.handled=true; renderAtt(); renderFeed(); } }
+function renderAtt(){
+  const box=$("#attList");
+  if(WX_LOADING){ box.setAttribute("aria-busy","true"); box.innerHTML=`<div class="sk"></div>`; renderKpis(); return; }
+  box.removeAttribute("aria-busy");
+  // incidents first (newest on top), then a storm (it changes every team's route), then the rest, newest first
+  const rank=p=>p.sev==="crit"?0:p.wx?1:2;
+  const open=sim.probs.filter(p=>!p.handled).sort((a,b)=>rank(a)-rank(b)||b.min-a.min);
+  const done=sim.probs.length-open.length;
+  if(!open.length){
+    box.innerHTML=`<div class="note note-ok" role="status">${ic("circle-check")}<div><b>${t("att.quiet")}</b><p>${t("att.quietB")}${done?" "+t("att.done",done):""}</p></div></div>`;
+  } else {
+    box.innerHTML=open.slice(0,3).map(p=>{
+      const acts=[`<button type="button" class="btn btn-secondary btn-s" data-done="${p.id}">${ic("check","ic-s")}<span>${t("act.done")}</span></button>`];
+      if(p.call) acts.push(`<button type="button" class="btn btn-quiet btn-s" data-call="${p.id}">${ic("phone","ic-s")}<span>${t("act.call")}</span></button>`);
+      if(p.wx) acts.splice(0,1,`<a class="btn btn-secondary btn-s" href="weather.html${SCEN?"?wx="+SCEN:""}">${ic("waves","ic-s")}<span>${t("act.wx")}</span></a>`);
+      return `<div class="note note-${p.sev}" role="group" aria-labelledby="pt-${p.id}">${ic(p.sev==="crit"?"circle-alert":"triangle-alert")}<div>
+        <b id="pt-${p.id}">${p.t()}</b><p>${p.b()}</p><p class="att-meta">${fmt(p.min)} · ${p.who()}</p>
+        ${p.called?`<p class="att-call">${t("call.demo",team(p.call))}</p>`:""}
+        <div class="att-act">${acts.join("")}</div></div></div>`;
+    }).join("")+(open.length>3?`<div class="att-more"><span>${t("att.more",open.length-3)}</span><button type="button" class="btn btn-quiet btn-s" data-allprob>${ic("list-checks","ic-s")}<span>${t("att.showAll")}</span></button></div>`:"");
+  }
+  renderKpis();
+}
+$("#attList").addEventListener("click",e=>{
+  const d=e.target.closest("[data-done]"), c=e.target.closest("[data-call]"), a=e.target.closest("[data-allprob]");
+  if(d){ resolveProb(d.dataset.done); }
+  else if(c){ const p=sim.probs.find(x=>x.id===c.dataset.call); if(p){ p.called=true; renderAtt(); } }
+  else if(a){ FEED_F="prob"; FEED_ALL=true; renderFeed(); $("#feedCard").scrollIntoView({block:"start"}); $("#feedH").focus({preventScroll:true}); }
+});
+
+/* ---- key numbers: status badge on the tile only when there is something to say ---- */
+function renderKpis(){
+  $("#kClients").textContent=sim.counters.clients; $("#kPhotos").textContent=sim.counters.photos; $("#kInc").textContent=sim.counters.inc;
+  $("#kIssues").textContent=TECH.filter(x=>x.st!=="done").length;
+  const shop=TECH.filter(x=>x.st==="shop").length;
+  $("#kIssuesB").innerHTML=shop?badge("warn",t("b.shop",shop),"wrench"):"";
+  const incOpen=sim.probs.filter(p=>p.sev==="crit"&&!p.handled).length;
+  $("#kIncB").innerHTML=incOpen?badge("crit",t("b.incOpen",incOpen)):(sim.counters.inc?badge("ok",t("b.incDone")):"");
+  const miss=PHOTO.filter(p=>p.missing.length).length, mp=sim.probs.find(p=>p.id==="mdone");
+  $("#kPhotosB").innerHTML=(miss&&!(mp&&mp.handled))?badge("warn",t("b.photoMiss",miss)):"";
+}
+
 const TECH=[ // issue text → I18N "issue.<id>"
   {id:"Y62",st:"shop",days:3},
   {id:"H29",st:"watch",days:1}
 ];
+const TECH_ST={shop:["warn","wrench"],open:["warn","wrench"],watch:["n","eye"],done:["ok","check"]};
 function renderTech(){
-  const mu=s=>`<td style="color:var(--muted)">${s}</td>`;
-  $("#techTable").innerHTML=`<tr>${mu(t("tech.machine"))}${mu(t("tech.defect"))}${mu(t("tech.status"))}</tr>`+
-    TECH.map(x=>`<tr><td><b>${x.id}</b></td><td>${t("issue."+x.id)}<div style="color:var(--muted);font-size:11px">${t("tech.open",x.days)}</div></td>
-    <td><span class="badge ${x.st}">${t("st."+(["shop","open","watch"].indexOf(x.st)>=0?x.st:"done"))}</span></td></tr>`).join("");
-  $("#kIssues").textContent=TECH.filter(x=>x.st!=="done").length;
+  $("#techList").innerHTML=TECH.map(x=>{ const st=["shop","open","watch"].indexOf(x.st)>=0?x.st:"done", s=TECH_ST[st];
+    return `<li><div class="r-t"><b>${x.id}</b>${badge(s[0],t("st."+st),s[1])}</div><p class="r-x">${t("issue."+x.id)}</p><p class="r-m">${t("tech.open",x.days)}</p></li>`; }).join("");
+  renderKpis();
 }
 const PHOTO=[]; // {g, wave, up, exp, missing:[]}
 function renderPhoto(){
-  const rows=PHOTO.length?PHOTO.map(p=>`<tr><td><span class="dotc" style="background:${p.g.hex}"></span><b>${team(p.g.id)}</b> ${p.wave==="a"?t("photo.aft"):""}</td>
-    <td>${p.up}/${p.exp} ${p.missing.length?`<div class="miss">${t("photo.missing",p.missing.join(", "))}</div>`:`<span class="okt">${t("photo.ok")}</span>`}</td></tr>`).join("")
-    :`<tr><td style="color:var(--muted)">${t("photo.wait")}</td></tr>`;
-  $("#photoTable").innerHTML=rows;
+  const b=$("#photoBody");
+  if(!PHOTO.length){
+    b.innerHTML=`<div class="empty"><span class="ic-wrap">${ic("images","ic-l")}</span><h3 class="h3">${t("photo.waitT")}</h3><p>${t("photo.wait")}</p></div>`;
+    renderKpis(); return;
+  }
+  b.innerHTML=["m","a"].map(w=>{
+    const rows=PHOTO.filter(p=>p.wave===w);
+    if(!rows.length) return w==="a"&&sim.min<END_A?`<p class="wait-note">${t("photo.waitA")}</p>`:"";
+    return `<h3 class="rows-h">${t(w==="m"?"teams.h.m":"teams.h.a",CONFIG.SESSIONS[w])}</h3><ul class="rows">`+rows.map(p=>
+      `<li><div class="r-t">${dotH(p.g.hex)}<b>${team(p.g.id)}</b>${p.missing.length?badge("warn",t("photo.missing",p.missing.join(", "))):badge("ok",t("photo.ok"))}</div><p class="r-m">${t("photo.of",p.up,p.exp)}</p></li>`).join("")+`</ul>`;
+  }).join("");
+  renderKpis();
 }
 const SHIFT0={m:"shift.full",a:"shift.short",tomorrow:"shift.tomShort"};
-let SHIFT=Object.assign({},SHIFT0); // I18N keys
+let SHIFT=Object.assign({},SHIFT0); // keys of SHIFT_V
+const SHIFT_V={"shift.full":[6,6,"ok","sw.full"],"shift.short":[5,6,"warn","sw.short"],"shift.tomShort":[5,6,"warn","sw.tomShort"],"shift.conf":[6,6,"ok","sw.conf"]};
 function renderShift(){
-  $("#shiftTable").innerHTML=
-   `<tr><td>${t("shift.m",CONFIG.SESSIONS.m)}</td><td><b>${t(SHIFT.m)}</b></td></tr>
-    <tr><td>${t("shift.a",CONFIG.SESSIONS.a)}</td><td><b>${t(SHIFT.a)}</b></td></tr>
-    <tr><td>${t("shift.tom")}</td><td><b>${t(SHIFT.tomorrow)}</b></td></tr>
-    <tr><td>${t("shift.sb")}</td><td>${t("shift.sbv")}</td></tr>`;
+  const row=(label,k)=>{const v=SHIFT_V[k]; return `<li><div class="r-t"><b>${label}</b>${badge(v[2],t(v[3]))}</div><p class="r-m">${t("sv.of",v[0],v[1])}</p></li>`;};
+  $("#shiftList").innerHTML=row(t("shift.m",CONFIG.SESSIONS.m),SHIFT.m)+row(t("shift.a",CONFIG.SESSIONS.a),SHIFT.a)+row(t("shift.tom"),SHIFT.tomorrow)
+    +`<li><div class="r-t"><b>${t("shift.sb")}</b></div><p class="r-m">${t("shift.sbv")}</p></li>`;
 }
 
 function buildSchedule(){
   const S=[]; const add=(min,fn)=>S.push({min,fn,key:min+"_"+S.length});
   const W=Object.assign({},WX); // weather snapshot for this simulated day
-  add(7*60+50,()=>feed("office",7*60+50,()=>t("ev.brief",W.cls==="bad"?t("ev.brief.bad"):t("ev.brief.wx",W.wave.toFixed(1),W.wind),t("ev.plan."+W.cls))));
+  const who=k=>()=>t(k);
+  add(7*60+50,()=>{
+    if(W.cls==="bad") addProb({id:"storm",sev:"warn",min:7*60+50,wx:true,t:()=>t("p.storm.t"),b:()=>t("p.storm.b"),who:who("who.office")});
+    feed("weather",7*60+50,()=>t("ev.brief",W.cls==="bad"?t("ev.brief.bad"):t("ev.brief.wx",W.wave.toFixed(1),W.wind),t("ev.plan."+W.cls)),
+      {sev:W.cls==="ok"?null:"warn",who:who("who.office")});});
   add(START_M,()=>{const mw=sim.waves.filter(g=>g.wave==="m"),cl=mw.reduce((s,g)=>s+g.clients,0),sk=mw.reduce((s,g)=>s+g.skis,0);
     sim.counters.clients+=cl;$("#kClients").textContent=sim.counters.clients;
-    feed("shift",START_M,()=>t("ev.depM",sk,cl));});
+    feed("trip",START_M,()=>t("ev.depM",sk,cl),{who:()=>t("who.teams",6)});});
   add(9*60+5,()=>{sim.counters.photos+=38;$("#kPhotos").textContent=sim.counters.photos;
-    feed("photo",9*60+5,()=>t("ev.photoY",team("Y")));});
+    feed("photo",9*60+5,()=>t("ev.photoY"),{who:teamWho("Y")});});
   add(9*60+40,()=>{TECH.push({id:"H100",st:"open",days:0});renderTech();
-    feed("breakdown",9*60+40,()=>t("ev.h100"));});
-  add(10*60+10,()=>feed("weather",10*60+10,()=>t("ev.swell",team("P"))));
+    addProb({id:"h100",sev:"warn",min:9*60+40,t:()=>t("p.h100.t"),b:()=>t("p.h100.b"),who:()=>"H100"});
+    feed("breakdown",9*60+40,()=>t("ev.h100"),{sev:"warn",who:()=>"H100",pid:"h100"});});
+  add(10*60+10,()=>feed("weather",10*60+10,()=>t("ev.swell"),{sev:"warn",who:teamWho("P")}));
   add(10*60+25,()=>{sim.waves.filter(g=>g.wave==="m").forEach(gr=>{
-      feed("weather",10*60+25,()=>t(gr.skip?"ev.noMonkey":"ev.monkeyOk",gr.g.emoji,team(gr.g.id),false));});});
-  add(10*60+40,()=>{sim.counters.inc++;$("#kInc").textContent=sim.counters.inc;$("#kInc").parentElement.className="kpi alert";
-    feed("incident",10*60+40,()=>t("ev.inc1",team("K")));});
-  add(11*60+5,()=>feed("weather",11*60+5,()=>t("ev.low",fmtLow(W.lowTide,LANG))));
-  add(11*60+35,()=>feed("shift",11*60+35,()=>t("ev.short")));
-  add(12*60+5,()=>{SHIFT.a="shift.conf";renderShift();
-    feed("shift",12*60+5,()=>t("ev.sbok"));});
+      feed("weather",10*60+25,()=>t(gr.skip?"ev.noMonkey":"ev.monkeyOk",false),{sev:gr.skip?"warn":"ok",who:teamWho(gr.g.id)});});});
+  add(10*60+40,()=>{sim.counters.inc++;$("#kInc").textContent=sim.counters.inc;
+    addProb({id:"inc1",sev:"crit",min:10*60+40,call:"K",t:()=>t("p.inc1.t",teamN("K")),b:()=>t("p.inc1.b"),who:()=>teamN("K")});
+    feed("incident",10*60+40,()=>t("ev.inc1"),{sev:"crit",who:teamWho("K"),pid:"inc1"});});
+  add(11*60+5,()=>feed("weather",11*60+5,()=>t("ev.low",fmtLow(W.lowTide,LANG)),{who:who("who.tide")}));
+  add(11*60+35,()=>{addProb({id:"short",sev:"warn",min:11*60+35,t:()=>t("p.short.t"),b:()=>t("p.short.b"),who:who("who.a")});
+    feed("shift",11*60+35,()=>t("ev.short"),{sev:"warn",who:who("who.a"),pid:"short"});});
+  add(12*60+5,()=>{SHIFT.a="shift.conf";renderShift();resolveProb("short");
+    feed("shift",12*60+5,()=>t("ev.sbok"),{sev:"ok",who:who("who.a")});});
   add(END_M,()=>{sim.counters.photos+=214;$("#kPhotos").textContent=sim.counters.photos;
     sim.waves.filter(g=>g.wave==="m").forEach((gr,i)=>{const exp=gr.skis*18;const miss=gr.g.id==="G"?["Monkey"]:(gr.g.id==="O"?["Rang Noi"]:[]);
       PHOTO.push({g:gr.g,wave:"m",up:exp-(miss.length?14:0)-(i%3),exp,missing:miss});});
     renderPhoto();
-    feed("photo",END_M,()=>t("ev.mdone",team("G"),team("O")));});
+    addProb({id:"mdone",sev:"warn",min:END_M,t:()=>t("p.mdone.t"),b:()=>t("p.mdone.b",team("G"),team("O")),who:who("who.m")});
+    feed("photo",END_M,()=>t("ev.mdone",team("G"),team("O")),{sev:"warn",who:who("who.m"),pid:"mdone"});});
   add(START_A,()=>{const cl=sim.waves.filter(g=>g.wave==="a").reduce((s,g)=>s+g.clients,0);sim.counters.clients+=cl;$("#kClients").textContent=sim.counters.clients;
-    feed("shift",START_A,()=>t("ev.depA",cl));});
+    feed("trip",START_A,()=>t("ev.depA",cl),{who:()=>t("who.teams",6)});});
   add(13*60+15,()=>{TECH.push({id:"K18",st:"shop",days:0});renderTech();
-    feed("breakdown",13*60+15,()=>t("ev.k18"));});
-  if(W.cls!=="ok") add(13*60+40,()=>feed("client",13*60+40,()=>t("ev.complaint")));
+    addProb({id:"k18",sev:"warn",min:13*60+15,t:()=>t("p.k18.t"),b:()=>t("p.k18.b"),who:()=>"K18"});
+    feed("breakdown",13*60+15,()=>t("ev.k18"),{sev:"warn",who:()=>"K18",pid:"k18"});});
+  if(W.cls!=="ok") add(13*60+40,()=>{addProb({id:"compl",sev:"warn",min:13*60+40,t:()=>t("p.compl.t"),b:()=>t("p.compl.b"),who:who("who.a")});
+    feed("client",13*60+40,()=>t("ev.complaint"),{sev:"warn",who:who("who.a"),pid:"compl"});});
   add(14*60+20,()=>{sim.counters.inc++;$("#kInc").textContent=sim.counters.inc;const ev=sim.evac;
-    feed("incident",14*60+20,()=>t("ev.evac",team(ev.id),ev.place));});
+    addProb({id:"evac",sev:"crit",min:14*60+20,call:ev.id,t:()=>t("p.evac.t",teamN(ev.id),ev.place),b:()=>t("p.evac.b"),who:()=>teamN(ev.id)});
+    feed("incident",14*60+20,()=>t("ev.evac",ev.place),{sev:"crit",who:teamWho(ev.id),pid:"evac"});});
   add(14*60+35,()=>{sim.waves.filter(g=>g.wave==="a").forEach(gr=>{
-      feed("weather",14*60+35,()=>t(gr.skip?"ev.noMonkey":"ev.monkeyOk",gr.g.emoji,team(gr.g.id),true));});});
+      feed("weather",14*60+35,()=>t(gr.skip?"ev.noMonkey":"ev.monkeyOk",true),{sev:gr.skip?"warn":"ok",who:teamWho(gr.g.id)});});});
   add(14*60+50,()=>{sim.counters.photos+=176;$("#kPhotos").textContent=sim.counters.photos;
-    feed("photo",14*60+50,()=>t("ev.photoA"));});
+    feed("photo",14*60+50,()=>t("ev.photoA"),{who:who("who.a")});});
   add(END_A,()=>{sim.counters.photos+=182;$("#kPhotos").textContent=sim.counters.photos;
     sim.waves.filter(g=>g.wave==="a").forEach((gr,i)=>{const exp=gr.skis*18;PHOTO.push({g:gr.g,wave:"a",up:exp-(i%2),exp,missing:[]});});
     renderPhoto();
-    feed("photo",END_A,()=>t("ev.adone"));});
-  add(18*60,()=>{genEOD();feed("office",18*60,()=>t("ev.eod"));});
+    feed("photo",END_A,()=>t("ev.adone"),{sev:"ok",who:who("who.a")});});
+  add(18*60,()=>{genEOD();feed("report",18*60,()=>t("ev.eod"),{who:who("who.office")});});
   return S;
 }
 let SCHEDULE=[];
@@ -851,63 +1292,103 @@ function eodData(L){
     photos:sim.counters.photos, clients:sim.counters.clients, inc:sim.counters.inc,
     evac:tm((sim.evac&&sim.evac.id)||"B"), tm};
 }
-function genEOD(){
-  const L=eodLang, date=new Date().toLocaleDateString("en-GB",{timeZone:TZ});
-  $("#eodText").textContent=tl(L,"eod.report",eodData(L),date,WX,lowTide(L));
-  eodReady=true;
+function genEOD(){ eodReady=true; renderEOD(); }
+function renderEOD(){
+  const box=$("#eodBox"), btn=$("#eodCopy");
+  if(eodReady){
+    const L=eodLang, date=new Date().toLocaleDateString("en-GB",{timeZone:TZ});
+    box.innerHTML=`<div class="card-2 msg" id="eodText"></div>`;
+    const tx=$("#eodText"); tx.lang=L; tx.textContent=tl(L,"eod.report",eodData(L),date,WX,lowTide(L));
+    btn.disabled=false; btn.innerHTML=`${ic("copy")}<span>${t("btn.copy")}</span>`;
+  } else {
+    box.innerHTML=`<div class="card-2 empty"><span class="ic-wrap">${ic("sunset","ic-l")}</span><h3 class="h3">${t("eod.waitT")}</h3><p>${t("eod.wait")}</p>
+      <a class="btn btn-quiet btn-s" href="#demo">${ic("chevron-down","ic-s")}<span>${t("eod.toDemo")}</span></a></div>`;
+    btn.disabled=true; btn.innerHTML=`${ic("clock")}<span>${t("btn.copyWait")}</span>`;
+    $("#eodNote").hidden=true;
+  }
 }
+function paintEodLang(){ document.querySelectorAll("#eodLang button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.l===eodLang))); }
+document.querySelectorAll("#eodLang button").forEach(b=>b.onclick=()=>{eodLang=b.dataset.l;paintEodLang();renderEOD();});
+$("#eodCopy").onclick=e=>{ const tx=$("#eodText"); if(!tx) return;
+  const txt=tx.textContent, note=$("#eodNote");
+  const show=ok=>{
+    note.className="note "+(ok?"note-ok":"note-warn");
+    note.innerHTML=`${ic(ok?"check":"triangle-alert")}<div>${ok?t("copy.ok"):t("copy.fail")}</div>`;
+    note.hidden=false; clearTimeout(note._t); note._t=setTimeout(()=>{note.hidden=true;},6000);
+  };
+  const fallback=()=>{try{const ta=document.createElement("textarea");ta.value=txt;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();const ok=document.execCommand("copy");ta.remove();show(!!ok);}catch(err){show(false);}};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(()=>show(true),fallback);else fallback();};
 
 /* ================= ENGINE ================= */
+function fireDue(){ SCHEDULE.forEach(s=>{if(s.min<=sim.min&&!sim.fired.has(s.key)){sim.fired.add(s.key);s.fn();}}); }
+function paintSim(){
+  $("#simClock").textContent=fmt(sim.min);
+  $("#simState").textContent=WX_LOADING?t("clock.load"):sim.min>=DAY_END?t("clock.end"):sim.playing?t("clock.run",sim.speed):t("clock.pause");
+  $("#btnPlay").innerHTML=sim.playing?`${ic("pause","ic-s")}<span>${t("btn.pause")}</span>`:`${ic("play","ic-s")}<span>${t("btn.play")}</span>`;
+  $("#btnX1").setAttribute("aria-pressed",String(sim.speed===1)); $("#btnX2").setAttribute("aria-pressed",String(sim.speed===2));
+  document.querySelectorAll(".scenbtn").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.scen===(SCEN||"live"))));
+  $("#navWx").setAttribute("href","weather.html"+(SCEN?"?wx="+SCEN:""));
+}
 function tick(){
   if(!sim.playing)return;
   sim.min+=sim.speed*1.5;
-  if(sim.min>18*60+30){sim.min=18*60+30;sim.playing=false;$("#btnPlay").textContent=t("btn.play");}
-  $("#simClock").textContent=fmt(sim.min);
-  SCHEDULE.forEach(s=>{if(s.min<=sim.min&&!sim.fired.has(s.key)){sim.fired.add(s.key);s.fn();}});
+  if(sim.min>DAY_END){sim.min=DAY_END;sim.playing=false;}
+  fireDue();
   drawGroups();
+  paintSim();
 }
+function jumpTo(min){ while(sim.min<min){ sim.min=Math.min(min,sim.min+5); fireDue(); } drawGroups(); paintSim(); }
 function reset(){
-  sim={min:7*60+45,speed:sim.speed,playing:true,fired:new Set(),feed:[],counters:{clients:0,photos:0,inc:0,issues:2},waves:[]};
+  sim={min:DAY_START,speed:sim.speed,playing:true,fired:new Set(),feed:[],counters:{clients:0,photos:0,inc:0,issues:2},waves:[],probs:[]};
   TECH.length=2;PHOTO.length=0;SHIFT=Object.assign({},SHIFT0);
-  $("#feedwrap").innerHTML="";$("#feedCount").textContent="0";
   ["kClients","kPhotos","kInc"].forEach(id=>$("#"+id).textContent="0");
-  $("#kInc").parentElement.className="kpi good";
-  eodReady=false;$("#eodText").textContent=t("eod.placeholder");
-  makeWaves();SCHEDULE=buildSchedule();renderTech();renderPhoto();renderShift();
-  $("#btnPlay").textContent=t("btn.pause");
+  eodReady=false; PICK=null; FEED_ALL=false;
+  makeWaves();SCHEDULE=buildSchedule();renderTech();renderPhoto();renderShift();renderFeed();renderAtt();renderEOD();renderPick();
+  drawGroups(); paintSim();
+}
+function renderAll(){
+  buildMap(); drawGroups(); renderWX(); renderTech(); renderPhoto(); renderShift(); renderFeed(); renderAtt(); renderEOD(); renderPick(); paintSim(); rtClock(); renderFoot();
+}
+function renderFoot(){
+  const T=CONFIG.THRESH;
+  $("#foot").innerHTML=`<p>${t("foot")}</p><p>${t("foot.coords")}</p><p><b>${t("srcThresh",T.wave.warn,T.wave.bad,T.wind.warn,T.wind.bad)}</b></p>
+    <p>${t("attrib")}</p>${t("thDraft")?`<p>${t("thDraft")}</p>`:""}<p>${t("powered")}</p>`;
 }
 
 /* ================= WIRE ================= */
-$("#btnPlay").onclick=()=>{sim.playing=!sim.playing;$("#btnPlay").textContent=sim.playing?t("btn.pause"):t("btn.play");};
-$("#btnX1").onclick=()=>{sim.speed=1;$("#btnX1").classList.add("on");$("#btnX2").classList.remove("on");};
-$("#btnX2").onclick=()=>{sim.speed=2;$("#btnX2").classList.add("on");$("#btnX1").classList.remove("on");};
-$("#btnEOD").onclick=()=>{while(sim.min<18*60+1){sim.min+=5;SCHEDULE.forEach(s=>{if(s.min<=sim.min&&!sim.fired.has(s.key)){sim.fired.add(s.key);s.fn();}});}$("#simClock").textContent=fmt(sim.min);drawGroups();};
-$("#btnReset").onclick=reset;
+$("#btnPlay").onclick=()=>{ if(sim.min>=DAY_END) return; sim.playing=!sim.playing; paintSim(); };
+$("#btnX1").onclick=()=>{sim.speed=1;paintSim();};
+$("#btnX2").onclick=()=>{sim.speed=2;paintSim();};
+$("#btnEOD").onclick=()=>{ if(WX_LOADING) return; while(sim.min<18*60+1){sim.min+=5;fireDue();} drawGroups(); paintSim(); };
+$("#btnReset").onclick=()=>{ if(!WX_LOADING){ setParam("t",null); reset(); } };
 document.querySelectorAll(".scenbtn").forEach(b=>b.onclick=async()=>{const k=b.dataset.scen;
-  try{ if(k==="live"){SCEN=null;await loadWX();} else {SCEN=k;pickWX();renderWX();} }
-  finally{ reset(); }});
-document.querySelectorAll("#langsw .sbtn").forEach(b=>b.onclick=()=>applyLang(b.dataset.lang));
-function paintEodLang(){ $("#eodLang").innerHTML=["en","th","ru"].map(l=>l===eodLang?`<b>${LANG_LBL[l]}</b>`:LANG_LBL[l]).join(" · "); }
-$("#eodLang").onclick=()=>{const o=["en","th","ru"];eodLang=o[(o.indexOf(eodLang)+1)%o.length];paintEodLang();if(eodReady)genEOD();};
-$("#eodCopy").onclick=e=>{const tx=$("#eodText").textContent, btn=e.currentTarget;
-  const show=ok=>{btn.textContent=ok?t("copy.ok"):t("copy.fail");setTimeout(()=>btn.textContent=t("btn.copy"),1400);};
-  const fallback=()=>{try{const ta=document.createElement("textarea");ta.value=tx;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();const ok=document.execCommand("copy");ta.remove();show(!!ok);}catch(err){show(false);}};
-  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(tx).then(()=>show(true),fallback);else fallback();};
+  if(WX_LOADING) return;
+  try{ if(k==="live"){SCEN=null;WX_LOADING=true;paintSim();renderWX();renderAtt();await loadWX();} else {SCEN=k;pickWX();renderWX();} }
+  finally{ WX_LOADING=false; setParam("wx",SCEN); setParam("t",null); reset(); }});
+document.querySelectorAll("#langsw button").forEach(b=>b.onclick=()=>applyLang(b.dataset.lang));
 function rtClock(){const n=new Date(), loc=LOCALE[LANG]||"en-GB";
-  $("#rtClock").textContent=n.toLocaleTimeString("en-GB",{timeZone:TZ,hour:"2-digit",minute:"2-digit"});
-  $("#rtDate").textContent=n.toLocaleDateString(loc,{timeZone:TZ,weekday:"short",day:"numeric",month:"short"})+" · Asia/Bangkok";}
+  const tm=n.toLocaleTimeString("en-GB",{timeZone:TZ,hour:"2-digit",minute:"2-digit"});
+  $("#todayD").textContent=n.toLocaleDateString(loc,{timeZone:TZ,weekday:"long",day:"numeric",month:"long"});
+  $("#rtLine").textContent=t("rt",tm,n.toLocaleDateString(loc,{timeZone:TZ,weekday:"short",day:"numeric",month:"short"}));}
+function onMapResize(){ const m=measureMap(); if(m.vb!==MS.vb||m.compact!==MS.compact||Math.abs(m.fs-MS.fs)>0.2){ MS=m; buildMap(); drawGroups(); renderPick(); } }
 
 /* ================= INIT ================= */
-$("#shiftTimes").textContent=`${CONFIG.SESSIONS.m} / ${CONFIG.SESSIONS.a}`;
+const T_JUMP=(()=>{ const v=PARAMS.get("t"); if(!v||!/^\d{1,2}:\d{2}$/.test(v)) return null; const m=hm(v); return (m>DAY_START&&m<=DAY_END)?m:null; })();
 pickWX();
+MS=measureMap();
 applyLang(LANG);
-buildMap();
-renderTech();renderPhoto();renderShift();renderWX();
 booted=true;
+renderAll();
+if(window.ResizeObserver) new ResizeObserver(onMapResize).observe($("#map")); else window.addEventListener("resize",onMapResize);
 setInterval(rtClock,30000);
 // start the day only once the weather settled (live or sample) — the clock never runs and then snaps back.
 // Always fetch: even in a scenario (?wx=…) the low-tide time comes from the live marine model.
-loadWX().catch(()=>{}).finally(()=>{ reset(); setInterval(tick,250); });
+loadWX().catch(()=>{}).finally(()=>{
+  WX_LOADING=false; reset();
+  if(T_JUMP!==null){ jumpTo(T_JUMP); sim.playing=false; paintSim(); } // deterministic: stays on that moment until Play
+  document.body.setAttribute("data-ready","1");
+  setInterval(tick,250);
+});
 })();
 </script>
 </body>

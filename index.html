@@ -2,319 +2,828 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0aa1dd">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0F2433" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#071219" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Phuket Jetski Club — Photo Delivery (Build 1 demo)</title>
+<title>Photo delivery — demo · Phuket Jetski Club</title>
+<link rel="stylesheet" href="assets/jo/jetops.css">
+<script src="assets/jo/theme.js"></script>
 <style>
-  :root{
-    --accent:#0aa1dd; --accent2:#f5a623; --ink:#0e1b26; --muted:#5b7080;
-    --bg:#eef4f8; --card:#ffffff; --line:#dbe6ee; --ok:#2fa84f; --red:#e5484d;
-    --shadow:0 6px 22px rgba(14,40,60,.10); --radius:16px;
+  /* Photo delivery demo — page layout only. Tokens and components (.appbar .seg .btn .card .chip .dot .badge
+     .note .empty .num .actionbar .footer-note) come from assets/jo/jetops.css (JetOps guideline v1).
+     The Guide and Tourist screens copy the layout of the real apps from wave 1:
+       photo-pipeline/public/u/u.css (guide uploader) and photo-pipeline/public/g/g.css (tourist gallery)
+     — this page is deployed on its own, so the pieces it needs are copied here, not linked.
+     The only raw colours: team dots (data) and the generated placeholder photos (image content). */
+  [hidden] { display: none !important; }
+  html { -webkit-tap-highlight-color: transparent; }
+  body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+  main { flex: 1 0 auto; width: 100%; }
+  button { -webkit-touch-callout: none; }
+
+  /* ---- header: logo + name left; language + theme right (own row on a phone) — as in the guide app ---- */
+  .appbar { padding-top: env(safe-area-inset-top); }
+  .appbar-in { max-width: 1040px; flex-wrap: wrap; row-gap: var(--s2); padding-top: var(--s2); padding-bottom: var(--s2);
+    padding-left: max(var(--s4), env(safe-area-inset-left)); padding-right: max(var(--s4), env(safe-area-inset-right)); }
+  .op-text { min-width: 0; }
+  .appbar-tools { display: flex; align-items: center; gap: var(--s2); }
+  .appbar [data-jo-theme-toggle] { padding: 0 var(--s3); }
+  @media (max-width: 599px) {
+    .appbar .spacer { display: none; }
+    .appbar-tools { flex-basis: 100%; justify-content: space-between; padding-bottom: var(--s1); }
   }
-  *{box-sizing:border-box}
-  html,body{margin:0;padding:0}
-  body{
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans Thai",sans-serif;
-    background:var(--bg); color:var(--ink); -webkit-font-smoothing:antialiased;
+
+  /* ---- demo screen switch: About · Guide · Tourist ---- */
+  .viewbar { display: flex; justify-content: center; padding: var(--s4) var(--s4) 0; }
+  .seg-view { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; max-width: 480px; }
+  .seg-view button { padding: 0 var(--s2); font-size: var(--fs-body-s); }
+
+  /* demo-only hints, clearly set apart from the product (dashed, like the weather demo) */
+  .demo-tip { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s3); align-items: start;
+    padding: var(--s3) var(--s4); border: 1.5px dashed var(--border); border-radius: var(--r-md);
+    color: var(--muted); font-size: var(--fs-body-s); font-weight: 600; line-height: 1.5; }
+  .demo-tip > .ic { margin-top: 1px; }
+  .demo-tip .btn { margin: var(--s1) 0 calc(-1 * var(--s2)) calc(-1 * var(--s3)); }
+
+  /* ================= About ================= */
+  .v-about { max-width: 880px; margin: 0 auto; padding: var(--s5) var(--s4) var(--s6); display: grid;
+    grid-template-columns: minmax(0, 1fr); gap: var(--s5); align-content: start; }
+  .a-head { display: grid; gap: var(--s2); }
+  .a-head p { color: var(--muted); max-width: 62ch; }
+  .sec-h { margin-bottom: var(--s3); }
+  .cmp { display: grid; gap: var(--s4); }
+  @media (min-width: 720px) { .cmp { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .cmp .card { display: grid; gap: var(--s3); align-content: start; }
+  .cmp-now { background: transparent; box-shadow: none; border: 1.5px solid var(--line); }
+  .cmp-h { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s2) var(--s3); }
+  .cmp-flow { font-weight: 800; }
+  .cmp p:last-child { color: var(--muted); }
+  .facts { display: grid; gap: var(--s3); }
+  .fact { display: grid; grid-template-columns: 120px minmax(0, 1fr); align-items: center; gap: var(--s3); }
+  .fact .num { white-space: nowrap; }
+  .fact p { font-size: var(--fs-body-s); font-weight: 600; color: var(--muted); }
+  @media (min-width: 600px) {
+    .facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .fact { grid-template-columns: minmax(0, 1fr); align-items: start; align-content: start; gap: var(--s1); }
   }
-  #app{max-width:460px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;
-    box-shadow:0 0 40px rgba(0,0,0,.06)}
-  /* top bar */
-  header.top{position:sticky;top:0;z-index:20;background:linear-gradient(135deg,var(--accent),#0784b8);
-    color:#fff;padding:12px 16px 10px;box-shadow:0 2px 12px rgba(7,132,184,.35)}
-  .brand{display:flex;align-items:center;gap:9px;font-weight:800;letter-spacing:.2px}
-  .brand .logo{width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,.18);
-    display:grid;place-items:center;font-size:17px}
-  .brand small{display:block;font-weight:600;opacity:.85;font-size:10.5px;letter-spacing:.6px;text-transform:uppercase}
-  .tabs{display:flex;gap:6px;margin-top:11px}
-  .tabs button{flex:1;border:0;border-radius:10px;padding:8px 6px;font-size:12.5px;font-weight:700;
-    background:rgba(255,255,255,.16);color:#fff;cursor:pointer;transition:.15s}
-  .tabs button.active{background:#fff;color:var(--accent)}
-  main{padding:16px 16px 90px}
-  section{display:none;animation:fade .25s ease}
-  section.on{display:block}
-  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-  h2{font-size:19px;margin:2px 0 4px}
-  .sub{color:var(--muted);font-size:13px;margin:0 0 16px;line-height:1.5}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-    padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
-  .label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
-  .pillrow{display:flex;flex-wrap:wrap;gap:8px}
-  .pill{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:9px 15px;font-size:14px;
-    font-weight:700;cursor:pointer;transition:.15s;color:var(--ink)}
-  .pill:active{transform:scale(.96)}
-  .pill.sel{border-color:var(--accent);background:var(--accent);color:#fff}
-  .pill.color{padding-left:12px}
-  .pill.color .dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:7px;vertical-align:-1px}
-  .pill.sel.color{color:#fff}
-  .numrow{display:flex;align-items:center;gap:10px}
-  .numrow button{width:44px;height:44px;border-radius:12px;border:1.5px solid var(--line);background:#fff;
-    font-size:22px;font-weight:800;color:var(--accent);cursor:pointer}
-  .numrow input{width:104px;height:44px;text-align:center;font-size:20px;font-weight:800;border:1.5px solid var(--line);
-    border-radius:12px;color:var(--ink);text-transform:uppercase;letter-spacing:.5px}
-  .draft{font-size:12px;line-height:1.5;background:#fff5e2;border:1px solid #ffe1a8;color:#a86a00;border-radius:10px;padding:8px 10px;margin:-6px 0 14px}
-  .btn{display:block;width:100%;border:0;border-radius:13px;padding:15px;font-size:16px;font-weight:800;
-    cursor:pointer;transition:.15s;text-align:center}
-  .btn:active{transform:scale(.98)}
-  .btn.primary{background:linear-gradient(135deg,var(--accent),#0784b8);color:#fff;box-shadow:0 6px 16px rgba(7,132,184,.35)}
-  .btn.accent2{background:linear-gradient(135deg,#ffb43d,var(--accent2));color:#3d2600}
-  .btn.ghost{background:#fff;border:1.5px solid var(--line);color:var(--ink)}
-  .btn.sm{padding:11px;font-size:14px}
-  .hint{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5}
-  .hidden{display:none!important}
-  /* grid */
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .ph{position:relative;border-radius:12px;overflow:hidden;background:#cfe0ea;aspect-ratio:4/3;cursor:pointer;
-    border:1px solid var(--line)}
-  .ph img{width:100%;height:100%;object-fit:cover;display:block}
-  .ph .tag{position:absolute;left:6px;top:6px;background:rgba(14,27,38,.72);color:#fff;font-size:10.5px;
-    font-weight:800;padding:3px 7px;border-radius:6px}
-  .empty{text-align:center;color:var(--muted);padding:30px 12px;font-size:13.5px;line-height:1.6}
-  .count{font-size:13px;color:var(--muted);margin:2px 0 12px}
-  .count b{color:var(--ink)}
-  /* auto-check */
-  .checkline{display:flex;align-items:center;gap:9px;font-size:14px;padding:6px 0;color:var(--muted)}
-  .checkline .bx{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;
-    font-size:13px;flex:none}
-  .checkline.ok{color:var(--ink)} .checkline.ok .bx{border-color:var(--ok);background:var(--ok);color:#fff}
-  /* toast */
-  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(30px);opacity:0;
-    background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:700;
-    z-index:60;transition:.3s;box-shadow:0 8px 24px rgba(0,0,0,.3);max-width:88%;text-align:center}
-  #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-  /* modal / lightbox */
-  .overlay{position:fixed;inset:0;background:rgba(8,20,30,.78);z-index:50;display:none;align-items:center;
-    justify-content:center;padding:18px}
-  .overlay.on{display:flex}
-  .sheet{background:#fff;border-radius:18px;max-width:420px;width:100%;padding:20px;box-shadow:var(--shadow)}
-  .sheet h3{margin:0 0 6px;font-size:18px}
-  .sheet p{color:var(--muted);font-size:14px;line-height:1.6;margin:0 0 16px}
-  .lb img{width:100%;border-radius:12px;display:block;background:#cfe0ea}
-  .badge{display:inline-flex;align-items:center;gap:6px;background:#eaf6fc;color:#0784b8;font-size:11.5px;
-    font-weight:800;padding:5px 10px;border-radius:999px;border:1px solid #cfe9f6}
-  .badge.prem{background:#fff5e2;color:#a86a00;border-color:#ffe1a8}
-  .beforeafter{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
-  .ba{border-radius:12px;padding:12px;font-size:12.5px;line-height:1.5}
-  .ba.now{background:#fdecec;border:1px solid #f7c9c9}
-  .ba.new{background:#e9f8ee;border:1px solid #bfe8cd}
-  .ba h4{margin:0 0 6px;font-size:13px}
-  .ba.now h4{color:var(--red)} .ba.new h4{color:var(--ok)}
-  .rolebtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
-  .rolebtns .btn{padding:18px 12px}
-  .qr{width:120px;height:120px;margin:6px auto 2px;display:block}
-  .footnote{text-align:center;color:var(--muted);font-size:11.5px;padding:14px}
-  .lang{display:flex;gap:4px;justify-content:flex-end;margin:-6px 0 10px}
-  .lang button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:4px 10px;font-size:12px;
-    font-weight:700;color:var(--muted);cursor:pointer}
-  .lang button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
-  .kv{font-size:13px;color:var(--muted);line-height:1.7}
-  .kv b{color:var(--ink)}
+  .shows ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s4); }
+  @media (min-width: 720px) { .shows ul { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s5); } }
+  .shows li { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: var(--s3); align-items: start; }
+  .shows .ic-wrap { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--primary-soft); color: var(--primary-strong); }
+  .shows li b { display: block; }
+  .shows li p { color: var(--muted); font-size: var(--fs-body-s); }
+  .demo { border: 1.5px dashed var(--border); border-radius: var(--r-lg); padding: var(--s5); display: grid; gap: var(--s3); justify-items: start; }
+  .demo p { max-width: 68ch; }
+  .demo .note { width: 100%; }
+  .demo .note-act { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s3); }
+  .demo-links { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--s2); }
+  .demo-links a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--s2); font-weight: 700; }
+
+  /* ================= Guide (copy of the guide uploader layout, u.css) ================= */
+  .v-guide { max-width: var(--w-read); width: 100%; margin: 0 auto; padding: var(--s4) var(--s4) var(--s6);
+    display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s4); align-content: start; }
+  .note > div { min-width: 0; }
+  .note b { font-weight: 800; }
+  .note .names { display: block; margin-top: var(--s1); color: var(--muted); font-size: var(--fs-caption); font-weight: 600; overflow-wrap: anywhere; }
+  .note .note-act { margin-top: var(--s3); }
+  .note .btn .ic { color: inherit; margin-top: 0; }
+
+  .choose { display: grid; gap: var(--s5); }
+  .step { display: grid; gap: var(--s3); border-radius: var(--r-md); }
+  .step-h { font-size: var(--fs-h3); line-height: 1.35; font-weight: 700; }
+  .step.need { animation: u-need 1.6s ease-out; }
+  @keyframes u-need { 0%, 60% { box-shadow: 0 0 0 4px var(--surface), 0 0 0 7px var(--warn); } 100% { box-shadow: 0 0 0 4px var(--surface), 0 0 0 7px transparent; } }
+
+  .seg-day { display: grid; grid-template-columns: 1fr 1fr; width: 100%; border-radius: var(--r-md); }
+  .seg-day button { min-height: var(--h-control); padding: var(--s2) var(--s3); display: grid; align-content: center; justify-items: center;
+    font: 700 var(--fs-body)/1.3 var(--font); }
+  .seg-day button .d { font-size: var(--fs-caption); font-weight: 600; color: var(--muted); }
+  .seg-day button[aria-pressed="true"] .d { color: inherit; }
+
+  .v-guide .chip { position: relative; border-width: 2px; }
+  /* chosen = filled chip + thick border + a check badge on the corner (never colour alone) */
+  .chip .ck { display: none; position: absolute; top: -8px; right: -6px; width: 24px; height: 24px; padding: 3px; border-radius: 50%;
+    background: var(--primary); color: var(--on-primary); stroke-width: 3; box-shadow: 0 0 0 2px var(--surface); }
+  .chip[aria-pressed="true"] .ck { display: block; }
+  .chips-trip { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); }
+  .chips-trip .chip { min-height: var(--h-control); padding: var(--s2) var(--s3); border-radius: var(--r-md);
+    display: grid; justify-items: center; align-content: center; gap: 0; }
+  .chips-trip .chip .big { font-size: var(--fs-h3); font-weight: 800; line-height: 1.25; }
+  .chips-trip .chip .small { font-size: var(--fs-caption); font-weight: 600; line-height: 1.35; color: var(--muted); }
+  .chips-trip .chip[aria-pressed="true"] .small { color: inherit; }
+  .chips-color { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (min-width: 600px) { .chips-color { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .chips-color .chip { padding: var(--s1) var(--s3) var(--s1) var(--s4); text-align: left; }
+  .chips-color .chip > span:not(.dot) { min-width: 0; overflow-wrap: anywhere; }
+  .chips-color .dot { width: 20px; height: 20px; }
+
+  .photos { display: grid; gap: var(--s4); scroll-margin-top: var(--s4); }
+  .photos-h { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); }
+  .photos-h .step-h { min-width: 0; }
+  .photos-h .btn { flex: none; white-space: nowrap; margin-right: calc(-1 * var(--s2)); }
+  .count { display: inline-block; min-width: 32px; padding: 0 var(--s2); border-radius: var(--r-pill); text-align: center;
+    background: var(--primary-soft); color: var(--primary-strong); font-size: var(--fs-body-s); font-weight: 800; vertical-align: 2px; }
+  .count:empty { display: none; }
+  .photos .empty { padding: var(--s4) var(--s2); }
+
+  .qgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: var(--s2); }
+  .qgrid:empty { display: none; }
+  .q { position: relative; aspect-ratio: 1; border-radius: var(--r-md); overflow: hidden; background: var(--bg-2); }
+  .q img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  /* overlays sit on a photo, so they use the raw brand colours, same in both themes */
+  .q .x { position: absolute; top: 0; right: 0; width: 44px; height: 44px; padding: 0; border: 0; background: transparent;
+    display: grid; place-items: center; cursor: pointer; color: var(--sand-50); }
+  .q .x span { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+    background: color-mix(in srgb, var(--deep-900) 78%, transparent); box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--sand-50) 70%, transparent); }
+  .q .x .ic { width: 18px; height: 18px; stroke-width: 2.5; }
+  .q .st { position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; gap: 4px;
+    padding: 3px 4px; font: 700 var(--fs-caption)/1.3 var(--font); white-space: nowrap; overflow: hidden;
+    background: color-mix(in srgb, var(--deep-900) 78%, transparent); color: var(--sand-50); }
+  .q .st .ic { width: 16px; height: 16px; }
+  .q.done .st { background: var(--ok-soft); color: var(--ok); }
+  .q.up img { opacity: .8; }
+
+  .undo { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); padding-left: var(--s4);
+    border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--line); font-size: var(--fs-body-s); font-weight: 600; }
+  .status { display: grid; gap: var(--s3); }
+  .status:empty { display: none; }
+  .today-line { display: flex; flex-direction: column; align-items: flex-start; gap: 0;
+    color: var(--muted); font-size: var(--fs-body-s); font-weight: 600; padding: 0 var(--s1); }
+  .today-line .btn { margin-left: calc(-1 * var(--s3)); }
+  @media (min-width: 600px) {
+    .today-line { flex-direction: row; align-items: center; justify-content: space-between; gap: var(--s3); }
+    .today-line .btn { margin-left: 0; margin-right: calc(-1 * var(--s3)); }
+  }
+
+  /* ---- action bar: what happened + summary line + one main button ---- */
+  .bar-in { display: grid; gap: var(--s2); }
+  .result { display: grid; gap: var(--s2); }
+  .result:empty { display: none; }
+  .result .note { padding: var(--s3) var(--s4); }
+  .result .note-act { margin-top: var(--s2); }
+  .summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 6px; text-align: center;
+    font-size: var(--fs-body-s); font-weight: 700; line-height: 1.4; }
+  .summary .sep { color: var(--muted); }
+  .summary .dot { width: 14px; height: 14px; }
+  .progress { height: 6px; border-radius: var(--r-pill); background: var(--bg-2); overflow: hidden; }
+  .progress i { display: block; height: 100%; width: 0; background: var(--primary); transition: width .2s; }
+  .btn[aria-busy="true"] { cursor: progress; }
+  .btn[aria-busy="true"]:active { transform: none; }
+  /* a disabled main button lets the tap through to the bar, which scrolls to the missing step */
+  #send[disabled] { pointer-events: none; }
+
+  @media (max-width: 420px) {
+    .card { padding: var(--s4); }
+    .v-guide { gap: var(--s3); }
+  }
+
+  /* first paint of Guide / Tourist: grey placeholders in the shape of the screen */
+  .skel { max-width: var(--w-read); margin: 0 auto; width: 100%; padding: var(--s4); display: grid; gap: var(--s3); }
+  .sk-title { height: 24px; width: 40%; }
+  .sk-row { height: 56px; }
+  .sk-chips { height: 48px; width: 70%; border-radius: var(--r-pill); }
+  .sk-block { height: 160px; border-radius: var(--r-lg); }
+
+  /* ================= Tourist (copy of the tourist gallery layout, g.css) ================= */
+  .g-page { max-width: 1040px; width: 100%; margin: 0 auto; padding: var(--s4) var(--s4) var(--s6); display: grid; gap: var(--s4); align-content: start; }
+  .g-page > * { min-width: 0; }
+  @media (min-width: 720px) { .g-page { padding: var(--s5) var(--s5) var(--s6); gap: var(--s5); } }
+
+  .g-steps { display: grid; gap: var(--s5); }
+  .g-step { display: grid; gap: var(--s3); }
+  .g-step-h { display: flex; align-items: flex-start; gap: var(--s3); }
+  .g-step-h .g-n { flex: none; width: 32px; height: 32px; margin-top: -2px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--primary-soft); color: var(--primary-strong); font-size: var(--fs-body-s); font-weight: 800; }
+  .g-step-h .g-sub { display: inline-block; color: var(--muted); font-weight: 500; }
+  .g-step .chips { padding-left: 44px; }
+  .g-step .g-wait { padding-left: 44px; color: var(--muted); font-size: var(--fs-body-s); }
+  @media (max-width: 399px) { .g-step .chips, .g-step .g-wait { padding-left: 0; } }
+  /* trips: an even list on a phone (two chips with times do not fit one row at 360–375 px) */
+  @media (max-width: 479px) {
+    #groupsS { display: grid; grid-template-columns: minmax(0, 1fr); }
+    #groupsS .chip { justify-content: flex-start; }
+    #groupsS .chip .g-time { margin-left: auto; }
+  }
+  .chip .g-cnt { color: var(--muted); font-weight: 600; font-size: var(--fs-caption); }
+  .chip[aria-pressed="true"] .g-cnt { color: inherit; }
+  .chip .g-time { font-weight: 800; }
+
+  .g-sum { display: flex; align-items: center; gap: var(--s3); padding: var(--s3) var(--s3) var(--s3) var(--s4); }
+  .g-sum .dot { width: 20px; height: 20px; }
+  .g-sum-txt { flex: 1; min-width: 0; display: grid; line-height: 1.35; }
+  .g-sum-txt b { font-size: var(--fs-body); }
+  .g-sum-txt span { font-size: var(--fs-body-s); }
+
+  .g-photos { display: grid; gap: var(--s4); }
+  .g-photos-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s2) var(--s3); }
+  .g-photos-h:focus { outline: none; }
+  .g-photos-top .btn { margin-right: calc(-1 * var(--s3)); }
+  .g-ski { display: grid; gap: var(--s2); max-width: 520px; }
+  .g-ski-row { display: flex; gap: var(--s2); }
+  .g-ski-row .input { flex: 1; min-width: 0; }
+
+  .g-grid { display: grid; gap: var(--s2); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (min-width: 600px) { .g-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); } }
+  @media (min-width: 900px) { .g-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .g-grid:empty { display: none; }
+  .g-tile { position: relative; display: block; width: 100%; aspect-ratio: 1; padding: 0; margin: 0; overflow: hidden;
+    border: 0; border-radius: var(--r-md); background: var(--bg-2); cursor: zoom-in; font: inherit; color: inherit; }
+  .g-tile img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .2s; }
+  @media (hover: hover) { .g-tile:hover img { transform: scale(1.03); } }
+  .g-tile:focus-visible { outline-offset: 3px; }
+  .g-tile.mine { box-shadow: 0 0 0 3px var(--primary); }
+  .g-tile .badge { position: absolute; left: var(--s2); top: var(--s2); box-shadow: var(--shadow-1); }
+  .g-turn { animation: jo-spin 1.2s linear infinite; }
+  @media (prefers-reduced-motion: reduce) { .g-turn { animation-duration: 3.6s; } .g-tile img { transition: none; } }
+  .g-more { justify-self: center; }
+  .g-msg .empty .h3 { max-width: 30ch; text-wrap: balance; }
+  .g-msg .empty p { text-wrap: balance; }
+
+  /* "coming later" teaser: a quiet card, no button */
+  .g-later { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: var(--s3); align-items: start; box-shadow: none; background: var(--surface-2); }
+  .g-later .ic-wrap { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: var(--bg-2); color: var(--muted); }
+  .g-later p { color: var(--muted); font-size: var(--fs-body-s); margin-top: var(--s1); }
+
+  /* ---- viewer: full-screen sheet, always the dark palette (photos read best on dark) ---- */
+  .g-viewer { width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; padding: 0; border: 0;
+    background: var(--bg); color: var(--fg); }
+  .g-viewer[open] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+  .g-viewer::backdrop { background: rgb(4 12 18 / 70%); }
+  body:has(.g-viewer[open]) { overflow: hidden; }
+  .g-v-top { display: flex; align-items: center; gap: var(--s3); min-height: 56px; padding: var(--s2) var(--s4);
+    padding-top: calc(var(--s2) + env(safe-area-inset-top)); }
+  .g-v-count { font-weight: 700; font-size: var(--fs-body-s); color: var(--muted); }
+  .g-v-stage { position: relative; min-height: 0; overflow: hidden; touch-action: pan-y pinch-zoom; }
+  .g-v-stage img { position: absolute; inset: 0; margin: auto; max-width: calc(100% - 2 * var(--s2)); max-height: 100%; border-radius: var(--r-md); }
+  .g-v-nav { position: absolute; top: 50%; transform: translateY(-50%); width: var(--h-control); height: var(--h-control);
+    display: grid; place-items: center; padding: 0; border-radius: 50%; cursor: pointer;
+    border: 1.5px solid var(--border); background: color-mix(in srgb, var(--bg) 72%, transparent); color: var(--fg); }
+  .g-v-nav:hover { background: var(--surface-2); }
+  .g-v-prev { left: var(--s3); }
+  .g-v-next { right: var(--s3); }
+  .g-v-actions { display: grid; gap: var(--s2); padding: var(--s3) var(--s4); padding-bottom: calc(var(--s4) + env(safe-area-inset-bottom)); }
+  .g-v-btns { display: flex; gap: var(--s3); width: 100%; max-width: 480px; margin: 0 auto; }
+  .g-v-btns .btn-primary { flex: 1; }
+  .g-v-hint { text-align: center; color: var(--muted); font-size: var(--fs-caption); max-width: 480px; margin: 0 auto; }
+  @media (min-width: 720px) {
+    .g-v-top { padding-inline: var(--s5); }
+    .g-v-stage img { max-width: calc(100% - 2 * (var(--h-control) + var(--s5))); }
+    .g-v-prev { left: var(--s4); }
+    .g-v-next { right: var(--s4); }
+  }
+
+  .footer-note { max-width: var(--w-read); margin: 0 auto; }
+  .footer-note p + p { margin-top: var(--s2); }
 </style>
 </head>
 <body>
-<div id="app">
-  <header class="top">
-    <div class="brand">
-      <img class="logo" src="assets/logo.png" alt="Phuket Jetski Club" style="width:auto;height:28px;background:#fff;padding:4px 8px;border-radius:8px;box-sizing:content-box">
-      <span id="brandName"><small data-i18n="brand_small">Photo delivery · Build 1 demo</small></span>
+<svg id="jo-sprite" xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><!-- Lucide icons (ISC), copied from assets/jo/icons.svg --><symbol id="i-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></symbol><symbol id="i-ban" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="m4.9 4.9 14.2 14.2" /></symbol><symbol id="i-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></symbol><symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></symbol><symbol id="i-chevron-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6" /></symbol><symbol id="i-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></symbol><symbol id="i-circle-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="m9 12 2 2 4-4" /></symbol><symbol id="i-circle-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="m15 9-6 6" /><path d="m9 9 6 6" /></symbol><symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></symbol><symbol id="i-hourglass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22h14" /><path d="M5 2h14" /><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" /><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" /></symbol><symbol id="i-image-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10l-3.1-3.1a2 2 0 0 0-2.814.014L6 21" /><path d="m14 19.5 3-3 3 3" /><path d="M17 22v-5.5" /><circle cx="9" cy="9" r="2" /></symbol><symbol id="i-images" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 22H4a2 2 0 0 1-2-2V6" /><path d="m22 13-1.296-1.296a2.41 2.41 0 0 0-3.408 0L11 18" /><circle cx="12" cy="8" r="2" /><rect width="16" height="16" x="6" y="2" rx="2" /></symbol><symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></symbol><symbol id="i-list-checks" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4" /><path d="m3 7 2 2 4-4" /><path d="M13 6h8" /><path d="M13 12h8" /><path d="M13 18h8" /></symbol><symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /></symbol><symbol id="i-refresh-cw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></symbol><symbol id="i-rotate-ccw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></symbol><symbol id="i-sailboat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 18H2a4 4 0 0 0 4 4h12a4 4 0 0 0 4-4Z" /><path d="M21 14 10 2 3 14h18Z" /><path d="M10 2v16" /></symbol><symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></symbol><symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z" /><path d="m21.854 2.147-10.94 10.939" /></symbol><symbol id="i-smartphone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2" /><path d="M12 18h.01" /></symbol><symbol id="i-star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" /></symbol><symbol id="i-triangle-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /><path d="M12 9v4" /><path d="M12 17h.01" /></symbol><symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></symbol><symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></symbol></svg>
+
+<header class="appbar">
+  <div class="appbar-in">
+    <img class="op-logo" src="assets/logo.png" alt="Phuket Jetski Club" width="63" height="36">
+    <div class="op-text">
+      <div class="op-name">Phuket Jetski Club</div>
+      <div class="op-sub" data-i18n="opSub">Photo delivery — demo</div>
     </div>
-    <div class="tabs">
-      <button data-view="home" class="active" data-i18n="tab_about">ℹ️ About</button>
-      <button data-view="guide" data-i18n="tab_guide">📸 Guide</button>
-      <button data-view="client" data-i18n="tab_client">🏖️ Client</button>
+    <div class="spacer"></div>
+    <div class="appbar-tools">
+      <div class="seg" id="lang" role="group" aria-label="Language" data-i18n-aria="language"><button type="button" data-l="en" lang="en" aria-pressed="true">EN</button><button type="button" data-l="th" lang="th" aria-pressed="false">ไทย</button><button type="button" data-l="ru" lang="ru" aria-pressed="false">RU</button></div>
+      <button type="button" class="btn btn-quiet btn-s" id="theme" data-jo-theme-toggle
+        data-label-auto="Auto" data-label-light="Light" data-label-dark="Dark" data-label-title="Theme"></button>
     </div>
-  </header>
+  </div>
+</header>
 
-  <main>
-    <!-- ============ HOME / ABOUT THE DEMO ============ -->
-    <section id="view-home" class="on">
-      <div class="lang" id="hLang">
-        <button data-lang="en" class="on">EN</button>
-        <button data-lang="th">ไทย</button>
-        <button data-lang="ru">RU</button>
-      </div>
-      <h2 data-i18n="home_h2">Demo: photos in minutes, not 1–3 days</h2>
-      <p class="sub" data-i18n="home_sub">Build 1 — instant HD pipeline. Photos stay <b>free</b>. Try the two tabs above: <b>Guide</b> uploads photos → <b>Client</b> sees them in the gallery right away, by jet ski number.</p>
-
-      <div class="card">
-        <div class="label" data-i18n="fix_lbl">What this fixes</div>
-        <div class="beforeafter">
-          <div class="ba now" data-i18n="now_ba"><h4>Now</h4>guide → WhatsApp → admin → manual upload to Google Drive. <b>1–3 days</b> delay, WhatsApp lowers quality, everything depends on one person.</div>
-          <div class="ba new" data-i18n="new_ba"><h4>Build 1</h4>guide → uploader → auto-check → gallery. <b>Minutes</b>, original HD, no admin bottleneck.</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="label" data-i18n="shows_lbl">What this demo shows</div>
-        <div class="kv" data-i18n="shows_kv">
-          • <b>Guide:</b> simple Thai uploader (2–3 taps: trip + color + number), sends original photos from iPhone.<br>
-          • <b>Auto-check:</b> trip / color / photo count / quality — no manual sorting.<br>
-          • <b>Client:</b> same shared QR → picks day / trip / color team → enters the <b>machine number</b> (visible on the jet ski in every shot) → sees their photos.<br>
-          • <b>✨ AI face search</b> — teaser of the premium feature (Build 2).
-        </div>
-      </div>
-
-      <div class="card" style="text-align:center">
-        <div class="label" style="text-align:left" data-i18n="qr_lbl">Customer wristband → one shared QR</div>
-        <img class="qr" id="homeQr" alt="QR">
-        <div class="hint" data-i18n="qr_hint">In real use the QR opens the client gallery. In this demo, use the buttons below.</div>
-        <div class="rolebtns" style="margin-top:12px">
-          <button class="btn primary" data-goto="guide" data-i18n="go_guide">📸 I am a guide — upload</button>
-          <button class="btn ghost" data-goto="client" data-i18n="go_client">🏖️ I am a client — my photos</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="label" data-i18n="modB_lbl">🌦️ Module B — Weather board (demo)</div>
-        <div class="hint" style="margin-top:0" data-i18n="modB_p">Local forecast for the Sirey → Monkey Island route + a clear go / borderline / no-go verdict + a ready briefing for the client. Live Open-Meteo data.</div>
-        <a class="btn accent2 sm" href="weather.html" style="margin-top:11px;text-decoration:none" data-i18n="modB_btn">Open weather board →</a>
-      </div>
-
-      <div class="card">
-        <div class="label" data-i18n="modD_lbl">🖥️ Module D — Ops Dashboard (demo)</div>
-        <div class="hint" style="margin-top:0" data-i18n="modD_p">Live operations board for the office: route map with groups, event feed from work chats, mechanics board, photo compliance, shifts, automatic day report. A simulated day built from real chat patterns.</div>
-        <a class="btn primary sm" href="dashboard.html" style="margin-top:11px;text-decoration:none;color:#fff" data-i18n="modD_btn">Open ops dashboard →</a>
-      </div>
-
-      <div class="card">
-        <div class="label" data-i18n="bot_lbl">🤖 Module D — LINE Ops Bot (showcase)</div>
-        <div class="hint" style="margin-top:0" data-i18n="bot_p">The bot reads work LINE groups: message → event → auto-alert when there is a problem → evening report for the office and mechanics. Real output from working code.</div>
-        <a class="btn ghost sm" href="bot.html" style="margin-top:11px;text-decoration:none;display:block;text-align:center" data-i18n="bot_btn">Open bot showcase →</a>
-      </div>
-
-      <div class="card">
-        <div class="label" data-i18n="notes_lbl">Notes</div>
-        <div class="hint" style="margin-top:0">
-          <span data-i18n="notes_p">Placeholder photos are generated (with the machine number visible on the jet ski) — real photos will replace them. Demo data is stored locally in your browser. You can also upload <b>real photos from your phone</b> ("Pick photos"). Number OCR and AI face search are teasers here — in production they are Build 1 / Build 2.</span>
-          <br><br><button class="btn ghost sm" id="resetBtn" data-i18n="reset_btn">↺ Reset demo data</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ GUIDE (Thai UI for guides) ============ -->
-    <section id="view-guide">
-      <h2>อัปโหลดรูปภาพ <span style="font-size:13px;color:var(--muted);font-weight:600">(Guide · upload)</span></h2>
-      <p class="sub">เลือกรอบ ทีมสี และหมายเลขเจ็ตสกี แล้วอัปโหลดรูป — เข้าแกลเลอรีทันที<br><span style="font-size:12px">Trip → color → machine number → photos. The client sees them right away.</span></p>
-      <div class="draft">📝 ฉบับร่าง — ข้อความภาษาไทยอยู่ระหว่างการตรวจทาน · Draft — Thai wording under review</div>
-
-      <div class="card">
-        <div class="label">รอบ / Trip — <span id="gDate"></span></div>
-        <div class="pillrow" id="gSession"></div>
-      </div>
-      <div class="card">
-        <div class="label">ทีมสี / Color team</div>
-        <div class="pillrow" id="gColor"></div>
-      </div>
-      <div class="card">
-        <div class="label">หมายเลขเจ็ตสกี / Machine number</div>
-        <div class="numrow">
-          <button id="gMinus">−</button>
-          <input id="gSki" type="text" value="K7" maxlength="6" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="K7">
-          <button id="gPlus">+</button>
-          <span class="hint" id="gSkiHint" style="margin:0 0 0 6px"></span>
-        </div>
-      </div>
-
-      <div class="card" id="gCheckCard" style="display:none">
-        <div class="label">ตรวจสอบอัตโนมัติ / Auto-check</div>
-        <div id="gChecks"></div>
-      </div>
-
-      <input id="gFile" type="file" accept="image/*" multiple class="hidden">
-      <button class="btn ghost sm" id="gPickReal">🖼️ เลือกรูปจากเครื่อง / Pick photos from phone</button>
-      <div style="height:10px"></div>
-      <button class="btn primary" id="gAddDemo">⬆️ อัปโหลด 8 รูปเดโม / Upload 8 demo photos</button>
-      <p class="hint" id="gTodayCount"></p>
-    </section>
-
-    <!-- ============ CLIENT ============ -->
-    <section id="view-client">
-      <div class="lang" id="cLang">
-        <button data-lang="en" class="on">EN</button>
-        <button data-lang="th">ไทย</button>
-        <button data-lang="ru">RU</button>
-      </div>
-      <h2 id="cTitle">Your ride photos 🏖️</h2>
-      <p class="sub" id="cSub">Scanned your wristband? Pick your trip and color team, then enter your jet ski number.</p>
-
-      <div class="card">
-        <div class="label" id="cLblSession">Trip</div>
-        <div class="pillrow" id="cSession"></div>
-        <div class="label" id="cLblColor" style="margin-top:14px">Color team</div>
-        <div class="pillrow" id="cColor"></div>
-        <div class="label" id="cLblSki" style="margin-top:14px">Your jet ski number</div>
-        <div class="numrow">
-          <input id="cSki" type="text" placeholder="K7" maxlength="6" autocapitalize="characters" autocomplete="off" spellcheck="false">
-          <button class="btn ghost sm" id="cAll" style="width:auto;padding:11px 14px">Show all group</button>
-        </div>
-        <button class="btn accent2 sm" id="cAI" style="margin-top:12px">✨ <span id="cAILbl">AI: find all photos of me (selfie)</span></button>
-      </div>
-
-      <div class="count" id="cCount"></div>
-      <div class="grid" id="cGrid"></div>
-      <div class="empty hidden" id="cEmpty"></div>
-
-      <div style="height:12px"></div>
-      <button class="btn ghost sm" id="cSend">📲 <span id="cSendLbl">Send gallery link to my phone</span></button>
-    </section>
-  </main>
-
-  <div class="footnote" data-i18n="footnote">Demo · Phuket Jetski Club · Photo Delivery · Build 1 — placeholder data, stored locally</div>
+<div class="viewbar">
+  <div class="seg seg-view" id="views" role="group" aria-label="Demo screens" data-i18n-aria="viewsLabel"><button type="button" data-v="about" aria-pressed="true" data-i18n="vAbout">About</button><button type="button" data-v="guide" aria-pressed="false" data-i18n="vGuide">Guide</button><button type="button" data-v="tourist" aria-pressed="false" data-i18n="vTourist">Tourist</button></div>
 </div>
 
-<div id="toast"></div>
-<div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
+<main id="main">
+  <!-- ================= ABOUT: the starting point ================= -->
+  <section id="view-about" class="v-about" aria-labelledby="aboutH">
+    <div class="a-head">
+      <h1 id="aboutH" data-i18n="aboutH">Photos in minutes, not 1⁠–⁠3 days</h1>
+      <p data-i18n="aboutLead">A clickable demo of photo delivery for Phuket Jetski Club. Try it first as the guide who sends the photos, then as the tourist who finds them.</p>
+    </div>
+
+    <div class="cmp">
+      <section class="card cmp-now" aria-labelledby="nowH">
+        <div class="cmp-h">
+          <h2 class="h3" id="nowH" data-i18n="nowTitle">Today</h2>
+          <span class="badge badge-warn"><svg class="ic" aria-hidden="true"><use href="#i-hourglass"/></svg><span data-i18n="nowBadge">1⁠–⁠3 days</span></span>
+        </div>
+        <p class="cmp-flow" data-i18n="nowFlow">Guide → WhatsApp → admin → Google Drive</p>
+        <p data-i18n="nowP">Tourists wait 1⁠–⁠3 days. WhatsApp compresses the photos, and everything depends on one person.</p>
+      </section>
+      <section class="card cmp-new" aria-labelledby="newH">
+        <div class="cmp-h">
+          <h2 class="h3" id="newH" data-i18n="newTitle">With JetOps</h2>
+          <span class="badge badge-ok"><svg class="ic" aria-hidden="true"><use href="#i-circle-check"/></svg><span data-i18n="newBadge">In minutes</span></span>
+        </div>
+        <p class="cmp-flow" data-i18n="newFlow">Guide → gallery</p>
+        <p data-i18n="newP">Photos reach the gallery minutes after each stop, in full quality and free for the tourist. Nobody re-uploads them by hand.</p>
+      </section>
+    </div>
+
+    <section aria-labelledby="factsH">
+      <h2 class="h3 sec-h" id="factsH" data-i18n="factsH">Key facts</h2>
+      <div class="facts">
+        <div class="card-2 fact"><span class="num" data-i18n="f1n">3</span><p data-i18n="f1">choices for the guide: trip, team colour, photos</p></div>
+        <div class="card-2 fact"><span class="num" data-i18n="f2n">100%</span><p data-i18n="f2">original quality — nothing is compressed on the way</p></div>
+        <div class="card-2 fact"><span class="num" data-i18n="f3n">0</span><p data-i18n="f3">manual steps for the office: no WhatsApp, no Google Drive</p></div>
+      </div>
+    </section>
+
+    <section class="card shows" aria-labelledby="showsH">
+      <h2 class="h3 sec-h" id="showsH" data-i18n="showsH">What this demo shows</h2>
+      <ul>
+        <li><span class="ic-wrap"><svg class="ic" aria-hidden="true"><use href="#i-camera"/></svg></span><div><b data-i18n="s1t">Guide app</b><p data-i18n="s1">Choose the trip and team colour, then send the photos — originals, straight from the phone.</p></div></li>
+        <li><span class="ic-wrap"><svg class="ic" aria-hidden="true"><use href="#i-list-checks"/></svg></span><div><b data-i18n="s2t">Automatic check</b><p data-i18n="s2">Each photo is checked on arrival: date, trip, team and file. No manual sorting.</p></div></li>
+        <li><span class="ic-wrap"><svg class="ic" aria-hidden="true"><use href="#i-images"/></svg></span><div><b data-i18n="s3t">Tourist gallery</b><p data-i18n="s3">One QR on every wristband. The tourist picks the day, trip and team colour and sees the group's photos.</p></div></li>
+        <li><span class="ic-wrap"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg></span><div><b data-i18n="s4t">Find my jet ski</b><p data-i18n="s4">Type the number from the jet ski — photos where it is visible move to the top.</p></div></li>
+      </ul>
+    </section>
+
+    <section class="demo" aria-labelledby="demoH">
+      <h2 class="h3" id="demoH" data-i18n="demoH">About this demo</h2>
+      <p class="body-s muted" data-i18n="demoP">The photos here are generated placeholders with the jet ski number painted on. You can also send your own photos from this phone. Everything stays in this browser — nothing is uploaded.</p>
+      <button type="button" class="btn btn-danger btn-s" id="resetBtn"><svg class="ic ic-s" aria-hidden="true"><use href="#i-rotate-ccw"/></svg><span data-i18n="reset">Reset demo data</span></button>
+      <div class="note note-warn" id="resetAsk" role="alertdialog" aria-labelledby="resetQ" hidden>
+        <svg class="ic" aria-hidden="true"><use href="#i-triangle-alert"/></svg>
+        <div><b id="resetQ" data-i18n="resetQ">Remove the photos you sent and bring back the sample photos?</b>
+          <div class="note-act"><button type="button" class="btn btn-danger btn-s" id="resetYes" data-i18n="resetYes">Reset</button><button type="button" class="btn btn-quiet btn-s" id="resetNo" data-i18n="cancel">Cancel</button></div></div>
+      </div>
+      <div class="note note-ok" id="resetDone" role="status" hidden>
+        <svg class="ic" aria-hidden="true"><use href="#i-circle-check"/></svg>
+        <div><b data-i18n="resetDone">Demo data reset — the sample photos are back.</b></div>
+      </div>
+      <nav class="demo-links" aria-label="Other demo screens" data-i18n-aria="otherScreens"><span class="body-s muted" data-i18n="otherScreens">Other demo screens:</span><a href="weather.html" data-i18n="navWeather">Weather today</a><a href="dashboard.html" data-i18n="navOps">Office dashboard</a><a href="bot.html" data-i18n="navBot">LINE bot</a></nav>
+    </section>
+  </section>
+
+  <!-- first paint of Guide / Tourist (local sample photos may still be loading) -->
+  <section id="loading" class="skel" aria-busy="true" hidden>
+    <div class="sk sk-title"></div><div class="sk sk-row"></div><div class="sk sk-chips"></div><div class="sk sk-block"></div>
+  </section>
+
+  <!-- ================= GUIDE: the guide uploader (photo-pipeline/public/u/) ================= -->
+  <section id="view-guide" class="v-guide" aria-labelledby="guideH" hidden>
+    <h1 class="sr-only" id="guideH" data-i18n="guideH">Guide app</h1>
+    <div class="demo-tip">
+      <svg class="ic" aria-hidden="true"><use href="#i-smartphone"/></svg>
+      <div><p data-i18n="guideTip">Demo: you are the guide on the pier. “Choose photos” adds 8 sample photos.</p>
+        <button type="button" class="btn btn-quiet btn-s" id="own"><svg class="ic ic-s" aria-hidden="true"><use href="#i-image-up"/></svg><span data-i18n="ownPhotos">Use photos from this phone</span></button></div>
+    </div>
+
+    <section class="card choose">
+      <div class="step" id="stepDay">
+        <h2 class="step-h" id="dayH" data-i18n="dayLabel">Day</h2>
+        <div class="seg seg-day" id="dayToggle" role="group" aria-labelledby="dayH"><button type="button" data-id="today" aria-pressed="true"><span class="w" data-i18n="today">Today</span><span class="d"></span></button><button type="button" data-id="yesterday" aria-pressed="false"><span class="w" data-i18n="yesterday">Yesterday</span><span class="d"></span></button></div>
+      </div>
+      <div class="step" id="stepTrip">
+        <h2 class="step-h" id="tripH" data-i18n="tripLabel">Trip</h2>
+        <div class="chips chips-trip" id="sessions" role="group" aria-labelledby="tripH"></div>
+      </div>
+      <div class="step" id="stepColor">
+        <h2 class="step-h" id="colorH" data-i18n="colorLabel">Team colour</h2>
+        <div class="chips chips-color" id="colors" role="group" aria-labelledby="colorH"></div>
+      </div>
+    </section>
+
+    <section class="card photos" id="photosCard">
+      <div class="photos-h">
+        <h2 class="step-h"><span data-i18n="photosLabel">Photos</span> <span class="count" id="count"></span></h2>
+        <button type="button" class="btn btn-quiet btn-s" id="add"><svg class="ic ic-s" aria-hidden="true"><use href="#i-plus"/></svg><span data-i18n="addPhotos">Add photos</span></button>
+      </div>
+      <div class="qgrid" id="queue"></div>
+      <div class="empty" id="emptyPh">
+        <div class="ic-wrap"><svg class="ic ic-l" aria-hidden="true"><use href="#i-images"/></svg></div>
+        <b class="h3" data-i18n="emptyTitle">No photos chosen yet</b>
+        <p data-i18n="emptyText">Choose this team's photos on the phone. They go as originals, full quality.</p>
+      </div>
+      <div class="undo" id="undo" role="status" hidden>
+        <span data-i18n="removed">Photo removed.</span>
+        <button type="button" class="btn btn-quiet btn-s" id="undoBtn"><svg class="ic ic-s" aria-hidden="true"><use href="#i-rotate-ccw"/></svg><span data-i18n="undo">Undo</span></button>
+      </div>
+    </section>
+
+    <div class="status" id="status" aria-live="polite"></div>
+
+    <div class="today-line">
+      <span id="todayCount"></span>
+      <button type="button" class="btn btn-quiet btn-s" id="galLink"><span data-i18n="openGallery">Tourist gallery</span><svg class="ic ic-s" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+    </div>
+    <input id="file" type="file" accept="image/*" multiple hidden>
+  </section>
+
+  <!-- ================= TOURIST: the tourist gallery (photo-pipeline/public/g/) ================= -->
+  <section id="view-tourist" class="g-page" aria-labelledby="touristH" hidden>
+    <h1 class="sr-only" id="touristH" data-i18n="touristH">Tourist gallery</h1>
+    <div class="demo-tip">
+      <svg class="ic" aria-hidden="true"><use href="#i-smartphone"/></svg>
+      <p data-i18n="touristTip">Demo: you are a tourist who scanned the QR on the wristband.</p>
+    </div>
+    <span class="badge badge-info"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="free">Photos are free · full quality</span></span>
+
+    <!-- 1 day → 2 trip → 3 team colour; folds into #summary once a group is chosen -->
+    <section class="card g-steps" id="steps" aria-label="Find your photos" data-i18n-aria="steps">
+      <div class="g-step">
+        <h2 class="h3 g-step-h"><span class="g-n" aria-hidden="true">1</span><span><span class="sr-only">1. </span><span data-i18n="l_day">Day</span></span></h2>
+        <div class="chips" id="days"></div>
+      </div>
+      <div class="g-step">
+        <h2 class="h3 g-step-h"><span class="g-n" aria-hidden="true">2</span><span><span class="sr-only">2. </span><span data-i18n="l_trip">Trip</span></span></h2>
+        <div class="chips" id="groupsS"></div>
+      </div>
+      <div class="g-step">
+        <h2 class="h3 g-step-h"><span class="g-n" aria-hidden="true">3</span><span><span class="sr-only">3. </span><span data-i18n="l_team">Your team colour</span> <span class="g-sub" data-i18n="l_team_sub">— it's on your wristband</span></span></h2>
+        <div class="chips" id="groupsC"></div>
+        <p class="g-wait" id="teamWait" data-i18n="pick_trip" hidden>Choose your trip first</p>
+      </div>
+    </section>
+
+    <section class="card g-sum" id="summary" hidden>
+      <span class="dot" id="sumDot" aria-hidden="true"></span>
+      <div class="g-sum-txt"><b id="sumTitle"></b><span class="muted" id="sumDay"></span></div>
+      <button type="button" class="btn btn-quiet btn-s" id="change" data-i18n="change">Change</button>
+    </section>
+
+    <section class="g-photos" aria-labelledby="cntH">
+      <div class="g-photos-top" id="photosTop" hidden>
+        <h2 class="h2 g-photos-h" id="cntH" tabindex="-1"></h2>
+        <button type="button" class="btn btn-quiet btn-s" id="skiOpen" aria-expanded="false" aria-controls="skiCard" hidden><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg><span data-i18n="ski_open">Find my jet ski</span></button>
+      </div>
+      <div class="g-ski" id="skiCard" hidden>
+        <div class="field">
+          <label for="skiInput" data-i18n="l_ski">Your jet ski number (optional)</label>
+          <div class="g-ski-row">
+            <input class="input" id="skiInput" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="search" maxlength="8" aria-describedby="skiHint">
+            <button type="button" class="btn btn-quiet" id="skiClear" data-i18n="clear" hidden>Clear</button>
+          </div>
+          <span class="hint" id="skiHint" data-i18n="h_ski">We find photos where your number is visible — they move to the top.</span>
+        </div>
+      </div>
+      <div class="note note-info" id="matchNote" role="status" hidden><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg><div id="matchTxt"></div></div>
+      <div class="g-grid" id="grid"></div>
+      <div class="g-msg" id="empty" role="status" aria-live="polite"></div>
+      <button type="button" class="btn btn-quiet g-more" id="more" hidden><svg class="ic" aria-hidden="true"><use href="#i-refresh-cw"/></svg><span data-i18n="more">Check for new photos</span></button>
+    </section>
+
+    <section class="card g-later" aria-labelledby="laterH">
+      <span class="ic-wrap"><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg></span>
+      <div><h2 class="h3" id="laterH" data-i18n="laterTitle">Coming later: find all your photos with a selfie</h2>
+        <p data-i18n="laterP">Take a selfie and the gallery finds every photo you are in — across the whole group and day. The base photos stay free.</p></div>
+    </section>
+  </section>
+
+  <footer class="footer-note" id="foot"></footer>
+</main>
+
+<!-- the one main action of the current screen, under the thumb -->
+<div class="actionbar" id="bar">
+  <div class="bar-in">
+    <div class="result" id="result" aria-live="polite"></div>
+    <div class="progress" id="prog" hidden><i id="progI"></i></div>
+    <p class="summary" id="summary2" hidden></p>
+    <button type="button" class="btn btn-primary btn-block" id="tryGuide"><span data-i18n="tryGuide">Try it as a guide</span><svg class="ic" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+    <button type="button" class="btn btn-primary btn-block" id="pick" hidden></button>
+    <button type="button" class="btn btn-primary btn-block" id="send" hidden disabled></button>
+    <button type="button" class="btn btn-primary btn-block" id="toTourist" hidden></button>
+  </div>
+</div>
+
+<!-- viewer: always the dark palette; Esc closes (native dialog), ←/→ and swipe move -->
+<dialog class="g-viewer t-dark" id="ov" aria-labelledby="ovCount">
+  <div class="g-v-top">
+    <span class="g-v-count" id="ovCount"></span>
+    <span class="badge badge-info" id="ovMine" hidden><svg class="ic" aria-hidden="true"><use href="#i-star"/></svg><span data-i18n="mine">Your jet ski</span></span>
+  </div>
+  <div class="g-v-stage" id="ovStage">
+    <img id="ovImg" alt="">
+    <button type="button" class="g-v-nav g-v-prev" id="ovPrev" aria-label="Previous photo"><svg class="ic" aria-hidden="true"><use href="#i-chevron-left"/></svg></button>
+    <button type="button" class="g-v-nav g-v-next" id="ovNext" aria-label="Next photo"><svg class="ic" aria-hidden="true"><use href="#i-chevron-right"/></svg></button>
+  </div>
+  <div class="g-v-actions">
+    <div class="g-v-btns">
+      <a class="btn btn-primary" id="ovDl" href="#" download><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg><span data-i18n="dl">Save photo</span></a>
+      <button type="button" class="btn btn-secondary" id="ovX" data-i18n="close">Close</button>
+    </div>
+    <p class="g-v-hint" data-i18n="ios">On iPhone: press and hold the photo → Save to Photos</p>
+  </div>
+</dialog>
 
 <!-- real sample photos (sample_photos/manifest.js) are gitignored and loaded dynamically, local hosts only — see INIT -->
 <script>
 (function(){
 "use strict";
 
-/* ---------- CONFIG (replace with the client's brand) ---------- */
-const BRAND = { name:"PHUKET JETSKI CLUB", logo:"🌊", accent:"#0aa1dd" };
+/* ============================ CONFIG ============================
+   A self-contained demo of photo delivery: no backend, everything is kept in localStorage.
+   Screens: About (start) · Guide (the guide uploader, photo-pipeline/public/u/) · Tourist (the gallery, /g/).
+
+   URL parameters (all optional):
+     ?view=about|guide|tourist     open that screen (old name "client" still works)
+     ?lang=en|th|ru                language (also saved as the shared demo language "jetops_lang")
+     ?session=morning|afternoon    preselect the trip (Guide and Tourist)
+     ?color=<team id>              preselect the team colour, e.g. blue (Guide and Tourist)
+     ?day=yesterday|YYYY-MM-DD     the day (Guide: yesterday; Tourist: which day to open)
+     ?pick=8                       Guide: start with N sample photos chosen (1–24)
+     ?ski=K7                       Tourist: open "Find my jet ski" with this number
+     ?real=0                       local host only: don't load the real sample photos (fresh browser) */
+const BRAND = { name:"PHUKET JETSKI CLUB" }; // used in the names of saved files
+// trip start times since 12.10.2026 (were 08:20 / 12:30); same list as photo-pipeline/lib/config.js
 const SESSIONS = [
-  {key:"morning",   th:"รอบเช้า 08:30", en:"Morning 08:30"},   // session start times since 12.10.2026 (were 08:20 / 12:30)
-  {key:"afternoon", th:"รอบบ่าย 12:45", en:"Afternoon 12:45"}
+  {key:"morning",   time:"08:30", en:"Morning",   th:"รอบเช้า", ru:"Утро"},
+  {key:"afternoon", time:"12:45", en:"Afternoon", th:"รอบบ่าย", ru:"День"}
 ];
-// a demo subset of the client's wristband colours (💛 Yellow 💜 Purple 💙 Blue 🩷 Pink 🧡 Orange 💚 Green) — the real
-// roster uses more colours (season 2026: 10–11); add them here when needed
+// the 11 wristband team colours of season 2026 — same ids / hex / names as photo-pipeline/lib/config.js
 const COLORS = [
-  {key:"yellow", hex:"#f5c518", fg:"#3d2600", emoji:"💛", th:"เหลือง", en:"Yellow"},
-  {key:"purple", hex:"#8e5bd8", emoji:"💜", th:"ม่วง",    en:"Purple"},
-  {key:"blue",   hex:"#3f8ef7", emoji:"💙", th:"น้ำเงิน", en:"Blue"},
-  {key:"pink",   hex:"#ef7fb3", emoji:"🩷", th:"ชมพู",    en:"Pink"},
-  {key:"orange", hex:"#f08c2e", emoji:"🧡", th:"ส้ม",     en:"Orange"},
-  {key:"green",  hex:"#3ddc78", fg:"#0b3d1e", emoji:"💚", th:"เขียว",   en:"Green"}
+  {key:"yellow",    hex:"#f5c518", en:"Yellow",     th:"เหลือง",     ru:"Жёлтая"},
+  {key:"purple",    hex:"#8e6bd6", en:"Purple",     th:"ม่วง",       ru:"Фиолетовая"},
+  {key:"blue",      hex:"#0091d5", en:"Blue",       th:"น้ำเงิน",     ru:"Синяя"},
+  {key:"pink",      hex:"#f06292", en:"Pink",       th:"ชมพู",       ru:"Розовая"},
+  {key:"orange",    hex:"#f5823c", en:"Orange",     th:"ส้ม",        ru:"Оранжевая"},
+  {key:"green",     hex:"#2fa84f", en:"Green",      th:"เขียว",      ru:"Зелёная"},
+  {key:"lightblue", hex:"#6ccff6", en:"Sky blue",   th:"ฟ้า",        ru:"Голубая"},
+  {key:"white",     hex:"#ffffff", en:"White",      th:"ขาว",        ru:"Белая"},
+  {key:"brown",     hex:"#8d5a3b", en:"Brown",      th:"น้ำตาล",      ru:"Коричневая"},
+  {key:"gray",      hex:"#9aa0a6", en:"Gray",       th:"เทา",        ru:"Серая"},
+  {key:"neongreen", hex:"#7ae82f", en:"Neon green", th:"เขียวนีออน", ru:"Салатовая"}
 ];
-// machine numbers are alphanumeric (K7, H100, Y62, P11 …) — the letter is the fleet series, not the team
+// machine numbers are alphanumeric (K7, H100, Y62, P11 …) — the letter is the fleet series, not the team.
+// Sample photos of a team show these numbers on the jet ski (in production the number is read from the photo).
 const SAMPLE_SKIS = {
   yellow:["Y62","Y7","K12"], purple:["P11","P4","H41"], blue:["K7","K9","K10","K11"],
-  pink:["K2","K3","H29"], orange:["K24","H7","Y20"], green:["K15","P8","H66"]
+  pink:["K2","K3","H29"], orange:["K24","H7","Y20"], green:["K15","P8","H66"],
+  lightblue:["K5","H12","Y31"], white:["K18","Y3","P20"], brown:["H52","K21","P6"],
+  gray:["P2","K30","H15"], neongreen:["Y15","H8","K27"]
 };
+const SEED_COLORS = ["yellow","purple","blue","pink","orange","green"]; // the morning trip is pre-filled with these teams
 const LEGACY_COLOR = {red:"pink"}; // older manifests used a 3-team scheme (red/blue/green)
 const STOPS = ["Coconut Is.","Rang Yai","Rang Noi","Naka Yai","Monkey Is."]; // real route islands (east coast)
-const KEY = "jetski_demo_v4"; // v4: colour teams below + alphanumeric machines (old v3 data is simply ignored)
-const todayStr = new Date().toLocaleDateString("en-CA"); // local date, not UTC (Bangkok mornings are still "yesterday" in UTC)
+const KEY = "jetski_demo_v4";   // demo photos (same key and record format as before the redesign)
+const LANG_KEY = "jetops_lang"; // shared by all demo pages (en | th | ru)
+const DEMO_BATCH = 8;           // «Choose photos» adds this many sample photos
+const OWN_MAX = 8;              // own photos per pick — they are kept in this browser
+const PICK_MAX = 24;
+const PARAMS = new URLSearchParams(location.search);
+const LOCAL_HOST = location.protocol==="file:" || /^(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)$/.test(location.hostname);
+const USE_REAL = LOCAL_HOST && PARAMS.get("real")!=="0";
+// local dates, not UTC (Bangkok mornings are still "yesterday" in UTC)
+function dayStr(off){ const d=new Date(); d.setDate(d.getDate()+(off||0)); return d.toLocaleDateString("en-CA"); }
+const todayStr = dayStr(0), yesterdayStr = dayStr(-1);
 
-/* ---------- STATE ---------- */
-let _id=0;
-// localStorage may be blocked (private mode / storage disabled) — never let it throw
+/* ---------- storage: may be blocked (private mode / storage disabled) — never let it throw ---------- */
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
-function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); return true; }catch(e){ return false; } }
 function lsRemove(k){ try{ localStorage.removeItem(k); }catch(e){} }
-let state = null; // filled in boot() (after the optional local manifest has loaded)
-let ui = { view:"home", lang:"en",
-  g:{session:"afternoon", color:"blue", ski:"K7"},
-  c:{session:"morning", color:"blue", ski:null, ai:false} };
 
+/* ================= i18n =================
+   EN is the default and complete. TH is a machine-drafted version that still needs proofreading by a
+   native speaker (see 14_localization_tasks.md) — marked in the header subtitle and the footer.
+   RU — Russian guests. One language on screen; the guide and gallery wording is the real apps' wording. */
+const enN = (n, one, many) => `${n} ${n===1 ? one : many}`;
+const I18N = {
+  en: {
+    docTitle:"Photo delivery — demo · Phuket Jetski Club", opSub:"Photo delivery — demo",
+    language:"Language", themeTitle:"Theme", themeAuto:"Auto", themeLight:"Light", themeDark:"Dark",
+    viewsLabel:"Demo screens", vAbout:"About", vGuide:"Guide", vTourist:"Tourist",
+    aboutH:"Photos in minutes, not 1⁠–⁠3 days",
+    aboutLead:"A clickable demo of photo delivery for Phuket Jetski Club. Try it first as the guide who sends the photos, then as the tourist who finds them.",
+    nowTitle:"Today", nowBadge:"1⁠–⁠3 days", nowFlow:"Guide → WhatsApp → admin → Google Drive",
+    nowP:"Tourists wait 1⁠–⁠3 days. WhatsApp compresses the photos, and everything depends on one person.",
+    newTitle:"With JetOps", newBadge:"In minutes", newFlow:"Guide → gallery",
+    newP:"Photos reach the gallery minutes after each stop, in full quality and free for the tourist. Nobody re-uploads them by hand.",
+    factsH:"Key facts",
+    f1n:"3", f1:"choices for the guide: trip, team colour, photos",
+    f2n:"100%", f2:"original quality — nothing is compressed on the way",
+    f3n:"0", f3:"manual steps for the office: no WhatsApp, no Google Drive",
+    showsH:"What this demo shows",
+    s1t:"Guide app", s1:"Choose the trip and team colour, then send the photos — originals, straight from the phone.",
+    s2t:"Automatic check", s2:"Each photo is checked on arrival: date, trip, team and file. No manual sorting.",
+    s3t:"Tourist gallery", s3:"One QR on every wristband. The tourist picks the day, trip and team colour and sees the group's photos.",
+    s4t:"Find my jet ski", s4:"Type the number from the jet ski — photos where it is visible move to the top.",
+    demoH:"About this demo",
+    demoP:"The photos here are generated placeholders with the jet ski number painted on. You can also send your own photos from this phone. Everything stays in this browser — nothing is uploaded.",
+    reset:"Reset demo data", resetQ:"Remove the photos you sent and bring back the sample photos?", resetYes:"Reset", cancel:"Cancel",
+    resetDone:"Demo data reset — the sample photos are back.",
+    otherScreens:"Other demo screens:", navWeather:"Weather today", navOps:"Office dashboard", navBot:"LINE bot",
+    tryGuide:"Try it as a guide",
+    // guide (wording of photo-pipeline/public/u/app.js)
+    guideH:"Guide app", guideTip:"Demo: you are the guide on the pier. “Choose photos” adds 8 sample photos.",
+    ownPhotos:"Use photos from this phone",
+    dayLabel:"Day", today:"Today", yesterday:"Yesterday", tripLabel:"Trip", colorLabel:"Team colour",
+    photosLabel:"Photos", addPhotos:"Add photos",
+    emptyTitle:"No photos chosen yet", emptyText:"Choose this team's photos on the phone. They go as originals, full quality.",
+    removePhoto:"Remove this photo", removed:"Photo removed.", undo:"Undo",
+    tileWait:"Waiting", tileSent:"Sent",
+    nPhotos: v=>enN(v.n,"photo","photos"), team:"{c} team",
+    choose:"Choose photos", chooseMore:"Choose more photos",
+    send: v=>`Send ${enN(v.n,"photo","photos")}`, sending:"Sending {a} of {b}…",
+    needTrip:"Choose the trip", needColor:"Choose the team colour",
+    doneTitle: v=>`Sent ${enN(v.n,"photo","photos")}`, doneBody:"The {team} can already see them in the gallery.",
+    sentToday: v=>`Sent today: ${enN(v.n,"photo","photos")}`, sentYesterday: v=>`Sent for yesterday: ${enN(v.n,"photo","photos")}`,
+    openGallery:"Tourist gallery", seeTourist:"See it as a tourist",
+    notImgTitle: v=>v.n===1 ? "1 file is not a photo" : `${v.n} files are not photos`, notImgBody:"Only photos can be sent — those files were left out.",
+    badTitle: v=>v.n===1 ? "1 photo couldn't be opened" : `${v.n} photos couldn't be opened`, badBody:"This browser can't show that format. Choose a JPEG or PNG.",
+    capTitle:"Only the first {n} photos were added", capBody:"The demo keeps photos in this browser, so it takes {n} at a time.",
+    // tourist (wording of photo-pipeline/public/g/app.js)
+    touristH:"Tourist gallery", touristTip:"Demo: you are a tourist who scanned the QR on the wristband.",
+    free:"Photos are free · full quality", steps:"Find your photos",
+    l_day:"Day", l_trip:"Trip", l_team:"Your team colour", l_team_sub:"— it's on your wristband",
+    pick_trip:"Choose your trip first", change:"Change",
+    count: v=>enN(v.n,"photo","photos"),
+    gChoose:"Choose day, trip and team colour — your photos appear here",
+    way_h:"Photos are on their way from the sea", way_p:"The guide sends them after each stop — usually within a few minutes.",
+    check:"Check again", more:"Check for new photos",
+    l_ski:"Your jet ski number (optional)", h_ski:"We find photos where your number is visible — they move to the top.",
+    ski_ph:"For example {x}", clear:"Clear", mine:"Your jet ski", ski_open:"Find my jet ski",
+    match_note: v=>`${enN(v.n,"photo","photos")} with your jet ski ${v.n===1?"is":"are"} at the top. The rest of your group is below.`,
+    match_none:"We couldn't spot number {q} — splashes often hide it. All your group's photos are below.",
+    photo_n:"Photo {i} of {n}", of:"{i} of {n}",
+    dl:"Save photo", close:"Close", prev:"Previous photo", next:"Next photo",
+    ios:"On iPhone: press and hold the photo → Save to Photos",
+    laterTitle:"Coming later: find all your photos with a selfie",
+    laterP:"Take a selfie and the gallery finds every photo you are in — across the whole group and day. The base photos stay free.",
+    foot:"Demo — the photos are generated and stay in this browser · Powered by JetOps", thDraft:""
+  },
+  th: {
+    docTitle:"ส่งรูปให้ลูกค้า — เดโม · Phuket Jetski Club", opSub:"ส่งรูปให้ลูกค้า — เดโม · ภาษาไทยฉบับร่าง",
+    language:"ภาษา", themeTitle:"ธีม", themeAuto:"ตามเครื่อง", themeLight:"สว่าง", themeDark:"มืด",
+    viewsLabel:"หน้าจอเดโม", vAbout:"เกี่ยวกับ", vGuide:"ไกด์", vTourist:"นักท่องเที่ยว",
+    aboutH:"ได้รูปภายในไม่กี่นาที ไม่ต้องรอ 1⁠–⁠3 วัน",
+    aboutLead:"เดโมระบบส่งรูปให้ลูกค้าของ Phuket Jetski Club ลองเป็นไกด์ที่ส่งรูปก่อน แล้วลองเป็นนักท่องเที่ยวที่หารูปของตัวเอง",
+    nowTitle:"ตอนนี้", nowBadge:"1⁠–⁠3 วัน", nowFlow:"ไกด์ → WhatsApp → แอดมิน → Google Drive",
+    nowP:"ลูกค้ารอ 1⁠–⁠3 วัน WhatsApp ลดความชัดของรูป และทุกอย่างขึ้นอยู่กับคนคนเดียว",
+    newTitle:"กับ JetOps", newBadge:"ไม่กี่นาที", newFlow:"ไกด์ → แกลเลอรี",
+    newP:"รูปถึงแกลเลอรีภายในไม่กี่นาทีหลังแต่ละจุดแวะ ความละเอียดเต็ม และลูกค้าได้ฟรี ไม่มีใครต้องอัปโหลดซ้ำเอง",
+    factsH:"ตัวเลขสำคัญ",
+    f1n:"3", f1:"สิ่งที่ไกด์เลือก: รอบ สีทีม และรูป",
+    f2n:"100%", f2:"ความละเอียดต้นฉบับ ไม่ถูกบีบอัดระหว่างทาง",
+    f3n:"0", f3:"งานมือของออฟฟิศ: ไม่ต้องใช้ WhatsApp ไม่ต้องใช้ Google Drive",
+    showsH:"เดโมนี้แสดงอะไร",
+    s1t:"แอปไกด์", s1:"เลือกรอบและสีทีม แล้วส่งรูป — ไฟล์ต้นฉบับจากมือถือโดยตรง",
+    s2t:"ตรวจอัตโนมัติ", s2:"ตรวจทุกรูปเมื่อมาถึง: วันที่ รอบ ทีม และไฟล์ ไม่ต้องคัดแยกเอง",
+    s3t:"แกลเลอรีลูกค้า", s3:"QR เดียวบนสายรัดข้อมือทุกเส้น ลูกค้าเลือกวัน รอบ และสีทีม แล้วเห็นรูปของกลุ่ม",
+    s4t:"หาเจ็ตสกีของฉัน", s4:"ใส่หมายเลขบนเจ็ตสกี — รูปที่เห็นหมายเลขนั้นจะขึ้นไปอยู่ด้านบน",
+    demoH:"เกี่ยวกับเดโมนี้",
+    demoP:"รูปในเดโมสร้างขึ้นอัตโนมัติ มีหมายเลขเจ็ตสกีอยู่บนลำ คุณส่งรูปของคุณเองจากมือถือนี้ได้ด้วย ทุกอย่างเก็บไว้ในเบราว์เซอร์นี้เท่านั้น ไม่มีการอัปโหลดจริง",
+    reset:"รีเซ็ตข้อมูลเดโม", resetQ:"ลบรูปที่คุณส่ง และนำรูปตัวอย่างกลับมาไหม?", resetYes:"รีเซ็ต", cancel:"ยกเลิก",
+    resetDone:"รีเซ็ตแล้ว — รูปตัวอย่างกลับมาแล้ว",
+    otherScreens:"หน้าจอเดโมอื่น:", navWeather:"สภาพอากาศวันนี้", navOps:"แดชบอร์ดออฟฟิศ", navBot:"บอท LINE",
+    tryGuide:"ลองเป็นไกด์",
+    guideH:"แอปไกด์", guideTip:"เดโม: คุณคือไกด์ที่ท่าเรือ ปุ่ม “เลือกรูป” จะเพิ่มรูปตัวอย่าง 8 รูป",
+    ownPhotos:"ใช้รูปจากมือถือนี้",
+    dayLabel:"วันที่ทริป", today:"วันนี้", yesterday:"เมื่อวาน", tripLabel:"รอบ", colorLabel:"สีทีม",
+    photosLabel:"รูปที่เลือก", addPhotos:"เพิ่มรูป",
+    emptyTitle:"ยังไม่ได้เลือกรูป", emptyText:"เลือกรูปของทีมนี้จากมือถือ ส่งเป็นไฟล์ต้นฉบับ ไม่ลดความชัด",
+    removePhoto:"เอารูปนี้ออก", removed:"เอารูปออกแล้ว", undo:"เอาคืน",
+    tileWait:"รอ", tileSent:"ส่งแล้ว",
+    nPhotos:"{n} รูป", team:"ทีมสี{c}",
+    choose:"เลือกรูป", chooseMore:"เลือกรูปเพิ่ม",
+    send:"ส่ง {n} รูป", sending:"กำลังส่ง {a} จาก {b}…",
+    needTrip:"เลือกรอบก่อน", needColor:"เลือกสีทีมก่อน",
+    doneTitle:"ส่งแล้ว {n} รูป", doneBody:"ลูกค้า{team}เห็นรูปในแกลเลอรีแล้ว",
+    sentToday:"วันนี้ส่งแล้ว {n} รูป", sentYesterday:"ของเมื่อวานส่งแล้ว {n} รูป",
+    openGallery:"เปิดแกลเลอรีลูกค้า", seeTourist:"ดูแบบนักท่องเที่ยว",
+    notImgTitle:"ไม่ใช่รูปภาพ {n} ไฟล์", notImgBody:"ส่งได้เฉพาะรูปภาพ ไฟล์เหล่านี้ไม่ได้เพิ่ม",
+    badTitle:"เปิดรูปไม่ได้ {n} รูป", badBody:"เบราว์เซอร์นี้เปิดไฟล์แบบนี้ไม่ได้ ลองเลือกรูป JPEG หรือ PNG",
+    capTitle:"เพิ่มแค่ {n} รูปแรก", capBody:"เดโมเก็บรูปไว้ในเบราว์เซอร์ จึงรับได้ครั้งละ {n} รูป",
+    touristH:"แกลเลอรีลูกค้า", touristTip:"เดโม: คุณคือนักท่องเที่ยวที่สแกน QR บนสายรัดข้อมือ",
+    free:"รูปฟรี · ความละเอียดเต็ม", steps:"ค้นหารูปของคุณ",
+    l_day:"วัน", l_trip:"รอบ", l_team:"สีทีมของคุณ", l_team_sub:"— ดูได้ที่สายรัดข้อมือ",
+    pick_trip:"เลือกรอบก่อน", change:"เปลี่ยน",
+    count:"{n} รูป",
+    gChoose:"เลือกวัน รอบ และสีทีม — รูปของคุณจะแสดงที่นี่",
+    way_h:"รูปกำลังเดินทางมาจากทะเล", way_p:"ไกด์ส่งรูปหลังแต่ละจุดแวะ ปกติจะมาถึงภายในไม่กี่นาที",
+    check:"ตรวจอีกครั้ง", more:"ดูรูปใหม่",
+    l_ski:"หมายเลขเจ็ตสกีของคุณ (ไม่บังคับ)", h_ski:"เราหารูปที่เห็นหมายเลขของคุณ — รูปเหล่านั้นจะขึ้นไปอยู่ด้านบน",
+    ski_ph:"เช่น {x}", clear:"ล้าง", mine:"เจ็ตสกีของคุณ", ski_open:"หาเจ็ตสกีของฉัน",
+    match_note:"รูปที่มีเจ็ตสกีของคุณ {n} รูปอยู่ด้านบน รูปอื่นของกลุ่มอยู่ด้านล่าง",
+    match_none:"ไม่พบหมายเลข {q} — น้ำกระเซ็นมักบังหมายเลข รูปทั้งหมดของกลุ่มอยู่ด้านล่าง",
+    photo_n:"รูปที่ {i} จาก {n}", of:"{i} จาก {n}",
+    dl:"บันทึกรูป", close:"ปิด", prev:"รูปก่อนหน้า", next:"รูปถัดไป",
+    ios:"บน iPhone: กดค้างที่รูป → บันทึกไปยังรูปภาพ",
+    laterTitle:"เร็ว ๆ นี้: หารูปทั้งหมดของคุณด้วยเซลฟี่",
+    laterP:"ถ่ายเซลฟี่ แล้วแกลเลอรีจะหารูปทุกรูปที่มีคุณ จากทั้งกลุ่มและทั้งวัน รูปพื้นฐานยังฟรีเหมือนเดิม",
+    foot:"เดโม — รูปสร้างขึ้นอัตโนมัติและเก็บไว้ในเบราว์เซอร์นี้ · ขับเคลื่อนโดย JetOps",
+    thDraft:"ภาษาไทยในหน้านี้เป็นฉบับร่าง รอเจ้าของภาษาตรวจทาน"
+  },
+  ru: {
+    docTitle:"Выдача фото — демо · Phuket Jetski Club", opSub:"Выдача фото — демо",
+    language:"Язык", themeTitle:"Тема", themeAuto:"Авто", themeLight:"Светлая", themeDark:"Тёмная",
+    viewsLabel:"Экраны демо", vAbout:"О демо", vGuide:"Гид", vTourist:"Турист",
+    aboutH:"Фото за минуты, а не за 1⁠–⁠3 дня",
+    aboutLead:"Кликабельное демо выдачи фото для Phuket Jetski Club. Попробуйте сначала как гид, который отправляет фото, потом как турист, который их находит.",
+    nowTitle:"Сейчас", nowBadge:"1⁠–⁠3 дня", nowFlow:"Гид → WhatsApp → админ → Google Drive",
+    nowP:"Туристы ждут 1⁠–⁠3 дня. WhatsApp сжимает фото, и всё держится на одном человеке.",
+    newTitle:"С JetOps", newBadge:"За минуты", newFlow:"Гид → галерея",
+    newP:"Фото попадают в галерею через несколько минут после каждой остановки — в полном качестве и бесплатно для туриста. Никто не перезаливает их вручную.",
+    factsH:"Главное в цифрах",
+    f1n:"3", f1:"выбора у гида: выход, цвет команды, фото",
+    f2n:"100 %", f2:"оригинальное качество — ничего не сжимается по дороге",
+    f3n:"0", f3:"ручных шагов у офиса: без WhatsApp и Google Drive",
+    showsH:"Что показывает демо",
+    s1t:"Приложение гида", s1:"Выбрать выход и цвет команды, отправить фото — оригиналы, прямо с телефона.",
+    s2t:"Автопроверка", s2:"Каждое фото проверяется при получении: дата, выход, команда, файл. Без ручной сортировки.",
+    s3t:"Галерея туриста", s3:"Один QR на каждом браслете. Турист выбирает день, выход и цвет команды и видит фото своей группы.",
+    s4t:"Найти мой гидроцикл", s4:"Введите номер с гидроцикла — фото, где он виден, поднимутся наверх.",
+    demoH:"Об этом демо",
+    demoP:"Фото здесь — сгенерированные заглушки с номером на борту гидроцикла. Можно отправить и свои фото с этого телефона. Всё хранится только в этом браузере — ничего не загружается.",
+    reset:"Сбросить демо-данные", resetQ:"Удалить отправленные вами фото и вернуть примеры?", resetYes:"Сбросить", cancel:"Отмена",
+    resetDone:"Сброшено — примеры фото на месте.",
+    otherScreens:"Другие экраны демо:", navWeather:"Погода сегодня", navOps:"Дашборд офиса", navBot:"LINE-бот",
+    tryGuide:"Попробовать как гид",
+    guideH:"Приложение гида", guideTip:"Демо: вы — гид на пирсе. «Выбрать фото» добавит 8 фото-примеров.",
+    ownPhotos:"Взять фото с этого телефона",
+    dayLabel:"Дата", today:"Сегодня", yesterday:"Вчера", tripLabel:"Выход", colorLabel:"Цвет команды",
+    photosLabel:"Фото", addPhotos:"Добавить",
+    emptyTitle:"Фото ещё не выбраны", emptyText:"Выберите в телефоне фото этой команды. Уйдут оригиналы, без потери качества.",
+    removePhoto:"Убрать это фото", removed:"Фото убрано.", undo:"Вернуть",
+    tileWait:"Ждёт", tileSent:"Ушло",
+    nPhotos:"{n} фото", team:"{c} команда",
+    choose:"Выбрать фото", chooseMore:"Выбрать ещё фото",
+    send:"Отправить {n} фото", sending:"Отправляем {a} из {b}…",
+    needTrip:"Выберите выход", needColor:"Выберите цвет команды",
+    doneTitle:"Отправлено {n} фото", doneBody:"{team} уже видит их в галерее.",
+    sentToday:"Сегодня отправлено: {n} фото", sentYesterday:"За вчера отправлено: {n} фото",
+    openGallery:"Галерея туристов", seeTourist:"Посмотреть как турист",
+    notImgTitle:"Это не фото: {n}", notImgBody:"Отправить можно только фото — эти файлы пропущены.",
+    badTitle:"Не открылись фото: {n}", badBody:"Этот браузер не показывает такой формат. Выберите JPEG или PNG.",
+    capTitle:"Добавлены только первые {n} фото", capBody:"Демо хранит фото в браузере, поэтому берёт по {n} за раз.",
+    touristH:"Галерея туриста", touristTip:"Демо: вы — турист, который отсканировал QR на браслете.",
+    free:"Фото бесплатно · полное качество", steps:"Найдите свои фото",
+    l_day:"День", l_trip:"Выход", l_team:"Цвет вашей команды", l_team_sub:"— он на браслете",
+    pick_trip:"Сначала выберите выход", change:"Изменить",
+    count:"{n} фото",
+    gChoose:"Выберите день, выход и цвет команды — здесь появятся ваши фото",
+    way_h:"Фото ещё едут с моря", way_p:"Гид отправляет их после каждой остановки. Обычно они здесь через несколько минут.",
+    check:"Проверить ещё раз", more:"Проверить новые фото",
+    l_ski:"Номер вашего гидроцикла (необязательно)", h_ski:"Найдём фото, где виден ваш номер, — они поднимутся наверх.",
+    ski_ph:"Например, {x}", clear:"Очистить", mine:"Ваш гидроцикл", ski_open:"Найти мой гидроцикл",
+    match_note:"Фото с вашим гидроциклом: {n} — они наверху. Остальные фото группы ниже.",
+    match_none:"Номер {q} не нашли — брызги часто его закрывают. Все фото группы ниже.",
+    photo_n:"Фото {i} из {n}", of:"{i} из {n}",
+    dl:"Сохранить фото", close:"Закрыть", prev:"Предыдущее фото", next:"Следующее фото",
+    ios:"На iPhone: нажмите и держите фото → «Сохранить в Фото»",
+    laterTitle:"Скоро: все ваши фото по селфи",
+    laterP:"Сделайте селфи — галерея найдёт все фото, где вы есть, по всей группе и дню. Базовые фото остаются бесплатными.",
+    foot:"Демо — фото сгенерированы и хранятся в этом браузере · Работает на JetOps", thDraft:""
+  }
+};
+const LOCALE = { en:"en-GB", th:"th-TH", ru:"ru-RU" };
+let lang = (I18N[PARAMS.get("lang")] && PARAMS.get("lang")) || lsGet(LANG_KEY) || "en";
+if(!I18N[lang]) lang = "en";
+// t("key", {vars}): strings take {name} placeholders, functions get the vars object
+function t(k, v){
+  v = v || {};
+  let s = I18N[lang][k]; if(s===undefined) s = I18N.en[k]; if(s===undefined) return k;
+  if(typeof s==="function") return s(v);
+  return s.replace(/\{(\w+)\}/g, (_, x)=> v[x]==null ? "" : String(v[x]));
+}
+const nameOf = it => (it && (it[lang] || it.en || it.key)) || "";
+
+/* ---------- tiny DOM helpers (no innerHTML with data) ---------- */
+const $ = s=>document.querySelector(s), $$ = s=>Array.from(document.querySelectorAll(s));
+const SVGNS = "http://www.w3.org/2000/svg";
+function icon(name, cls){
+  const s=document.createElementNS(SVGNS,"svg");
+  s.setAttribute("class","ic"+(cls?" "+cls:"")); s.setAttribute("aria-hidden","true");
+  const u=document.createElementNS(SVGNS,"use"); u.setAttribute("href","#i-"+name); s.appendChild(u);
+  return s;
+}
+function el(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!==undefined) e.textContent=text; return e; }
+const setText = (n, s)=>{ if(n.textContent!==s) n.textContent=s; };
+// Button = [spinner | icon] + label (+ icon after). Rebuilt only when it changes, so a tap is never lost to a re-render.
+function setBtn(b, iconName, label, busy, after){
+  const sig=(busy?"busy|":(iconName||"")+"|")+label+"|"+(after||"");
+  if(b._sig===sig) return; b._sig=sig; b.textContent="";
+  if(busy){ const sp=el("span","spin"); sp.setAttribute("aria-hidden","true"); b.appendChild(sp); }
+  else if(iconName) b.appendChild(icon(iconName));
+  b.appendChild(el("span","",label));
+  if(after) b.appendChild(icon(after));
+  if(busy) b.setAttribute("aria-busy","true"); else b.removeAttribute("aria-busy");
+}
+
+/* ================= STATE ================= */
+let state = null; // {photos:[{id, day, session, color, ski, stop, src?, seed?, up?}], seededAt, n} — filled in boot()
+const ui = {
+  view:"about",
+  g:{ day:"today", session:null, color:null },                                     // guide choices
+  c:{ day:todayStr, session:null, color:null, expanded:true, skiOpen:false, ski:"" } // tourist choices
+};
 function load(){
   // re-seed when the day changes: otherwise after midnight the "today" gallery is empty
-  try{ const s=JSON.parse(lsGet(KEY)); if(s&&s.photos&&s.seededAt===todayStr) return s; }catch(e){}
+  try{ const s=JSON.parse(lsGet(KEY)); if(s&&Array.isArray(s.photos)&&s.seededAt===todayStr){ s.n=s.n||0; return s; } }catch(e){}
   return seed();
 }
-function save(){ lsSet(KEY, JSON.stringify(state)); }
-function normSki(v){ return String(v==null?"":v).toUpperCase().replace(/[\s#]/g,"").slice(0,6); }
+function save(){ return lsSet(KEY, JSON.stringify(state)); }
+function normSki(v){ return String(v==null?"":v).toUpperCase().replace(/[\s#]/g,"").slice(0,8); }
+function colorOf(k){ return COLORS.find(c=>c.key===k); }
+function sessionOf(k){ return SESSIONS.find(s=>s.key===k); }
 // real sample photos from sample_photos/manifest.js (if present) — normalised to the colour-team / alphanumeric scheme.
 // Backward compatible: legacy colors map via LEGACY_COLOR, numeric machines become K-series (9 → K9).
 function manifestPhotos(){
@@ -327,360 +836,602 @@ function manifestPhotos(){
 }
 function seed(){
   // real sample photos override placeholders for their (session|color|machine)
-  const real = manifestPhotos();
+  const real = USE_REAL ? manifestPhotos() : [];
   const realKeys = new Set(real.map(r=>r.session+"|"+r.color+"|"+r.ski));
   const photos=[];
-  // seed MORNING only (afternoon starts empty → guide fills it live)
-  COLORS.forEach(c=>{
-    (SAMPLE_SKIS[c.key]||[]).forEach(ski=>{
-      if(realKeys.has("morning|"+c.key+"|"+ski)) return; // covered by real photos
-      STOPS.forEach(stop=>{ for(let n=0;n<2;n++) photos.push(mk({day:todayStr,session:"morning",color:c.key,ski,stop})); });
+  // seed the MORNING trip only (the afternoon starts empty → the guide fills it live).
+  // Ids are stable, so the generated pictures look the same on every device.
+  SEED_COLORS.forEach(ck=>{
+    (SAMPLE_SKIS[ck]||[]).forEach(ski=>{
+      if(realKeys.has("morning|"+ck+"|"+ski)) return; // covered by real photos
+      STOPS.forEach((stop,si)=>{ for(let n=0;n<2;n++) photos.push({id:`s-${ck}-${ski}-${si}${n}`, day:todayStr, session:"morning", color:ck, ski, stop}); });
     });
   });
-  real.forEach(r=>photos.push(mk({day:todayStr,session:r.session,color:r.color,ski:r.ski,stop:r.stop,src:"sample_photos/"+encodeURIComponent(r.file)})));
-  const s={photos, seededAt:todayStr};
+  real.forEach((r,i)=>photos.push({id:"r-"+i, day:todayStr, session:r.session, color:r.color, ski:r.ski, stop:r.stop, src:"sample_photos/"+encodeURIComponent(r.file)}));
+  const s={photos, seededAt:todayStr, n:0};
   lsSet(KEY, JSON.stringify(s));
   return s;
 }
-function mk(o){ return Object.assign({id:"p"+(Date.now().toString(36))+(_id++)+Math.floor(Math.random()*1e4)}, o); }
-function colorOf(k){ return COLORS.find(c=>c.key===k); }
 
-/* ---------- SVG placeholder photo (machine number visible on the jet ski) ---------- */
+/* ---------- generated placeholder photo (machine number painted on the jet ski) ---------- */
 function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
 function rng(seed){let a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
-function svgFor(p,opts){
-  opts=opts||{}; const wm=opts.wm!==false;
-  const r=rng(hash(p.id)); const W=400,H=300;
-  const c=colorOf(p.color)||{hex:"#0091d5"};
+const xmlEsc = s=>String(s).replace(/[&<>'"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
+function svgText(p){
+  const key=String(p.seed||p.id), r=rng(hash(key)), W=400, H=300;
+  const c=colorOf(p.color), hull=c?c.hex:"#b8c4cc";
   const skyPals=[["#bfe3ff","#8ecbf5"],["#cdeafe","#ffe6bf"],["#b9e6ff","#7fc4ee"]];
-  const sky=skyPals[hash(p.id)%skyPals.length];
-  const jx=70+Math.floor(r()*170), jy=182+Math.floor(r()*24);
+  const sky=skyPals[hash(key)%skyPals.length];
+  const jx=78+Math.floor(r()*110), jy=168+Math.floor(r()*18); // jet ski stays inside the square crop of a tile
   const sunX=50+Math.floor(r()*300), sunY=40+Math.floor(r()*36);
   const wave=196+Math.floor(r()*10);
-  const svg=
-`<svg xmlns='http://www.w3.org/2000/svg' width='${W}' height='${H}' viewBox='0 0 ${W} ${H}'>
-<defs>
-<linearGradient id='s' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='${sky[0]}'/><stop offset='1' stop-color='${sky[1]}'/></linearGradient>
-<linearGradient id='w' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#2f9fd6'/><stop offset='1' stop-color='#0b6fa3'/></linearGradient>
-</defs>
+  const ski=xmlEsc(p.ski||""), stop=xmlEsc(p.stop||""), capW=34+String(p.stop||"").length*7;
+  return `<svg xmlns='http://www.w3.org/2000/svg' width='${W}' height='${H}' viewBox='0 0 ${W} ${H}'>
+<defs><linearGradient id='s' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='${sky[0]}'/><stop offset='1' stop-color='${sky[1]}'/></linearGradient>
+<linearGradient id='w' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#2f9fd6'/><stop offset='1' stop-color='#0b6fa3'/></linearGradient></defs>
 <rect width='${W}' height='${H}' fill='url(#s)'/>
 <circle cx='${sunX}' cy='${sunY}' r='24' fill='#fff2c2' opacity='.9'/>
 <path d='M0 ${wave} Q100 ${wave-14} 200 ${wave} T400 ${wave} V300 H0 Z' fill='url(#w)'/>
 <path d='M0 ${wave+16} Q120 ${wave+4} 240 ${wave+16} T400 ${wave+14} V300 H0 Z' fill='#0b6fa3' opacity='.55'/>
-<g transform='translate(${jx},${jy})'>
+<g transform='translate(${jx},${jy}) scale(1.35)'>
 <ellipse cx='34' cy='44' rx='60' ry='11' fill='#063b57' opacity='.30'/>
-<path d='M-6 30 Q34 8 92 26 Q96 40 78 46 L4 46 Q-12 42 -6 30 Z' fill='${c.hex}'/>
-<path d='M6 30 Q40 18 74 28 L70 36 L14 36 Z' fill='#ffffff' opacity='.9'/>
+<path d='M-6 30 Q34 8 92 26 Q96 40 78 46 L4 46 Q-12 42 -6 30 Z' fill='${hull}' stroke='#0e1b26' stroke-opacity='.3'/>
+<path d='M6 30 Q40 18 74 28 L70 36 L14 36 Z' fill='#ffffff' opacity='.85'/>
 <rect x='40' y='12' width='16' height='14' rx='3' fill='#0e1b26'/>
 <circle cx='30' cy='8' r='8' fill='#f1c27d'/>
 <rect x='24' y='14' width='14' height='16' rx='6' fill='#12384f'/>
-<rect x='60' y='20' width='26' height='16' rx='3' fill='#fff' stroke='#0e1b26' stroke-width='1.5'/>
-<text x='73' y='32' font-family='Arial' font-size='13' font-weight='bold' text-anchor='middle' fill='#0e1b26'>${p.ski}</text>
+${ski?`<rect x='58' y='20' width='30' height='16' rx='3' fill='#fff' stroke='#0e1b26' stroke-width='1.5'/><text x='73' y='32' font-family='Arial' font-size='12' font-weight='bold' text-anchor='middle' fill='#0e1b26'>${ski}</text>`:""}
 <path d='M78 40 q18 6 30 2' stroke='#dff1fb' stroke-width='4' fill='none' opacity='.8' stroke-linecap='round'/>
 </g>
-<rect x='8' y='${H-26}' width='auto' height='18' rx='9' fill='#0e1b26' opacity='.55'/>
-<text x='14' y='${H-13}' font-family='Arial' font-size='11' fill='#fff'>📍 ${p.stop} · ${(colorOf(p.color)||{}).en||''} ${p.ski}</text>
-${wm?`<text x='${W/2}' y='${H/2}' font-family='Arial' font-size='22' font-weight='bold' fill='#ffffff' opacity='.28' text-anchor='middle' transform='rotate(-18 ${W/2} ${H/2})'>${BRAND.name}</text>`:''}
+${stop?`<g transform='translate(58 ${H-32})'><rect width='${capW}' height='22' rx='11' fill='#0e1b26' opacity='.55'/><circle cx='13' cy='9' r='4' fill='#fff'/><path d='M9.6 10.5 L13 16.5 L16.4 10.5 Z' fill='#fff'/><text x='24' y='15.5' font-family='Arial' font-size='12' fill='#fff'>${stop}</text></g>`:""}
 </svg>`;
-  return "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
 }
-function photoSrc(p,wm){ return p.src ? p.src : svgFor(p,{wm:wm}); }
+const svgCache = new Map();
+function svgFor(p){
+  const k=[p.seed||p.id, p.color, p.ski, p.stop].join("|");
+  let u=svgCache.get(k);
+  if(!u){ u="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svgText(p)); svgCache.set(k,u); }
+  return u;
+}
+function photoSrc(p){ return p.src ? p.src : svgFor(p); }
 
-/* ---------- QR (decorative svg) ---------- */
-function qrSvg(){
-  const n=13,cell=8,pad=6; let rects="";
-  const r=rng(20260709);
-  for(let y=0;y<n;y++)for(let x=0;x<n;x++){
-    const finder=(x<3&&y<3)||(x>n-4&&y<3)||(x<3&&y>n-4);
-    const on = finder || r()>.45;
-    if(on) rects+=`<rect x='${pad+x*cell}' y='${pad+y*cell}' width='${cell}' height='${cell}' rx='1.5' fill='#0e1b26'/>`;
-  }
-  const S=n*cell+pad*2;
-  return "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(
-    `<svg xmlns='http://www.w3.org/2000/svg' width='${S}' height='${S}'><rect width='${S}' height='${S}' rx='12' fill='#fff'/>${rects}</svg>`);
-}
-
-/* ---------- i18n ----------
-   EN is complete: strings for the About tab / header / footer are read from the markup
-   ([data-i18n]) at start-up, the rest is below. TH is a machine-drafted version that still
-   needs proofreading by a native speaker (see 14_localization_tasks.md); RU — Russian guests.
-   Switch language with the EN | ไทย | RU buttons; choice persists in localStorage (shared by all demo pages). */
-const LANG_KEY = "jetops_lang";
-const I18N = {
-  en:{
-    tab_about:"ℹ️ About", tab_guide:"📸 Guide", tab_client:"🏖️ Client",
-    title:"Your ride photos 🏖️", sub:"Scanned your wristband? Pick your trip and color team, then enter your jet ski number.",
-    round:"Trip", colour:"Color team", ski:"Your jet ski number", all:"Show all group",
-    ai:"AI: find all photos of me (selfie)", send:"Send gallery link to my phone",
-    count:(n,ski)=> ski? `${n} photo(s) of jet ski ${ski}` : `${n} photo(s) in this group`,
-    emptyGroup:"No photos in this trip/color yet.\nIn the real flow they appear seconds after the guide uploads — open the Guide tab and upload to see it.",
-    emptySki:"No photos for that number here.\nCheck the machine number on your wristband, or tap “Show all group”.",
-    hd:"Full HD · no watermark after download", dl:"Download",
-    dlToast:"⬇️ Download started (demo)", resetToast:"↺ Demo data reset",
-    premAi:`<span class="badge prem">✨ Premium · Build 2</span><h3 style="margin-top:12px">AI face search</h3><p>Customer takes a selfie → the system finds <b>all their photos</b> across the whole group and day, even from other riders' shots. A premium add-on — base photos stay free.</p><button class="btn accent2" id="ok">Got it</button>`,
-    premSend:`<span class="badge prem">📲 Build 2</span><h3 style="margin-top:12px">Send link + capture contact</h3><p>Customer drops their LINE/WhatsApp/email — the gallery is sent <b>instantly</b>, while they're still on site. That restores contact and the window for the enhanced upsell.</p><button class="btn primary" id="ok">Ok</button>`
-  },
-  th:{
-    tab_about:"ℹ️ เกี่ยวกับ", tab_guide:"📸 ไกด์", tab_client:"🏖️ ลูกค้า",
-    brand_small:"ส่งรูปให้ลูกค้า · เดโม Build 1 · 📝 ภาษาไทยฉบับร่าง",
-    home_h2:"เดโม: ได้รูปภายในไม่กี่นาที ไม่ต้องรอ 1–3 วัน",
-    home_sub:"Build 1 — ระบบส่งรูป HD ทันที รูปยัง<b>ฟรี</b>เหมือนเดิม ลองสองแท็บด้านบน: <b>ไกด์</b> อัปโหลดรูป → <b>ลูกค้า</b> เห็นรูปในแกลเลอรีทันที ค้นด้วยหมายเลขเจ็ตสกี",
-    fix_lbl:"แก้ปัญหาอะไร",
-    now_ba:"<h4>ตอนนี้</h4>ไกด์ → WhatsApp → แอดมิน → อัปโหลดขึ้น Google Drive เอง ล่าช้า <b>1–3 วัน</b> WhatsApp ลดคุณภาพรูป และทุกอย่างขึ้นอยู่กับคนคนเดียว",
-    new_ba:"<h4>Build 1</h4>ไกด์ → ระบบอัปโหลด → ตรวจอัตโนมัติ → แกลเลอรี ใช้เวลา<b>ไม่กี่นาที</b> ได้รูป HD ต้นฉบับ แอดมินไม่ต้องทำเอง",
-    shows_lbl:"เดโมนี้แสดงอะไร",
-    shows_kv:"• <b>ไกด์:</b> หน้าอัปโหลดภาษาไทยแบบง่าย (2–3 แตะ: รอบ + สี + หมายเลข) ส่งรูปต้นฉบับจาก iPhone<br>• <b>ตรวจอัตโนมัติ:</b> รอบ / สี / จำนวนรูป / คุณภาพ — ไม่ต้องคัดแยกเอง<br>• <b>ลูกค้า:</b> สแกน QR เดียวกัน → เลือกวัน / รอบ / ทีมสี → ใส่<b>หมายเลขเจ็ตสกี</b> (เห็นบนเจ็ตสกีในทุกรูป) → เห็นรูปของตัวเอง<br>• <b>✨ ค้นหารูปด้วยใบหน้า (AI)</b> — ตัวอย่างฟีเจอร์พรีเมียม (Build 2)",
-    qr_lbl:"สายรัดข้อมือลูกค้า → QR เดียวกันทั้งหมด",
-    qr_hint:"ในการใช้งานจริง QR จะเปิดแกลเลอรีของลูกค้า ในเดโมนี้ให้ใช้ปุ่มด้านล่าง",
-    go_guide:"📸 ฉันเป็นไกด์ — อัปโหลด", go_client:"🏖️ ฉันเป็นลูกค้า — รูปของฉัน",
-    modB_lbl:"🌦️ โมดูล B — บอร์ดสภาพอากาศ (เดโม)",
-    modB_p:"พยากรณ์เฉพาะเส้นทาง Sirey → Monkey Island + สรุปชัดเจน ไปได้ / ก้ำกึ่ง / ไม่ข้าม + ข้อความบรีฟลูกค้าพร้อมใช้ ข้อมูลจริงจาก Open-Meteo",
-    modB_btn:"เปิดบอร์ดสภาพอากาศ →",
-    modD_lbl:"🖥️ โมดูล D — แดชบอร์ดงานประจำวัน (เดโม)",
-    modD_p:"บอร์ดงานแบบสดสำหรับออฟฟิศ: แผนที่เส้นทางพร้อมทีม ฟีดเหตุการณ์จากแชทงาน บอร์ดช่าง ความครบของรูป กะงาน และรายงานประจำวันอัตโนมัติ เป็นการจำลองหนึ่งวันจากรูปแบบแชทจริง",
-    modD_btn:"เปิดแดชบอร์ด →",
-    bot_lbl:"🤖 โมดูล D — บอท LINE (ตัวอย่าง)",
-    bot_p:"บอทอ่านกลุ่ม LINE ของทีม: ข้อความ → เหตุการณ์ → แจ้งเตือนอัตโนมัติเมื่อมีปัญหา → รายงานตอนเย็นให้ออฟฟิศและช่าง เป็นผลลัพธ์จริงจากโค้ดที่ใช้งานได้",
-    bot_btn:"เปิดตัวอย่างบอท →",
-    notes_lbl:"หมายเหตุ",
-    notes_p:"รูปตัวอย่างสร้างขึ้นอัตโนมัติ (เห็นหมายเลขเจ็ตสกีในรูป) — จะเปลี่ยนเป็นรูปจริงภายหลัง ข้อมูลเดโมเก็บไว้ในเบราว์เซอร์ของคุณเท่านั้น คุณอัปโหลด<b>รูปจริงจากมือถือ</b>ได้ด้วย (“เลือกรูปจากเครื่อง”) การอ่านหมายเลข (OCR) และการค้นหาด้วยใบหน้า (AI) ในเดโมนี้เป็นเพียงตัวอย่าง — ในระบบจริงอยู่ใน Build 1 / Build 2",
-    reset_btn:"↺ รีเซ็ตข้อมูลเดโม",
-    footnote:"เดโม · Phuket Jetski Club · ส่งรูปให้ลูกค้า · Build 1 — ข้อมูลตัวอย่าง เก็บไว้ในเครื่อง",
-    title:"รูปจากทริปของคุณ 🏖️", sub:"สแกนสายรัดข้อมือแล้วใช่ไหม? เลือกรอบและทีมสี แล้วใส่หมายเลขเจ็ตสกีของคุณ",
-    round:"รอบ", colour:"ทีมสี", ski:"หมายเลขเจ็ตสกีของคุณ", all:"ดูทั้งกลุ่ม",
-    ai:"AI: หารูปทั้งหมดของฉัน (เซลฟี่)", send:"ส่งลิงก์แกลเลอรีเข้ามือถือ",
-    count:(n,ski)=> ski? `เจ็ตสกี ${ski}: ${n} รูป` : `ในกลุ่มนี้มี ${n} รูป`,
-    emptyGroup:"รอบ/สีนี้ยังไม่มีรูป\nในการใช้งานจริง รูปจะขึ้นภายในไม่กี่วินาทีหลังไกด์อัปโหลด — ลองเปิดแท็บไกด์แล้วอัปโหลดดู",
-    emptySki:"ไม่มีรูปของหมายเลขนี้\nตรวจหมายเลขเจ็ตสกีบนสายรัดข้อมือ หรือกด “ดูทั้งกลุ่ม”",
-    hd:"Full HD · ไม่มีลายน้ำเมื่อดาวน์โหลด", dl:"ดาวน์โหลด",
-    dlToast:"⬇️ เริ่มดาวน์โหลดแล้ว (เดโม)", resetToast:"↺ รีเซ็ตข้อมูลเดโมแล้ว",
-    premAi:`<span class="badge prem">✨ พรีเมียม · Build 2</span><h3 style="margin-top:12px">ค้นหารูปด้วยใบหน้า (AI)</h3><p>ลูกค้าถ่ายเซลฟี่ → ระบบหา<b>รูปทั้งหมดของลูกค้า</b>จากทั้งกลุ่มและทั้งวัน รวมถึงรูปที่ติดอยู่ในรูปของคนอื่น เป็นบริการเสริมแบบพรีเมียม — รูปพื้นฐานยังฟรีเหมือนเดิม</p><button class="btn accent2" id="ok">เข้าใจแล้ว</button>`,
-    premSend:`<span class="badge prem">📲 Build 2</span><h3 style="margin-top:12px">ส่งลิงก์ + เก็บช่องทางติดต่อ</h3><p>ลูกค้าใส่ LINE/WhatsApp/อีเมล — ระบบส่งแกลเลอรีให้<b>ทันที</b> ขณะที่ลูกค้ายังอยู่ที่ท่า ทำให้มีช่องทางติดต่อกลับ และมีโอกาสเสนอรูปแบบพิเศษเพิ่ม</p><button class="btn primary" id="ok">ตกลง</button>`
-  },
-  ru:{
-    tab_about:"ℹ️ О демо", tab_guide:"📸 Гид", tab_client:"🏖️ Клиент",
-    brand_small:"Выдача фото · демо Билд 1",
-    home_h2:"Демо: фото за минуты, а не за 1–3 дня",
-    home_sub:"Билд 1 — мгновенный HD-пайплайн. Фото остаются <b>бесплатными</b>. Попробуйте две вкладки выше: <b>Гид</b> загружает фото → <b>Клиент</b> сразу видит их в галерее по номеру гидроцикла.",
-    fix_lbl:"Что это исправляет",
-    now_ba:"<h4>Сейчас</h4>гид → WhatsApp → админ → ручная загрузка в Google Drive. Задержка <b>1–3 дня</b>, WhatsApp снижает качество, всё держится на одном человеке.",
-    new_ba:"<h4>Билд 1</h4>гид → аплоадер → авто-проверка → галерея. <b>Минуты</b>, оригинальное HD, админ больше не узкое место.",
-    shows_lbl:"Что показывает демо",
-    shows_kv:"• <b>Гид:</b> простой тайский аплоадер (2–3 тапа: рейс + цвет + номер), отправляет оригиналы фото с iPhone.<br>• <b>Авто-проверка:</b> рейс / цвет / количество фото / качество — без ручной сортировки.<br>• <b>Клиент:</b> тот же общий QR → выбирает день / рейс / цвет команды → вводит <b>номер гидроцикла</b> (он виден на гидроцикле в каждом кадре) → видит свои фото.<br>• <b>✨ AI-поиск по лицу</b> — тизер премиум-функции (Билд 2).",
-    qr_lbl:"Браслет клиента → один общий QR",
-    qr_hint:"В реальной работе QR открывает галерею клиента. В демо используйте кнопки ниже.",
-    go_guide:"📸 Я гид — загрузить", go_client:"🏖️ Я клиент — мои фото",
-    modB_lbl:"🌦️ Модуль B — Погодный борт (демо)",
-    modB_p:"Локальный прогноз для маршрута Sirey → Monkey Island + понятный вердикт «идём / на грани / не идём» + готовый брифинг для клиента. Живые данные Open-Meteo.",
-    modB_btn:"Открыть погодный борт →",
-    modD_lbl:"🖥️ Модуль D — Ops-дашборд (демо)",
-    modD_p:"Живая операционная доска для офиса: карта маршрута с группами, лента событий из рабочих чатов, доска механиков, фото-комплаенс, смены, автоматический отчёт дня. Симулированный день на реальных паттернах чата.",
-    modD_btn:"Открыть ops-дашборд →",
-    bot_lbl:"🤖 Модуль D — LINE-бот (витрина)",
-    bot_p:"Бот читает рабочие LINE-группы: сообщение → событие → авто-алерт при проблеме → вечерний отчёт офису и механикам. Реальный вывод работающего кода.",
-    bot_btn:"Открыть витрину бота →",
-    notes_lbl:"Примечания",
-    notes_p:"Фото-заглушки генерируются (номер машины виден на гидроцикле) — их заменят реальные фото. Данные демо хранятся локально в вашем браузере. Можно загрузить и <b>реальные фото с телефона</b> («Выбрать реальные фото»). OCR номера и AI-поиск по лицу здесь — тизеры; в проде это Билд 1 / Билд 2.",
-    reset_btn:"↺ Сбросить демо-данные",
-    footnote:"Демо · Phuket Jetski Club · Выдача фото · Билд 1 — данные-заглушки, хранятся локально",
-    lbl_morning:"Утро 08:30", lbl_afternoon:"День 12:45",
-    lbl_yellow:"Жёлтый", lbl_purple:"Фиолетовый", lbl_blue:"Синий", lbl_pink:"Розовый", lbl_orange:"Оранжевый", lbl_green:"Зелёный",
-    title:"Ваши фото с катания 🏖️", sub:"Отсканировали браслет? Выберите рейс и цвет команды, затем введите номер гидроцикла.",
-    round:"Рейс", colour:"Цвет команды", ski:"Ваш номер гидроцикла", all:"Показать всю группу",
-    ai:"AI: найти все фото со мной (селфи)", send:"Прислать ссылку на галерею на телефон",
-    count:(n,ski)=> ski? `${n} фото гидроцикла ${ski}` : `${n} фото в этой группе`,
-    emptyGroup:"В этом рейсе/цвете пока нет фото.\nВ реальном потоке они появляются через секунды после загрузки гидом — откройте вкладку «Гид» и загрузите.",
-    emptySki:"Нет фото по этому номеру.\nПроверьте номер на браслете или нажмите «Показать всю группу».",
-    hd:"Полное HD · без водяного знака после скачивания", dl:"Скачать",
-    dlToast:"⬇️ Скачивание начато (демо)", resetToast:"↺ Демо-данные сброшены",
-    premAi:`<span class="badge prem">✨ Премиум · Билд 2</span><h3 style="margin-top:12px">AI-поиск по лицу</h3><p>Клиент делает селфи → система находит <b>все его фото</b> по всей группе и дню, даже с чужих кадров. Это премиум-продукт (продаётся отдельно, база остаётся бесплатной).</p><button class="btn accent2" id="ok">Понятно</button>`,
-    premSend:`<span class="badge prem">📲 Билд 2</span><h3 style="margin-top:12px">Ссылка + контакт</h3><p>Здесь клиент оставляет LINE/WhatsApp/email — галерея уходит ему <b>сразу</b>, пока он ещё на месте. Так восстанавливается контакт и окно для enhanced-апселла.</p><button class="btn primary" id="ok">Ок</button>`
-  }
-};
-// EN defaults for the static markup (About tab, header, footer) come from the HTML itself — one source of truth
-document.querySelectorAll("[data-i18n]").forEach(el=>{ const k=el.dataset.i18n; if(I18N.en[k]==null) I18N.en[k]=el.innerHTML.trim(); });
-function t(k){ const d=I18N[ui.lang]||{}; return (d[k]!=null) ? d[k] : I18N.en[k]; }
-function pillLabel(it,lang){
-  if(it[lang]!=null) return it[lang];                       // label stored on the item (th/en)
-  const d=I18N[lang]||{}; const v=d["lbl_"+it.key];         // label stored in the dict (ru)
-  return v!=null ? v : it.en;
-}
-function applyLang(lang){
-  ui.lang = I18N[lang] ? lang : "en";
-  lsSet(LANG_KEY, ui.lang);
-  document.documentElement.lang = ui.lang;
-  $$(".lang button").forEach(b=>b.classList.toggle("on",b.dataset.lang===ui.lang));
-  $$("[data-i18n]").forEach(el=>{ const v=t(el.dataset.i18n); if(typeof v==="string") el.innerHTML=v; }); // our own dictionary strings only
-  if(ui.view==="client") renderClient();
-}
-
-/* ---------- RENDER ---------- */
-const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+/* ================= VIEWS ================= */
+const VIEWS = { about:"about", home:"about", guide:"guide", tourist:"tourist", client:"tourist", gallery:"tourist" };
 function setView(v){
-  if(!state) state=load();
-  ui.view=v;
-  $$(".tabs button").forEach(b=>b.classList.toggle("active",b.dataset.view===v));
-  $$("main section").forEach(s=>s.classList.remove("on"));
-  $("#view-"+v).classList.add("on");
-  if(v==="guide") renderGuide();
-  if(v==="client") renderClient();
+  ui.view = VIEWS[v] || "about";
+  try{ const u=new URL(location.href); u.searchParams.set("view", ui.view); history.replaceState(null,"",u.href); }catch(e){ /* file:// — the link just doesn't remember the screen */ }
+  render();
   window.scrollTo(0,0);
 }
-function pills(container,items,selKey,onPick,opts){
-  opts=opts||{}; container.innerHTML="";
-  items.forEach(it=>{
-    const b=document.createElement("button");
-    b.className="pill"+(opts.color?" color":"")+(it.key===selKey?" sel":"");
-    if(opts.color){ b.innerHTML=`<span class='dot' style='background:${it.hex}'></span>${it.emoji?it.emoji+" ":""}${pillLabel(it,opts.lang)}`; }
-    else b.textContent = pillLabel(it,opts.lang);
-    if(it.key===selKey&&opts.color){ b.style.background=it.hex; b.style.borderColor=it.hex; b.style.color=it.fg||"#fff"; }
-    b.onclick=()=>onPick(it.key);
-    container.appendChild(b);
-  });
+function render(){
+  const v=ui.view;
+  $$("#views button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.v===v)));
+  $("#view-about").hidden = v!=="about";
+  $("#view-guide").hidden = v!=="guide" || !state;
+  $("#view-tourist").hidden = v!=="tourist" || !state;
+  $("#loading").hidden = v==="about" || !!state;
+  if(state && v==="guide") renderGuide();
+  if(state && v==="tourist") renderTourist();
+  renderBar();
 }
 
-/* ----- GUIDE ----- */
+/* ================= GUIDE (behaves like photo-pipeline/public/u/app.js; the upload is simulated) =================
+   The main button (#bar) by state — barMode():
+     no photos            → «Choose photos» (adds 8 sample photos)          #pick
+     photos, step missing → disabled, names the step («Choose the trip»); a tap scrolls to it   #send
+     photos, ready        → «Send 8 photos»                                  #send
+     sending              → busy «Sending 3 of 8…» + progress bar             #send
+     all sent             → note «Sent 8 photos» + «See it as a tourist»     #toTourist */
+let queue = [];      // chosen, not yet sent: [{qid, k, seed?, src?, st:''|'wait'|'up'|'done', pct, meta?}]
+let sending = null;  // {sent, total, day, session, color}
+let outcome = null;  // {sent, day, session, color} — the last batch, fully sent
+let picked = null;   // {notImg, bad, capped} — problems with the last own-photo pick
+let undo = null;     // {item, idx, timer}
+let gen = 0;         // bumped by «Reset demo data»: a send in flight stops
+const selectedDay = ()=> ui.g.day==="yesterday" ? yesterdayStr : todayStr;
+function fmtDate(d){
+  try{ return new Date(d+"T12:00:00Z").toLocaleDateString(LOCALE[lang],{timeZone:"UTC",weekday:"short",day:"numeric",month:"short"}); }catch(e){ return d; }
+}
+const teamName = key => t("team",{c:nameOf(colorOf(key))});
+const skisOf = color => SAMPLE_SKIS[color] || [];
+// what a chosen photo will be sent as (sample photos: the team's machines in turn, the route's stops in turn)
+function metaOf(q){
+  if(q.meta) return q.meta;
+  const skis=skisOf(ui.g.color);
+  return { color:ui.g.color, ski: q.src ? "" : (skis.length ? skis[q.k % skis.length] : ""), stop: STOPS[q.k % STOPS.length] };
+}
+function previewOf(q){ if(q.src) return q.src; const m=metaOf(q); return svgFor({seed:q.seed, id:q.qid, color:m.color, ski:m.ski, stop:m.stop}); }
+
+function buildGuideChips(){
+  const mk=(box, items, kind)=>{
+    box.textContent="";
+    items.forEach(it=>{
+      const b=el("button","chip"); b.type="button"; b.dataset.id=it.key;
+      if(kind==="color"){ const d=el("span","dot"); d.style.background=it.hex; b.append(d, el("span","",nameOf(it))); } // team colour = data
+      else b.append(el("span","big",it.time), el("span","small",nameOf(it)));                                   // "08:30" big, name under it
+      b.appendChild(icon("check","ic-s ck"));
+      b.onclick=()=>{ ui.g[kind]=it.key; renderGuide(); renderBar(); };
+      box.appendChild(b);
+    });
+  };
+  mk($("#sessions"), SESSIONS, "session");
+  mk($("#colors"), COLORS, "color");
+}
 function renderGuide(){
-  $("#gDate").textContent = todayStr;
-  pills($("#gSession"), SESSIONS, ui.g.session, k=>{ui.g.session=k;renderGuide();}, {lang:"th"});
-  pills($("#gColor"), COLORS, ui.g.color, k=>{ui.g.color=k; renderGuide();}, {color:true,lang:"th"});
-  $("#gSki").value = ui.g.ski;
-  const c=colorOf(ui.g.color);
-  $("#gSkiHint").textContent = `${c.en} · e.g. ${(SAMPLE_SKIS[c.key]||[]).slice(0,3).join(" · ")}`;
-  const n = state.photos.filter(p=>p.day===todayStr).length;
-  $("#gTodayCount").innerHTML = `วันนี้อัปโหลดแล้ว / Uploaded today: <b>${n}</b> — ผ่านคุณ ไม่ต้องผ่านแอดมิน / no admin, no WhatsApp, original quality.`;
-}
-function clampSki(){ let v=normSki($("#gSki").value); if(!/^[A-Z0-9]{1,6}$/.test(v)) v=ui.g.ski||"K7"; ui.g.ski=v; $("#gSki").value=v; }
-// − / + step the numeric part of the machine number (K7 → K8); letters (fleet series) stay
-function stepSki(d){ clampSki(); const m=/^([A-Z]*)(\d+)$/.exec(ui.g.ski); if(!m) return;
-  const n=Math.min(999,Math.max(1,parseInt(m[2],10)+d)); ui.g.ski=m[1]+n; $("#gSki").value=ui.g.ski; }
-function runAutoCheck(count, done){
-  const card=$("#gCheckCard"), box=$("#gChecks"); card.style.display="block";
-  const c=colorOf(ui.g.color), sess=SESSIONS.find(s=>s.key===ui.g.session);
-  const items=[`รอบ/รหัสสี: ${sess.th} · ${c.th} ${ui.g.ski}`,`จำนวนรูป / Photos: ${count}`,`คุณภาพ/รูปแบบ / Quality·format: OK`,`บันทึกเข้าแกลเลอรี / Saved to gallery`];
-  box.innerHTML=""; const rows=items.map(txt=>{const d=document.createElement("div");d.className="checkline";d.innerHTML=`<span class='bx'>…</span><span>${txt}</span>`;box.appendChild(d);return d;});
-  let i=0; (function step(){ if(i<rows.length){ rows[i].classList.add("ok"); rows[i].querySelector(".bx").textContent="✓"; i++; setTimeout(step,340);} else setTimeout(done,260); })();
-}
-function addPhotos(list){
-  runAutoCheck(list.length, ()=>{
-    list.forEach(o=>state.photos.push(mk(o)));
-    save(); renderGuide();
-    toast(`✅ อัปโหลดสำเร็จ / Uploaded ${list.length} photos — already in the gallery`);
-    setTimeout(()=>{$("#gCheckCard").style.display="none";},1400);
+  $$("#dayToggle button").forEach(b=>{
+    b.setAttribute("aria-pressed", String(b.dataset.id===ui.g.day));
+    setText(b.querySelector(".d"), fmtDate(b.dataset.id==="yesterday" ? yesterdayStr : todayStr));
   });
-}
-function addDemoBatch(){
-  clampSki();
-  const list=[];
-  STOPS.forEach(stop=>{ for(let n=0;n<2;n++) list.push({day:todayStr,session:ui.g.session,color:ui.g.color,ski:ui.g.ski,stop}); });
-  addPhotos(list.slice(0,8));
-}
-function pickReal(files){
-  clampSki(); const arr=Array.from(files).slice(0,8); if(!arr.length) return;
-  let loaded=[], done=0;
-  arr.forEach((f,idx)=>{ const rd=new FileReader(); rd.onload=e=>{ loaded.push({day:todayStr,session:ui.g.session,color:ui.g.color,ski:ui.g.ski,stop:STOPS[idx%STOPS.length],src:e.target.result}); if(++done===arr.length) addPhotos(loaded); }; rd.readAsDataURL(f); });
+  $$("#sessions .chip").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.id===ui.g.session)));
+  $$("#colors .chip").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.id===ui.g.color)));
+  renderQueue(); renderGuideStatus(); renderToday();
 }
 
-/* ----- CLIENT ----- */
-function renderClient(){
-  const L=ui.lang;
-  $$(".lang button").forEach(b=>b.classList.toggle("on",b.dataset.lang===L));
-  $("#cTitle").textContent=t("title"); $("#cSub").textContent=t("sub");
-  $("#cLblSession").textContent=t("round"); $("#cLblColor").textContent=t("colour"); $("#cLblSki").textContent=t("ski");
-  $("#cAll").textContent=t("all"); $("#cAILbl").textContent=t("ai"); $("#cSendLbl").textContent=t("send");
-  pills($("#cSession"), SESSIONS, ui.c.session, k=>{ui.c.session=k;renderClient();}, {lang:L});
-  pills($("#cColor"), COLORS, ui.c.color, k=>{ui.c.color=k;renderClient();}, {color:true,lang:L});
-  $("#cSki").value = ui.c.ski==null?"":ui.c.ski;
-  renderGrid();
+const tiles = new Map(); // qid -> {d, img, x, st, sig}
+function tileState(q){
+  if(q.st==="done") return ["done","check",t("tileSent")];
+  if(q.st==="up") return q.pct>0 ? ["up","",q.pct+"%"] : ["up","hourglass",t("tileWait")];
+  if(q.st==="wait") return ["up","hourglass",t("tileWait")];
+  return ["","",""];
 }
-function renderGrid(){
-  const L=ui.lang, grid=$("#cGrid"), empty=$("#cEmpty");
-  let list=state.photos.filter(p=>p.day===todayStr && p.session===ui.c.session && p.color===ui.c.color);
-  const groupCount=list.length;
-  const want=normSki(ui.c.ski); // case-insensitive: "k7" / "K 7" / "#K7" all match K7
-  if(want && !ui.c.all){ list=list.filter(p=>normSki(p.ski)===want); }
-  $("#cCount").innerHTML = t("count")(list.length, ((ui.c.all||!want)?null:want));
-  grid.innerHTML="";
-  if(!list.length){
-    grid.classList.add("hidden"); empty.classList.remove("hidden");
-    empty.textContent = groupCount? t("emptySki") : t("emptyGroup");
-    return;
+function renderQueue(){
+  const box=$("#queue");
+  const ids=new Set(queue.map(q=>q.qid));
+  for(const [id,tl] of tiles) if(!ids.has(id)){ tl.d.remove(); tiles.delete(id); }
+  queue.forEach(q=>{
+    let tl=tiles.get(q.qid);
+    if(!tl){
+      const d=el("div","q"), img=el("img"); img.alt=""; img.decoding="async";
+      const x=el("button","x"); x.type="button"; const xs=el("span"); xs.appendChild(icon("x")); x.appendChild(xs);
+      x.onclick=()=>removeQueued(q.qid);
+      const st=el("div","st"); d.append(img,x,st);
+      tl={d,img,x,st,sig:null}; tiles.set(q.qid,tl);
+    }
+    box.appendChild(tl.d); // keeps the queue order (undo puts a photo back in its place)
+    const src=previewOf(q); if(tl.img.getAttribute("src")!==src) tl.img.src=src;
+    const [cls,ic,label]=tileState(q), sig=cls+"|"+ic+"|"+label;
+    if(tl.sig!==sig){
+      tl.sig=sig; tl.d.className="q"+(cls?" "+cls:""); tl.st.textContent="";
+      if(ic) tl.st.appendChild(icon(ic)); if(label) tl.st.appendChild(el("span","",label));
+      tl.st.hidden=!label; tl.x.hidden=!!q.st;
+    }
+    const al=t("removePhoto"); if(tl.x.getAttribute("aria-label")!==al) tl.x.setAttribute("aria-label",al);
+  });
+  setText($("#count"), queue.length ? String(queue.length) : "");
+  $("#emptyPh").hidden = queue.length>0;
+  // all sent and nothing new: the success note takes this card's place
+  $("#photosCard").hidden = !queue.length && !!outcome && !undo;
+  $("#undo").hidden = !undo;
+}
+function noteEl(kind, ic, title, body, action){
+  const n=el("div","note note-"+kind), box=el("div");
+  box.append(el("b","",title)); if(body) box.append(el("span","",body));
+  if(action){ const a=el("div","note-act"), b=el("button","btn btn-secondary btn-s"); b.type="button"; setBtn(b, action.icon, action.label); b.onclick=action.run; a.appendChild(b); box.appendChild(a); }
+  n.append(icon(ic), box); return n;
+}
+function renderGuideStatus(){
+  const box=$("#status"); box.textContent="";
+  if(!picked) return;
+  if(picked.notImg) box.appendChild(noteEl("crit","ban",t("notImgTitle",{n:picked.notImg}),t("notImgBody")));
+  if(picked.bad) box.appendChild(noteEl("crit","circle-x",t("badTitle",{n:picked.bad}),t("badBody")));
+  if(picked.capped) box.appendChild(noteEl("info","info",t("capTitle",{n:OWN_MAX}),t("capBody",{n:OWN_MAX})));
+}
+function renderToday(){
+  const d=selectedDay(), n=state.photos.filter(p=>p.up && p.day===d).length;
+  setText($("#todayCount"), t(ui.g.day==="yesterday" ? "sentYesterday" : "sentToday", {n}));
+}
+
+function pickDemo(n, quiet){
+  for(let i=0;i<n;i++){ const k=state.n++; queue.push({qid:"q"+k, k, seed:"q"+k, st:"", pct:0}); }
+  save(); outcome=null; picked=null;
+  if(quiet) return;
+  render();
+  // back from the "picker": show what was picked if it is below the fold
+  const card=$("#photosCard");
+  if(!card.hidden && card.getBoundingClientRect().top > window.innerHeight*0.55) card.scrollIntoView({block:"start", behavior:"smooth"});
+}
+// own photos: shrunk to 1600 px so a batch fits in the browser's storage
+function readPhoto(file){
+  return new Promise(res=>{
+    const url=URL.createObjectURL(file), img=new Image();
+    img.onload=()=>{
+      let out=null;
+      try{
+        const s=Math.min(1, 1600/Math.max(img.naturalWidth, img.naturalHeight));
+        const cv=document.createElement("canvas"); cv.width=Math.max(1,Math.round(img.naturalWidth*s)); cv.height=Math.max(1,Math.round(img.naturalHeight*s));
+        cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height); out=cv.toDataURL("image/jpeg",0.85);
+      }catch(e){ out=null; }
+      URL.revokeObjectURL(url); res(out);
+    };
+    img.onerror=()=>{ URL.revokeObjectURL(url); res(null); };
+    img.src=url;
+  });
+}
+async function pickOwn(files){
+  const all=Array.from(files||[]);
+  const imgs=all.filter(f=>/^image\//.test(f.type) || /\.(heic|heif)$/i.test(f.name));
+  const res={ notImg: all.length-imgs.length, bad:0, capped: imgs.length>OWN_MAX };
+  for(const f of imgs.slice(0,OWN_MAX)){
+    const src=await readPhoto(f);
+    if(!src){ res.bad++; continue; }
+    const k=state.n++; queue.push({qid:"q"+k, k, src, st:"", pct:0});
   }
-  grid.classList.remove("hidden"); empty.classList.add("hidden");
-  list.slice(0,60).forEach(p=>{
-    const d=document.createElement("div"); d.className="ph";
-    d.innerHTML=`<img loading="lazy" src="${photoSrc(p,true)}" alt=""><span class="tag">${p.ski}</span>`;
-    d.onclick=()=>lightbox(p); grid.appendChild(d);
+  save(); outcome=null;
+  picked = (res.notImg||res.bad||res.capped) ? res : null;
+  render();
+}
+function removeQueued(qid){
+  const idx=queue.findIndex(q=>q.qid===qid); if(idx<0 || queue[idx].st) return; // in flight
+  if(undo) clearTimeout(undo.timer);
+  undo={ item:queue[idx], idx, timer:setTimeout(()=>{ undo=null; render(); },6000) };
+  queue.splice(idx,1); render();
+}
+function undoRemove(){
+  if(!undo) return; const u=undo; clearTimeout(u.timer); undo=null;
+  queue.splice(Math.min(u.idx, queue.length), 0, u.item); render();
+}
+
+function barMode(){
+  if(ui.view==="about") return "try";
+  if(ui.view!=="guide" || !state) return "none";
+  if(sending) return "sending";
+  if(queue.some(q=>!q.st)) return !ui.g.session ? "needTrip" : !ui.g.color ? "needColor" : "send";
+  return outcome ? "done" : "choose";
+}
+// the upload is simulated: two photos at a time, like the real uploader
+function startSend(){
+  const items=queue.filter(q=>!q.st);
+  if(sending || !ui.g.session || !ui.g.color || !items.length) return;
+  const day=selectedDay(), session=ui.g.session, color=ui.g.color, my=gen;
+  outcome=null; picked=null;
+  sending={sent:0, total:items.length, day, session, color};
+  items.forEach(q=>{ const m=metaOf(q); q.meta={color, ski:m.ski, stop:m.stop}; q.st="wait"; q.pct=0; });
+  const step=q=>{
+    if(my!==gen) return;
+    q.pct=Math.min(100, q.pct+(q.src?14:26));
+    if(q.pct>=100){
+      q.st="done";
+      state.photos.push({id:"u-"+Date.now().toString(36)+"-"+q.k, day, session, color, ski:q.meta.ski, stop:q.meta.stop,
+        seed:q.src?undefined:q.seed, src:q.src||undefined, up:1});
+      save(); sending.sent++; next();
+    } else setTimeout(()=>step(q), 120);
+    render();
+  };
+  const next=()=>{
+    if(my!==gen) return;
+    const q=queue.find(x=>x.st==="wait");
+    if(q){ q.st="up"; q.pct=0; setTimeout(()=>step(q), 160); return; }
+    if(!queue.some(x=>x.st==="up")){ // all sent: they leave the queue, the note says what happened
+      outcome={sent:sending.sent, day, session, color}; sending=null;
+      queue=queue.filter(x=>x.st!=="done"); render();
+    }
+  };
+  next(); next(); render();
+}
+
+function renderBar(){
+  const mode=barMode(), send=$("#send");
+  $("#bar").hidden = mode==="none";
+  $("#tryGuide").hidden = mode!=="try";
+  $("#pick").hidden = mode!=="choose";
+  $("#toTourist").hidden = mode!=="done";
+  send.hidden = !["needTrip","needColor","send","sending"].includes(mode);
+  send.disabled = !(mode==="send" || mode==="sending");
+  if(mode==="choose") setBtn($("#pick"),"images",t("choose"));
+  if(mode==="needTrip") setBtn(send,"",t("needTrip"));
+  if(mode==="needColor") setBtn(send,"",t("needColor"));
+  if(mode==="send") setBtn(send,"image-up",t("send",{n:queue.filter(q=>!q.st).length}));
+  if(mode==="sending"){ const tot=Math.max(sending.total,1); setBtn(send,"",t("sending",{a:Math.min(sending.sent+1,tot), b:tot}),true); }
+  if(mode==="done") setBtn($("#toTourist"),"",t("seeTourist"),false,"arrow-right");
+  // progress of the whole batch
+  $("#prog").hidden = mode!=="sending";
+  if(mode==="sending"){
+    const inBatch=queue.filter(q=>q.st);
+    const pct=inBatch.length ? inBatch.reduce((a,q)=>a+(q.st==="done"?100:q.pct),0)/inBatch.length : 0;
+    $("#progI").style.width=pct.toFixed(0)+"%";
+  }
+  // what the last send did — right above the button that did it
+  const res=$("#result"); res.textContent="";
+  if(mode==="done"){
+    res.appendChild(noteEl("ok","circle-check", t("doneTitle",{n:outcome.sent}), t("doneBody",{team:teamName(outcome.color)}),
+      {icon:"images", label:t("chooseMore"), run:()=>pickDemo(DEMO_BATCH)}));
+  }
+  // the one-line summary of what the button will send
+  const sum=$("#summary2"), parts=[];
+  if(ui.view==="guide" && state && mode!=="done"){
+    if(ui.g.day==="yesterday") parts.push({text:t("yesterday")});
+    const s=sessionOf(ui.g.session); if(s) parts.push({text:nameOf(s)+" "+s.time});
+    const c=colorOf(ui.g.color); if(c) parts.push({text:teamName(c.key), hex:c.hex});
+    const n=mode==="sending" ? 0 : queue.filter(q=>!q.st).length;
+    if(n) parts.push({text:t("nPhotos",{n})});
+  }
+  const sig=JSON.stringify(parts);
+  if(sum._sig!==sig){
+    sum._sig=sig; sum.textContent="";
+    parts.forEach((p,i)=>{
+      if(i) sum.appendChild(el("span","sep","·"));
+      if(p.hex){ const d=el("span","dot"); d.style.background=p.hex; d.setAttribute("aria-hidden","true"); sum.appendChild(d); }
+      sum.appendChild(el("span","",p.text));
+    });
+  }
+  sum.hidden=!parts.length;
+}
+
+/* ================= TOURIST (behaves like photo-pipeline/public/g/app.js on the local demo data) ================= */
+const chosen = ()=> !!(ui.c.day && ui.c.session && ui.c.color);
+function tDays(){
+  const set=new Set(state.photos.map(p=>p.day)); set.add(todayStr); if(ui.c.day) set.add(ui.c.day);
+  return Array.from(set).sort().reverse();
+}
+function tGroups(day){
+  const m=new Map();
+  state.photos.forEach(p=>{ if(p.day!==day) return; const k=p.session+"|"+p.color; const g=m.get(k)||{session:p.session,color:p.color,count:0}; g.count++; m.set(k,g); });
+  return Array.from(m.values());
+}
+function fmtDay(d){
+  if(d===todayStr) return t("today");
+  if(d===yesterdayStr) return t("yesterday");
+  try{ return new Date(d+"T12:00:00Z").toLocaleDateString(LOCALE[lang],{day:"numeric",month:"short",timeZone:"UTC"}); }catch(e){ return d; }
+}
+// only one option: preselect it; a group chosen → the steps fold into one line
+function autoPick(){
+  const c=ui.c, groups=tGroups(c.day);
+  const ss=Array.from(new Set(groups.map(g=>g.session)));
+  if(!c.session && ss.length===1) c.session=ss[0];
+  if(c.session && !c.color){ const cs=Array.from(new Set(groups.filter(g=>g.session===c.session).map(g=>g.color))); if(cs.length===1) c.color=cs[0]; }
+  if(chosen()) c.expanded=false;
+}
+function groupPhotos(){
+  const c=ui.c, si=p=>{ const i=STOPS.indexOf(p.stop); return i<0?99:i; };
+  const list=state.photos.filter(p=>p.day===c.day && p.session===c.session && p.color===c.color);
+  // sample photos in route order (stop by stop), the guide's new ones after them
+  return list.filter(p=>!p.up).sort((a,b)=>si(a)-si(b)).concat(list.filter(p=>p.up));
+}
+function chip(on, click){
+  const b=el("button","chip"); b.type="button"; b.setAttribute("aria-pressed",String(on));
+  if(on) b.appendChild(icon("check","ic-s")); b.onclick=click; return b;
+}
+function renderTourist(){ renderSteps(); renderPhotos(); renderMsg(); }
+function renderSteps(){
+  const c=ui.c, ready=chosen();
+  $("#steps").hidden = ready && !c.expanded;
+  $("#summary").hidden = !ready || c.expanded;
+  const dEl=$("#days"); dEl.textContent="";
+  tDays().slice(0,10).forEach(d=>{ const b=chip(c.day===d, ()=>pickDay(d)); b.appendChild(el("span","",fmtDay(d))); dEl.appendChild(b); });
+  const groups=tGroups(c.day);
+  const ids=Array.from(new Set(groups.map(g=>g.session))); if(c.session && !ids.includes(c.session)) ids.push(c.session); // link opened before the first upload
+  const sEl=$("#groupsS"), cEl=$("#groupsC"); sEl.textContent=""; cEl.textContent="";
+  const sessions=SESSIONS.filter(s=>ids.includes(s.key));
+  sessions.forEach(s=>{ const b=chip(c.session===s.key, ()=>pickSession(s.key)); b.append(el("span","",nameOf(s)), el("span","g-time",s.time)); sEl.appendChild(b); });
+  if(c.session){
+    const cids=Array.from(new Set(groups.filter(g=>g.session===c.session).map(g=>g.color))); if(c.color && !cids.includes(c.color)) cids.push(c.color);
+    COLORS.filter(x=>cids.includes(x.key)).forEach(x=>{
+      const g=groups.find(y=>y.session===c.session && y.color===x.key);
+      const b=chip(c.color===x.key, ()=>pickColor(x.key)); const dot=el("span","dot"); dot.style.background=x.hex;
+      b.append(dot, el("span","",nameOf(x))); if(g) b.appendChild(el("span","g-cnt",String(g.count)));
+      cEl.appendChild(b);
+    });
+  }
+  $("#teamWait").hidden = !!c.session || !sessions.length;
+  if(ready){
+    const col=colorOf(c.color), s=sessionOf(c.session);
+    $("#sumDot").style.background=col?col.hex:"";
+    setText($("#sumTitle"), teamName(c.color));
+    setText($("#sumDay"), (s?nameOf(s)+" "+s.time:"")+" · "+fmtDay(c.day));
+  }
+}
+function pickDay(d){ if(d===ui.c.day) return; Object.assign(ui.c,{day:d, session:null, color:null, expanded:true}); autoPick(); renderTourist(); focusPhotos(); }
+function pickSession(id){ if(id===ui.c.session) return; Object.assign(ui.c,{session:id, color:null, expanded:true}); autoPick(); renderTourist(); focusPhotos(); }
+function pickColor(id){ ui.c.color=id; ui.c.expanded=false; renderTourist(); focusPhotos(); }
+// focus follows the tourist from the (now folded) steps to the photos
+function focusPhotos(){
+  if(!$("#steps").hidden) return;
+  ($("#photosTop").hidden ? $("#change") : $("#cntH")).focus({preventScroll:true});
+  const top=$("#summary"); if(top.getBoundingClientRect().top<0) top.scrollIntoView({block:"start"});
+}
+
+function skiMatch(p, q){
+  const want=normSki(q), have=normSki(p.ski);
+  if(!want || !have) return false;
+  if(have===want) return true;
+  return /^\d+$/.test(want) && have.replace(/\D/g,"")===want; // "7" finds K7 and Y7
+}
+let ORDER=[], MATCHED=new Set();
+function renderPhotos(){
+  const c=ui.c, grid=$("#grid"); grid.textContent="";
+  const ready=chosen(), photos=ready ? groupPhotos() : [], n=photos.length;
+  $("#photosTop").hidden = !ready || !n;
+  setText($("#cntH"), n ? t("count",{n}) : "");
+  $("#more").hidden = !ready || !n;
+  // the jet-ski filter is secondary: a quiet "Find my jet ski" opens it (stays open while in use)
+  const anyTags=photos.some(p=>p.ski);
+  $("#skiCard").hidden = !anyTags || !c.skiOpen;
+  $("#skiOpen").hidden = !anyTags || c.skiOpen;
+  $("#skiOpen").setAttribute("aria-expanded", String(c.skiOpen));
+  const inp=$("#skiInput"); if(inp.value!==c.ski) inp.value=c.ski;
+  inp.placeholder=t("ski_ph",{x:(photos.find(p=>p.ski)||{}).ski || "K7"});
+  const q=(c.skiOpen && anyTags) ? c.ski.trim() : "";
+  $("#skiClear").hidden=!q;
+  let ordered=photos; MATCHED=new Set();
+  if(q){ const mine=[], rest=[]; photos.forEach(p=>{ if(skiMatch(p,q)){ mine.push(p); MATCHED.add(p); } else rest.push(p); }); ordered=mine.concat(rest); }
+  $("#matchNote").hidden=!q;
+  if(q) setText($("#matchTxt"), MATCHED.size ? t("match_note",{n:MATCHED.size}) : t("match_none",{q:normSki(q)}));
+  ORDER=ordered;
+  ordered.forEach((p,i)=>{
+    const mine=MATCHED.has(p), b=el("button","g-tile"+(mine?" mine":"")); b.type="button";
+    b.setAttribute("aria-label", t("photo_n",{i:i+1, n:ordered.length})+(mine?" · "+t("mine"):""));
+    const img=el("img"); img.loading=i<8?"eager":"lazy"; img.decoding="async"; img.alt=""; img.src=photoSrc(p); b.appendChild(img);
+    if(mine){ const bd=el("span","badge badge-info"); bd.append(icon("star"), el("span","",t("mine"))); b.appendChild(bd); }
+    b.onclick=()=>openView(i);
+    grid.appendChild(b);
   });
+  if(VIEW.open){ const j=ORDER.findIndex(p=>p.id===VIEW.id); showView(j>=0?j:VIEW.i); }
 }
-function lightbox(p){
-  const L=ui.lang;
-  openSheet(`<div class="lb"><img src="${photoSrc(p,true)}" alt=""></div>
-    <div style="margin-top:12px" class="badge">🔓 ${t("hd")}</div>
-    <div style="height:14px"></div>
-    <button class="btn primary" id="dlBtn">⬇️ ${t("dl")}</button>
-    <div style="height:8px"></div>
-    <button class="btn ghost sm" id="closeBtn">✕</button>`);
-  $("#dlBtn").onclick=()=>download(p);
-  $("#closeBtn").onclick=closeSheet;
+// one message slot (#empty) for the empty states: "choose" / "on their way" (+ Check again)
+function renderMsg(){
+  const box=$("#empty"); box.textContent="";
+  const ready=chosen();
+  let kind=null;
+  if(!ready) kind = tGroups(ui.c.day).length ? "choose" : "way";
+  else if(!groupPhotos().length) kind="way";
+  if(!kind) return;
+  const card=el("div","card"), e=el("div","empty"), wrap=el("div","ic-wrap");
+  wrap.appendChild(icon(kind==="way"?"sailboat":"images","ic-l")); e.appendChild(wrap);
+  if(kind==="choose") e.appendChild(el("p","h3",t("gChoose")));
+  else{
+    e.append(el("b","h3",t("way_h")), el("p","",t("way_p")));
+    const b=el("button","btn btn-secondary"); b.type="button"; setBtn(b,"refresh-cw",t("check"));
+    b.onclick=()=>refresh(b); e.appendChild(b);
+  }
+  card.appendChild(e); box.appendChild(card);
 }
-function extOf(p){ // real photos keep their real extension; only generated placeholders are .svg
-  if(!p.src) return "svg";
-  const m=/^data:image\/(png|jpe?g|webp|heic|gif)/i.exec(p.src) || /\.(png|jpe?g|webp|heic|gif)(\?|$)/i.exec(p.src);
-  return m ? m[1].toLowerCase().replace("jpeg","jpg") : "jpg";
+// "Check again" / "Check for new photos": re-read the demo data (another tab may have sent photos)
+function refresh(btn){
+  const ic=btn && btn.querySelector(".ic"); if(btn){ btn.disabled=true; if(ic) ic.classList.add("g-turn"); }
+  setTimeout(()=>{ state=load(); if(btn){ btn.disabled=false; if(ic) ic.classList.remove("g-turn"); } render(); }, 500);
 }
-function download(p){
-  const a=document.createElement("a");
-  if(p.src){ a.href=p.src; }
-  else{ const svg=decodeURIComponent(svgFor(p,{wm:false}).replace("data:image/svg+xml;charset=utf-8,","")); const blob=new Blob([svg],{type:"image/svg+xml"}); a.href=URL.createObjectURL(blob); }
-  a.download=`${BRAND.name.replace(/\s+/g,"_")}_${p.color}_${p.ski}_${p.stop.replace(/\s+/g,"")}.${extOf(p)}`;
-  document.body.appendChild(a); a.click(); a.remove();
-  toast(t("dlToast"));
-}
-
-/* ---------- modal/toast ---------- */
-function openSheet(html){ $("#sheet").innerHTML=html; $("#overlay").classList.add("on"); }
-function closeSheet(){ $("#overlay").classList.remove("on"); }
-$("#overlay").onclick=e=>{ if(e.target.id==="overlay") closeSheet(); };
-let toastT; function toast(msg){ const el=$("#toast"); el.textContent=msg; el.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("show"),2600); }
-
-function premiumSheet(kind){
-  openSheet(t(kind==="ai" ? "premAi" : "premSend"));
-  $("#ok").onclick=closeSheet;
+function goTourist(sel){
+  Object.assign(ui.c,{ day:sel.day||todayStr, session:sel.session||null, color:sel.color||null, expanded:true, skiOpen:false, ski:"" });
+  autoPick(); setView("tourist");
 }
 
-/* ---------- WIRE ---------- */
-$$(".tabs button").forEach(b=>b.onclick=()=>setView(b.dataset.view));
-$$("[data-goto]").forEach(b=>b.onclick=()=>setView(b.dataset.goto));
-$("#gMinus").onclick=()=>stepSki(-1);
-$("#gPlus").onclick=()=>stepSki(+1);
-$("#gSki").onchange=clampSki;
-$("#gAddDemo").onclick=addDemoBatch;
-$("#gPickReal").onclick=()=>$("#gFile").click();
-$("#gFile").onchange=e=>pickReal(e.target.files);
-$("#cSki").oninput=e=>{ ui.c.ski=e.target.value===""?null:e.target.value; ui.c.all=false; renderGrid(); };
-$("#cAll").onclick=()=>{ ui.c.all=true; renderGrid(); };
-$("#cAI").onclick=()=>premiumSheet("ai");
-$("#cSend").onclick=()=>premiumSheet("send");
-$$(".lang button").forEach(b=>b.onclick=()=>applyLang(b.dataset.lang));
-$("#resetBtn").onclick=()=>{ lsRemove(KEY); state=seed(); toast(t("resetToast")); if(ui.view!=="home"){renderGuide();renderClient();} };
+/* ---------- viewer (native <dialog>: modal, Esc closes; ←/→, arrows and swipe move) ---------- */
+const VIEW={open:false, i:0, id:null};
+let dlUrl=null;
+function fileName(p){
+  const ext = !p.src ? "svg" : ((/^data:image\/(png|jpe?g|webp|gif)/i.exec(p.src) || /\.(png|jpe?g|webp|heic|gif)(\?|$)/i.exec(p.src) || [,"jpg"])[1].toLowerCase().replace("jpeg","jpg"));
+  return `${BRAND.name.replace(/\s+/g,"_")}_${p.color}_${p.ski||"photo"}_${String(p.stop||"").replace(/[^A-Za-z0-9]+/g,"")}.${ext}`;
+}
+function openView(i){ const ov=$("#ov"); if(!ov.open) ov.showModal(); VIEW.open=true; showView(i); $("#ovDl").focus(); }
+function showView(i){
+  if(!ORDER.length) return closeView();
+  VIEW.i=Math.max(0, Math.min(i, ORDER.length-1));
+  const p=ORDER[VIEW.i]; VIEW.id=p.id;
+  const img=$("#ovImg"), src=photoSrc(p); if(img.getAttribute("src")!==src) img.src=src;
+  img.alt=t("photo_n",{i:VIEW.i+1, n:ORDER.length});
+  setText($("#ovCount"), t("of",{i:VIEW.i+1, n:ORDER.length}));
+  $("#ovMine").hidden=!MATCHED.has(p);
+  // Save photo: real photos as they are; generated ones as a clean SVG file
+  const a=$("#ovDl"); if(dlUrl){ URL.revokeObjectURL(dlUrl); dlUrl=null; }
+  if(p.src) a.href=p.src; else { dlUrl=URL.createObjectURL(new Blob([svgText(p)],{type:"image/svg+xml"})); a.href=dlUrl; }
+  a.setAttribute("download", fileName(p));
+  $("#ovPrev").hidden = VIEW.i===0;
+  $("#ovNext").hidden = VIEW.i>=ORDER.length-1;
+}
+function stepView(d){
+  const j=VIEW.i+d; if(j<0 || j>=ORDER.length) return; showView(j);
+  const a=document.activeElement; if(!a || a===document.body || a.hidden) $("#ovDl").focus();
+}
+function closeView(){ const ov=$("#ov"); if(ov.open) ov.close(); }
+function wireViewer(){
+  const ov=$("#ov"), stage=$("#ovStage");
+  $("#ovX").onclick=closeView; $("#ovPrev").onclick=()=>stepView(-1); $("#ovNext").onclick=()=>stepView(1);
+  ov.addEventListener("close", ()=>{ VIEW.open=false; const back=$$("#grid .g-tile")[VIEW.i]; if(back) back.focus(); });
+  stage.addEventListener("click", e=>{ if(e.target===stage) closeView(); });
+  ov.addEventListener("keydown", e=>{
+    if(e.key==="ArrowLeft"){ e.preventDefault(); stepView(-1); }
+    else if(e.key==="ArrowRight"){ e.preventDefault(); stepView(1); }
+  });
+  let x0=null, y0=0;
+  stage.addEventListener("touchstart", e=>{ if(e.touches.length!==1){ x0=null; return; } x0=e.touches[0].clientX; y0=e.touches[0].clientY; }, {passive:true});
+  stage.addEventListener("touchend", e=>{
+    if(x0===null) return; const dx=e.changedTouches[0].clientX-x0, dy=e.changedTouches[0].clientY-y0; x0=null;
+    if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.5) stepView(dx<0?1:-1);
+  }, {passive:true});
+}
 
-/* ---------- INIT ---------- */
-// brand logo is an image in the header (assets/logo.png)
-$("#homeQr").src = qrSvg();
-document.documentElement.style.setProperty("--accent", BRAND.accent);
+/* ================= LANGUAGE ================= */
+function applyLang(l){
+  lang = I18N[l] ? l : "en";
+  lsSet(LANG_KEY, lang);
+  document.documentElement.lang = lang;
+  document.title = t("docTitle");
+  $$("[data-i18n]").forEach(n=>setText(n, t(n.dataset.i18n)));
+  $$("[data-i18n-aria]").forEach(n=>n.setAttribute("aria-label", t(n.dataset.i18nAria)));
+  $$("#lang button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.l===lang)));
+  $("#ovPrev").setAttribute("aria-label", t("prev")); $("#ovNext").setAttribute("aria-label", t("next"));
+  const th=$("#theme");
+  th.setAttribute("data-label-auto",t("themeAuto")); th.setAttribute("data-label-light",t("themeLight"));
+  th.setAttribute("data-label-dark",t("themeDark")); th.setAttribute("data-label-title",t("themeTitle"));
+  if(window.joTheme) window.joTheme.relabel();
+  const foot=$("#foot"); foot.textContent="";
+  foot.appendChild(el("p","",t("foot"))); if(t("thDraft")) foot.appendChild(el("p","",t("thDraft"))); // Thai draft marker
+  buildGuideChips();
+  $$("#bar button").forEach(b=>{ b._sig=null; });
+  render();
+  if(VIEW.open) showView(VIEW.i);
+}
+
+/* ================= WIRE ================= */
+$("#lang").addEventListener("click", e=>{ const b=e.target.closest("button[data-l]"); if(b && b.dataset.l!==lang) applyLang(b.dataset.l); });
+$("#views").addEventListener("click", e=>{ const b=e.target.closest("button[data-v]"); if(b && b.dataset.v!==ui.view) setView(b.dataset.v); });
+$("#tryGuide").onclick=()=>setView("guide");
+$("#dayToggle").addEventListener("click", e=>{ const b=e.target.closest("button[data-id]"); if(!b) return; ui.g.day=b.dataset.id; renderGuide(); renderBar(); });
+$("#pick").onclick=()=>pickDemo(DEMO_BATCH);
+$("#add").onclick=()=>pickDemo(DEMO_BATCH);
+$("#own").onclick=()=>$("#file").click();
+$("#file").onchange=e=>{ const f=e.target.files; pickOwn(f).finally(()=>{ e.target.value=""; }); };
+$("#send").onclick=()=>{ if(barMode()==="send") startSend(); };
+$("#undoBtn").onclick=undoRemove;
+$("#toTourist").onclick=()=>goTourist(outcome||{});
+$("#galLink").onclick=()=>goTourist({day:selectedDay(), session:ui.g.session, color:ui.g.color});
+// a disabled main button lets taps through (pointer-events: none): show the step that is missing
+$("#bar").addEventListener("click", e=>{
+  const s=$("#send"); if(s.hidden || !s.disabled) return;
+  const r=s.getBoundingClientRect();
+  if(e.clientX<r.left || e.clientX>r.right || e.clientY<r.top || e.clientY>r.bottom) return;
+  const step=!ui.g.session ? $("#stepTrip") : !ui.g.color ? $("#stepColor") : null; if(!step) return;
+  step.scrollIntoView({behavior:"smooth", block:"center"});
+  step.classList.remove("need"); void step.offsetWidth; step.classList.add("need");
+});
+$("#change").onclick=()=>{
+  ui.c.expanded=true; renderTourist();
+  const on=$("#groupsC .chip[aria-pressed=\"true\"]") || $("#steps .chip"); if(on) on.focus({preventScroll:true});
+  $("#steps").scrollIntoView({block:"nearest"});
+};
+$("#skiOpen").onclick=()=>{ ui.c.skiOpen=true; renderPhotos(); $("#skiInput").focus(); };
+$("#skiInput").addEventListener("input", e=>{ ui.c.ski=e.target.value; renderPhotos(); });
+$("#skiClear").onclick=()=>{ ui.c.ski=""; renderPhotos(); $("#skiInput").focus(); };
+$("#more").onclick=()=>refresh($("#more"));
+$("#resetBtn").onclick=()=>{ $("#resetBtn").hidden=true; $("#resetDone").hidden=true; $("#resetAsk").hidden=false; $("#resetYes").focus(); };
+$("#resetNo").onclick=()=>{ $("#resetAsk").hidden=true; $("#resetBtn").hidden=false; $("#resetBtn").focus(); };
+$("#resetYes").onclick=()=>{
+  gen++; lsRemove(KEY); state=seed();
+  queue=[]; sending=null; outcome=null; picked=null; if(undo){ clearTimeout(undo.timer); undo=null; }
+  Object.assign(ui.c,{day:todayStr, session:null, color:null, expanded:true, skiOpen:false, ski:""}); autoPick();
+  $("#resetAsk").hidden=true; $("#resetBtn").hidden=false; $("#resetDone").hidden=false; $("#resetBtn").focus();
+  render();
+};
+// photos sent from another tab of this browser show up here too
+window.addEventListener("storage", e=>{ if(e.key===KEY && state){ state=load(); render(); } });
+wireViewer();
+
+/* ================= INIT ================= */
+function applyParams(){
+  const s=PARAMS.get("session")||PARAMS.get("trip"), c=PARAMS.get("color"), d=PARAMS.get("day")||"";
+  const sOk=!!sessionOf(s), cOk=!!colorOf(c);
+  if(sOk) ui.g.session=s; if(cOk) ui.g.color=c;
+  if(d==="yesterday" || d===yesterdayStr) ui.g.day="yesterday";
+  ui.c.day = d==="yesterday" ? yesterdayStr : (/^\d{4}-\d{2}-\d{2}$/.test(d) ? d : todayStr);
+  ui.c.session = sOk ? s : null; ui.c.color = cOk ? c : null;
+  autoPick();
+  const ski=PARAMS.get("ski"); if(ski){ ui.c.skiOpen=true; ui.c.ski=normSki(ski); }
+  const n=parseInt(PARAMS.get("pick"),10); if(n>0) pickDemo(Math.min(n,PICK_MAX), true);
+}
+ui.view = VIEWS[PARAMS.get("view")] || "about";
+applyLang(lang); // About works before the demo data is ready
 let booted=false;
 function boot(){
   if(booted) return; booted=true;
-  state = load();
-  applyLang(lsGet(LANG_KEY) || "en");
-  setView("home");
+  state=load();
+  applyParams();
+  render();
+  document.body.setAttribute("data-ready","1");
 }
 // Real sample photos (sample_photos/manifest.js) are gitignored and exist only on a local machine.
 // On a public host (GitHub Pages etc.) the file is never requested → no 404 in the console;
 // locally it is loaded dynamically and a missing file is simply ignored (placeholders are used).
-const LOCAL_HOST = location.protocol==="file:" || /^(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)$/.test(location.hostname);
-if(LOCAL_HOST){
+if(USE_REAL){
   const sc=document.createElement("script"); sc.src="sample_photos/manifest.js"; sc.async=true;
   sc.onload=boot; sc.onerror=boot; document.head.appendChild(sc);
   setTimeout(boot, 3000); // safety net: never wait on the manifest forever
