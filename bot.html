@@ -9,17 +9,10 @@
 <link rel="stylesheet" href="assets/jo/jetops.css">
 <script src="assets/jo/theme.js"></script>
 <style>
-  /* LINE bot showcase — page layout only. Tokens and components (.appbar .seg .btn .card .badge .note .dot .sk
-     .footer-note) come from assets/jo/jetops.css. The only raw colours are the two team-wristband dots (data). */
-  [hidden] { display: none !important; }
+  /* LINE bot showcase — page layout only. Tokens and components (.appbar .appbar-tools .seg .btn .card .badge .note
+     .dot .tag .sk .footer-note) come from assets/jo/jetops.css. The only raw colours are the two team-wristband dots (data). */
   html { scroll-behavior: smooth; }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
-
-  /* header: one row on a computer, logo row + controls row on a phone (same as the weather board) */
-  .appbar-in { flex-wrap: wrap; gap: var(--s2) var(--s3); padding-block: var(--s2); }
-  .op-text { min-width: 0; }
-  .ctrls { display: flex; align-items: center; gap: var(--s2); }
-  @media (max-width: 559px) { .appbar .spacer { display: none; } .ctrls { flex-basis: 100%; justify-content: space-between; } }
 
   .wrap { max-width: var(--w-page); margin: 0 auto; padding: var(--s5) var(--s4) var(--s6); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s7); }
   @media (min-width: 1024px) { .wrap { padding: var(--s6) var(--s5); gap: var(--s8); } }
@@ -94,13 +87,6 @@
   .ev-top { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3); }
   .tb { display: inline-flex; align-items: center; gap: var(--s2); font-weight: 800; }
   .tb .ic { width: 22px; height: 22px; }
-  .badge-plain { background: var(--bg-2); color: var(--muted); }
-  .tags { display: flex; flex-wrap: wrap; gap: var(--s2); }
-  .tag { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: var(--r-pill); background: var(--surface-2);
-    border: 1px solid var(--line); font-size: var(--fs-caption); font-weight: 700; line-height: 1.5; }
-  .tag .k { color: var(--muted); font-weight: 600; }
-  .tag .ic { width: 16px; height: 16px; color: var(--muted); }
-  .tag .dot { width: 12px; height: 12px; }
   .dot-blue { background: #0091d5; } .dot-yellow { background: #f5c518; }   /* team wristband colours = data */
   .out { display: flex; align-items: flex-start; gap: var(--s2); font-size: var(--fs-body-s); font-weight: 600; color: var(--muted); }
   .out .ic { width: 20px; height: 20px; margin-top: 2px; }
@@ -210,7 +196,7 @@
     <img class="op-logo" src="assets/logo.png" alt="" width="63" height="36">
     <div class="op-text"><div class="op-name">Phuket Jetski Club</div><div class="op-sub" data-i18n="opSub">LINE ops bot</div></div>
     <div class="spacer"></div>
-    <div class="ctrls">
+    <div class="appbar-tools">
       <div class="seg" id="uiLang" role="group" aria-label="Language" data-i18n-aria="langLabel"><button type="button" data-l="en" lang="en">EN</button><button type="button" data-l="th" lang="th">ไทย</button><button type="button" data-l="ru" lang="ru">RU</button></div>
       <button type="button" class="btn btn-quiet btn-s" data-jo-theme-toggle data-label-auto="Auto" data-label-light="Light" data-label-dark="Dark" data-label-title="Theme"></button>
     </div>
@@ -343,7 +329,7 @@ const TYPE_IC = { weather_report:"waves", breakdown:"wrench", incident:"life-buo
   client_issue:"message-circle", office_notice:"info", dispatch:"ship", masks:"list-checks", other:"info" };
 const TYPE_SEC = { weather_report:"wx", incident:"inc", breakdown:"br", photo_status:"ph", shift:"sh", client_issue:"cl", office_notice:"of" };
 const SEC_IC = { high:"triangle-alert", wx:"waves", inc:"life-buoy", br:"wrench", ph:"camera", sh:"users", cl:"message-circle", of:"info" };
-const SEV = { high:["crit","triangle-alert"], medium:["warn","circle-alert"], info:["plain","info"] };
+const SEV = { high:["crit","triangle-alert"], medium:["warn","circle-alert"], info:["n","info"] };   // .badge-n: neutral (jetops)
 const STEP_MS = 650, READ_MS = 900;                                             // playback: bubble → card, card → next
 const PARAMS = new URLSearchParams(location.search);
 const LOCALE = { en:"en-GB", th:"th-TH", ru:"ru-RU" };

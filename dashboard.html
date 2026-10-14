@@ -9,9 +9,9 @@
 <link rel="stylesheet" href="assets/jo/jetops.css">
 <script src="assets/jo/theme.js"></script>
 <style>
-  /* Office dashboard — page layout only. Tokens and components (.appbar .seg .btn .card .badge .note .chip .dot
-     .num .empty .footer-note) come from assets/jo/jetops.css. The only raw colours here are DATA colours:
-     the map's sea and land (below, as --map-* tokens with a dark variant) and the team dots (GROUPS in the script). */
+  /* Office dashboard — page layout only. Tokens and components (.appbar .appbar-tools .seg .btn .card .card-h .tile
+     .badge .badge-n .note .chip .dot .rows .num .empty .demo .footer-note) come from assets/jo/jetops.css.
+     The only raw colours here are DATA colours: the map's sea and land (below, as --map-* tokens with a dark variant) and the team dots (GROUPS in the script). */
   :root {
     --map-sea: #D5EBE8; --map-land: #EFE7DA; --map-coast: #C2B39C; --map-land-ink: #5B5043;
     --map-route: #4D5D6A; --map-edge: #0F2433;
@@ -26,23 +26,13 @@
     --map-sea: #0E2A35; --map-land: #1C3644; --map-coast: #33576A; --map-land-ink: #B3AEA4;
     --map-route: #8FA9B8; --map-edge: #F3EDE3;
   }
-  [hidden] { display: none !important; }
   html { scroll-padding-top: var(--s4); }
-
-  /* header: one row on a computer, logo row + controls row on a phone */
-  .appbar-in { flex-wrap: wrap; gap: var(--s2) var(--s3); padding-block: var(--s2); }
-  .op-text { min-width: 0; }
-  .ctrls { display: flex; align-items: center; gap: var(--s2); }
-  @media (max-width: 559px) { .appbar .spacer { display: none; } .ctrls { flex-basis: 100%; justify-content: space-between; } }
 
   .wrap { max-width: var(--w-page); margin: 0 auto; padding: var(--s4) var(--s4) var(--s5); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s5); }
   @media (min-width: 1024px) { .wrap { padding: var(--s5); } }
   @media (max-width: 559px) { .card { padding: var(--s4); } }
   .sec-h { font-size: var(--fs-h3); margin-bottom: var(--s3); }
-  .card-h { display: grid; gap: var(--s1); }
-  .card-h p { color: var(--muted); font-size: var(--fs-body-s); }
   .card-top { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--s3); }
-  .badge-n { background: var(--bg-2); color: var(--fg); } /* neutral: a type, not a status */
 
   /* the moment on screen (demo time) */
   .now { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s2) var(--s4); }
@@ -68,10 +58,8 @@
   .kpis > :last-child:nth-child(odd) { grid-column: 1 / -1; }
   @media (min-width: 720px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } .kpis > :last-child:nth-child(odd) { grid-column: auto; } }
   @media (min-width: 1024px) { .kpis { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
-  .tile { padding: var(--s4); display: grid; gap: var(--s1); align-content: start; min-width: 0; }
-  .tile-k { display: flex; align-items: center; gap: var(--s2); font-weight: 700; font-size: var(--fs-body-s); line-height: 1.3; color: var(--muted); }
-  .tile-sub { font-size: var(--fs-body-s); font-weight: 600; color: var(--muted); line-height: 1.4; }
-  .tile .badge { margin-top: var(--s1); }
+  .tile-k { line-height: 1.3; }
+  .tile-sub { color: var(--muted); line-height: 1.4; }
 
   /* map + feed side by side on a computer */
   .main2 { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s5); }
@@ -140,9 +128,7 @@
 
   /* tech board, photos, shifts: short lists (no dense tables) */
   .grid3 { display: grid; gap: var(--s5); grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); align-items: start; }
-  .rows { list-style: none; margin: var(--s2) 0 0; padding: 0; }
-  .rows li { display: grid; gap: 2px; padding: var(--s3) 0; border-top: 1px solid var(--line); }
-  .rows li:first-child { border-top: 0; }
+  .rows { margin-top: var(--s2); }
   .r-t { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s2); }
   .r-t b { font-size: var(--fs-body); font-weight: 800; }
   .r-x { font-size: var(--fs-body-s); }
@@ -165,14 +151,12 @@
   @media (min-width: 720px) and (max-width: 1023px) { .eod-act .btn { justify-self: start; } }
   .eod-card .empty .btn { margin-top: var(--s1); }
 
-  /* demo-only controls, clearly set apart from the product */
-  .demo { border: 1.5px dashed var(--border); border-radius: var(--r-lg); padding: var(--s5); display: grid; gap: var(--s4); justify-items: start; }
+  /* demo-only controls (jetops .demo), a little more air here */
+  .demo { gap: var(--s4); }
   .demo p { max-width: 70ch; }
   .demo-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3); }
   #speedSeg button { min-width: 52px; }
   .demo-g { display: grid; gap: var(--s2); justify-items: start; }
-  .demo-links { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--s2); }
-  .demo-links a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--s2); font-weight: 700; }
   .footer-note { max-width: var(--w-read); margin: 0 auto; padding-top: 0; }
   .footer-note p + p { margin-top: var(--s2); }
   .footer-note a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 700; }
@@ -186,7 +170,7 @@
     <img class="op-logo" src="assets/logo.png" alt="" width="63" height="36">
     <div class="op-text"><div class="op-name">Phuket Jetski Club</div><div class="op-sub" data-i18n="opSub">Operations today</div></div>
     <div class="spacer"></div>
-    <div class="ctrls">
+    <div class="appbar-tools">
       <div class="seg" id="langsw" role="group" aria-label="Language" data-i18n-aria="langLabel"><button type="button" data-lang="en" lang="en">EN</button><button type="button" data-lang="th" lang="th">ไทย</button><button type="button" data-lang="ru" lang="ru">RU</button></div>
       <button type="button" class="btn btn-quiet btn-s" data-jo-theme-toggle data-label-auto="Auto" data-label-light="Light" data-label-dark="Dark" data-label-title="Theme"></button>
     </div>

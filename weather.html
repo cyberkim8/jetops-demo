@@ -9,15 +9,8 @@
 <link rel="stylesheet" href="assets/jo/jetops.css">
 <script src="assets/jo/theme.js"></script>
 <style>
-  /* Weather board — page layout only. Tokens and components (.appbar .seg .btn .card .badge .note .num
-     .footer-note) come from assets/jo/jetops.css; nothing here uses a raw colour. */
-  [hidden] { display: none !important; }
-
-  /* header: one row on a computer, logo row + controls row on a phone */
-  .appbar-in { flex-wrap: wrap; gap: var(--s2) var(--s3); padding-block: var(--s2); }
-  .op-text { min-width: 0; }
-  .ctrls { display: flex; align-items: center; gap: var(--s2); }
-  @media (max-width: 559px) { .appbar .spacer { display: none; } .ctrls { flex-basis: 100%; justify-content: space-between; } }
+  /* Weather board — page layout only. Tokens and components (.appbar .appbar-tools .seg .btn .card .card-h .tile
+     .badge .note .num .demo .footer-note) come from assets/jo/jetops.css; nothing here uses a raw colour. */
 
   /* minmax(0,1fr): the hourly strip scrolls inside itself instead of widening the page */
   .wrap { max-width: var(--w-page); margin: 0 auto; padding: var(--s4) var(--s4) var(--s5); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s4); }
@@ -29,12 +22,9 @@
   }
 
   .toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s3); }
-  .seg-day button { min-height: 48px; padding: 0 var(--s5); font-size: var(--fs-body-s); }
+  .day-pick button { min-height: 48px; padding: 0 var(--s5); font-size: var(--fs-body-s); }
   .chip-src { display: inline-flex; align-items: center; gap: 6px; font: 600 var(--fs-caption)/1.3 var(--font); color: var(--muted); }
   .chip-src .ic { width: 18px; height: 18px; color: var(--ok); }
-  .card-h { display: grid; gap: var(--s1); }
-  .card-h p { color: var(--muted); font-size: var(--fs-body-s); }
-  .note .note-act { margin-top: var(--s3); }
 
   /* verdict: the hero. Tinted with the status token, never a saturated slab */
   .verdict { --st: var(--muted); --st-soft: var(--surface); background: var(--st-soft);
@@ -57,13 +47,9 @@
   .sec-h { font-size: var(--fs-h3); }
   .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3); margin-top: var(--s3); }
   @media (min-width: 720px) { .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-  .tile { padding: var(--s4); display: grid; gap: var(--s1); align-content: start; min-width: 0; }
-  .tile-k { display: flex; align-items: center; gap: var(--s2); font-weight: 700; font-size: var(--fs-body-s); color: var(--muted); }
   .tile-v { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
   .tile-v .unit { font-weight: 700; color: var(--muted); }
-  .tile-sub { font-size: var(--fs-body-s); font-weight: 600; }
   .tile-worst { font-size: var(--fs-caption); color: var(--muted); font-weight: 600; }
-  .tile .badge { margin-top: var(--s1); }
 
   /* tide at the stops: stacked on a phone, three columns on a computer */
   .tide-sum { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s4); margin-top: var(--s4); font-size: var(--fs-body-s); }
@@ -116,11 +102,6 @@
   .msg { white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--fs-body-s); line-height: 1.55; }
   .brief-lang { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s2) var(--s3); }
 
-  /* demo-only controls, clearly set apart from the product */
-  .demo { border: 1.5px dashed var(--border); border-radius: var(--r-lg); padding: var(--s5); display: grid; gap: var(--s3); justify-items: start; }
-  .demo p { max-width: 68ch; }
-  .demo-links { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--s2); }
-  .demo-links a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--s2); font-weight: 700; }
   .footer-note { max-width: var(--w-read); margin: 0 auto; padding-top: 0; }
   .footer-note p + p { margin-top: var(--s2); }
   .footer-note a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 700; }
@@ -141,7 +122,7 @@
     <img class="op-logo" src="assets/logo.png" alt="" width="63" height="36">
     <div class="op-text"><div class="op-name">Phuket Jetski Club</div><div class="op-sub" data-i18n="opSub">Weather today</div></div>
     <div class="spacer"></div>
-    <div class="ctrls">
+    <div class="appbar-tools">
       <div class="seg" id="uiLang" role="group" aria-label="Language" data-i18n-aria="langLabel"><button type="button" data-l="en" lang="en">EN</button><button type="button" data-l="th" lang="th">ไทย</button><button type="button" data-l="ru" lang="ru">RU</button></div>
       <button type="button" class="btn btn-quiet btn-s" data-jo-theme-toggle data-label-auto="Auto" data-label-light="Light" data-label-dark="Dark" data-label-title="Theme"></button>
     </div>
@@ -150,7 +131,7 @@
 
 <main class="wrap">
   <div class="toolbar">
-    <div class="seg seg-day" id="dayView" role="group" aria-label="Day" data-i18n-aria="dayLabel"><button type="button" data-d="0" aria-pressed="true" data-i18n="dayToday">Today</button><button type="button" data-d="1" aria-pressed="false" data-i18n="dayTomorrow">Tomorrow</button></div>
+    <div class="seg day-pick" id="dayView" role="group" aria-label="Day" data-i18n-aria="dayLabel"><button type="button" data-d="0" aria-pressed="true" data-i18n="dayToday">Today</button><button type="button" data-d="1" aria-pressed="false" data-i18n="dayTomorrow">Tomorrow</button></div>
     <span id="srcChip"></span>
   </div>
 

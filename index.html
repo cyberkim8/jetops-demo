@@ -10,41 +10,27 @@
 <link rel="stylesheet" href="assets/jo/jetops.css">
 <script src="assets/jo/theme.js"></script>
 <style>
-  /* Photo delivery demo — page layout only. Tokens and components (.appbar .seg .btn .card .chip .dot .badge
-     .note .empty .num .actionbar .footer-note) come from assets/jo/jetops.css (JetOps guideline v1).
-     The Guide and Tourist screens copy the layout of the real apps from wave 1:
+  /* Photo delivery demo — page layout only. Tokens and components come from assets/jo/jetops.css (JetOps guideline v1):
+     .appbar .appbar-tools .seg .seg-view .seg-day .btn .card .chip .chips-trip .chips-color .dot .badge .note .empty
+     .ic-wrap .num .actionbar .summary .progress .undo .g-grid .g-tile .g-viewer .demo .demo-tip .footer-note.
+     The Guide and Tourist screens copy the page layout of the real apps:
        photo-pipeline/public/u/u.css (guide uploader) and photo-pipeline/public/g/g.css (tourist gallery)
-     — this page is deployed on its own, so the pieces it needs are copied here, not linked.
+     — this page is deployed on its own, so the page-only pieces it needs are copied here, not linked.
      The only raw colours: team dots (data) and the generated placeholder photos (image content). */
-  [hidden] { display: none !important; }
   html { -webkit-tap-highlight-color: transparent; }
   body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
   main { flex: 1 0 auto; width: 100%; }
   button { -webkit-touch-callout: none; }
 
-  /* ---- header: logo + name left; language + theme right (own row on a phone) — as in the guide app ---- */
-  .appbar { padding-top: env(safe-area-inset-top); }
-  .appbar-in { max-width: 1040px; flex-wrap: wrap; row-gap: var(--s2); padding-top: var(--s2); padding-bottom: var(--s2);
-    padding-left: max(var(--s4), env(safe-area-inset-left)); padding-right: max(var(--s4), env(safe-area-inset-right)); }
-  .op-text { min-width: 0; }
-  .appbar-tools { display: flex; align-items: center; gap: var(--s2); }
+  /* ---- header (jetops .appbar-tools) — as in the guide app ---- */
+  .appbar-in { max-width: 1040px; }
   .appbar [data-jo-theme-toggle] { padding: 0 var(--s3); }
-  @media (max-width: 599px) {
-    .appbar .spacer { display: none; }
-    .appbar-tools { flex-basis: 100%; justify-content: space-between; padding-bottom: var(--s1); }
-  }
+  @media (max-width: 599px) { .appbar-tools { padding-bottom: var(--s1); } }
 
   /* ---- demo screen switch: About · Guide · Tourist ---- */
   .viewbar { display: flex; justify-content: center; padding: var(--s4) var(--s4) 0; }
-  .seg-view { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; max-width: 480px; }
-  .seg-view button { padding: 0 var(--s2); font-size: var(--fs-body-s); }
-
-  /* demo-only hints, clearly set apart from the product (dashed, like the weather demo) */
-  .demo-tip { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s3); align-items: start;
-    padding: var(--s3) var(--s4); border: 1.5px dashed var(--border); border-radius: var(--r-md);
-    color: var(--muted); font-size: var(--fs-body-s); font-weight: 600; line-height: 1.5; }
-  .demo-tip > .ic { margin-top: 1px; }
-  .demo-tip .btn { margin: var(--s1) 0 calc(-1 * var(--s2)) calc(-1 * var(--s3)); }
+  .seg-view { max-width: 480px; }
+  .seg-view button { font-size: var(--fs-body-s); }
 
   /* ================= About ================= */
   .v-about { max-width: 880px; margin: 0 auto; padding: var(--s5) var(--s4) var(--s6); display: grid;
@@ -70,25 +56,16 @@
   .shows ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s4); }
   @media (min-width: 720px) { .shows ul { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s5); } }
   .shows li { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: var(--s3); align-items: start; }
-  .shows .ic-wrap { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center;
-    background: var(--primary-soft); color: var(--primary-strong); }
   .shows li b { display: block; }
   .shows li p { color: var(--muted); font-size: var(--fs-body-s); }
-  .demo { border: 1.5px dashed var(--border); border-radius: var(--r-lg); padding: var(--s5); display: grid; gap: var(--s3); justify-items: start; }
-  .demo p { max-width: 68ch; }
   .demo .note { width: 100%; }
-  .demo .note-act { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s3); }
-  .demo-links { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--s2); }
-  .demo-links a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--s2); font-weight: 700; }
+  .demo .note-act { display: flex; flex-wrap: wrap; gap: var(--s2); }
 
   /* ================= Guide (copy of the guide uploader layout, u.css) ================= */
   .v-guide { max-width: var(--w-read); width: 100%; margin: 0 auto; padding: var(--s4) var(--s4) var(--s6);
     display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s4); align-content: start; }
-  .note > div { min-width: 0; }
   .note b { font-weight: 800; }
   .note .names { display: block; margin-top: var(--s1); color: var(--muted); font-size: var(--fs-caption); font-weight: 600; overflow-wrap: anywhere; }
-  .note .note-act { margin-top: var(--s3); }
-  .note .btn .ic { color: inherit; margin-top: 0; }
 
   .choose { display: grid; gap: var(--s5); }
   .step { display: grid; gap: var(--s3); border-radius: var(--r-md); }
@@ -96,28 +73,6 @@
   .step.need { animation: u-need 1.6s ease-out; }
   @keyframes u-need { 0%, 60% { box-shadow: 0 0 0 4px var(--surface), 0 0 0 7px var(--warn); } 100% { box-shadow: 0 0 0 4px var(--surface), 0 0 0 7px transparent; } }
 
-  .seg-day { display: grid; grid-template-columns: 1fr 1fr; width: 100%; border-radius: var(--r-md); }
-  .seg-day button { min-height: var(--h-control); padding: var(--s2) var(--s3); display: grid; align-content: center; justify-items: center;
-    font: 700 var(--fs-body)/1.3 var(--font); }
-  .seg-day button .d { font-size: var(--fs-caption); font-weight: 600; color: var(--muted); }
-  .seg-day button[aria-pressed="true"] .d { color: inherit; }
-
-  .v-guide .chip { position: relative; border-width: 2px; }
-  /* chosen = filled chip + thick border + a check badge on the corner (never colour alone) */
-  .chip .ck { display: none; position: absolute; top: -8px; right: -6px; width: 24px; height: 24px; padding: 3px; border-radius: 50%;
-    background: var(--primary); color: var(--on-primary); stroke-width: 3; box-shadow: 0 0 0 2px var(--surface); }
-  .chip[aria-pressed="true"] .ck { display: block; }
-  .chips-trip { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); }
-  .chips-trip .chip { min-height: var(--h-control); padding: var(--s2) var(--s3); border-radius: var(--r-md);
-    display: grid; justify-items: center; align-content: center; gap: 0; }
-  .chips-trip .chip .big { font-size: var(--fs-h3); font-weight: 800; line-height: 1.25; }
-  .chips-trip .chip .small { font-size: var(--fs-caption); font-weight: 600; line-height: 1.35; color: var(--muted); }
-  .chips-trip .chip[aria-pressed="true"] .small { color: inherit; }
-  .chips-color { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  @media (min-width: 600px) { .chips-color { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-  .chips-color .chip { padding: var(--s1) var(--s3) var(--s1) var(--s4); text-align: left; }
-  .chips-color .chip > span:not(.dot) { min-width: 0; overflow-wrap: anywhere; }
-  .chips-color .dot { width: 20px; height: 20px; }
 
   .photos { display: grid; gap: var(--s4); scroll-margin-top: var(--s4); }
   .photos-h { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); }
@@ -145,8 +100,6 @@
   .q.done .st { background: var(--ok-soft); color: var(--ok); }
   .q.up img { opacity: .8; }
 
-  .undo { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); padding-left: var(--s4);
-    border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--line); font-size: var(--fs-body-s); font-weight: 600; }
   .status { display: grid; gap: var(--s3); }
   .status:empty { display: none; }
   .today-line { display: flex; flex-direction: column; align-items: flex-start; gap: 0;
@@ -163,12 +116,6 @@
   .result:empty { display: none; }
   .result .note { padding: var(--s3) var(--s4); }
   .result .note-act { margin-top: var(--s2); }
-  .summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 6px; text-align: center;
-    font-size: var(--fs-body-s); font-weight: 700; line-height: 1.4; }
-  .summary .sep { color: var(--muted); }
-  .summary .dot { width: 14px; height: 14px; }
-  .progress { height: 6px; border-radius: var(--r-pill); background: var(--bg-2); overflow: hidden; }
-  .progress i { display: block; height: 100%; width: 0; background: var(--primary); transition: width .2s; }
   .btn[aria-busy="true"] { cursor: progress; }
   .btn[aria-busy="true"]:active { transform: none; }
   /* a disabled main button lets the tap through to the bar, which scrolls to the missing step */
@@ -223,56 +170,15 @@
   .g-ski { display: grid; gap: var(--s2); max-width: 520px; }
   .g-ski-row { display: flex; gap: var(--s2); }
   .g-ski-row .input { flex: 1; min-width: 0; }
-
-  .g-grid { display: grid; gap: var(--s2); grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  @media (min-width: 600px) { .g-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); } }
-  @media (min-width: 900px) { .g-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
   .g-grid:empty { display: none; }
-  .g-tile { position: relative; display: block; width: 100%; aspect-ratio: 1; padding: 0; margin: 0; overflow: hidden;
-    border: 0; border-radius: var(--r-md); background: var(--bg-2); cursor: zoom-in; font: inherit; color: inherit; }
-  .g-tile img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .2s; }
-  @media (hover: hover) { .g-tile:hover img { transform: scale(1.03); } }
-  .g-tile:focus-visible { outline-offset: 3px; }
-  .g-tile.mine { box-shadow: 0 0 0 3px var(--primary); }
-  .g-tile .badge { position: absolute; left: var(--s2); top: var(--s2); box-shadow: var(--shadow-1); }
-  .g-turn { animation: jo-spin 1.2s linear infinite; }
-  @media (prefers-reduced-motion: reduce) { .g-turn { animation-duration: 3.6s; } .g-tile img { transition: none; } }
   .g-more { justify-self: center; }
   .g-msg .empty .h3 { max-width: 30ch; text-wrap: balance; }
   .g-msg .empty p { text-wrap: balance; }
 
   /* "coming later" teaser: a quiet card, no button */
   .g-later { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: var(--s3); align-items: start; box-shadow: none; background: var(--surface-2); }
-  .g-later .ic-wrap { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: var(--bg-2); color: var(--muted); }
+  .g-later .ic-wrap { background: var(--bg-2); color: var(--muted); }
   .g-later p { color: var(--muted); font-size: var(--fs-body-s); margin-top: var(--s1); }
-
-  /* ---- viewer: full-screen sheet, always the dark palette (photos read best on dark) ---- */
-  .g-viewer { width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; padding: 0; border: 0;
-    background: var(--bg); color: var(--fg); }
-  .g-viewer[open] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
-  .g-viewer::backdrop { background: rgb(4 12 18 / 70%); }
-  body:has(.g-viewer[open]) { overflow: hidden; }
-  .g-v-top { display: flex; align-items: center; gap: var(--s3); min-height: 56px; padding: var(--s2) var(--s4);
-    padding-top: calc(var(--s2) + env(safe-area-inset-top)); }
-  .g-v-count { font-weight: 700; font-size: var(--fs-body-s); color: var(--muted); }
-  .g-v-stage { position: relative; min-height: 0; overflow: hidden; touch-action: pan-y pinch-zoom; }
-  .g-v-stage img { position: absolute; inset: 0; margin: auto; max-width: calc(100% - 2 * var(--s2)); max-height: 100%; border-radius: var(--r-md); }
-  .g-v-nav { position: absolute; top: 50%; transform: translateY(-50%); width: var(--h-control); height: var(--h-control);
-    display: grid; place-items: center; padding: 0; border-radius: 50%; cursor: pointer;
-    border: 1.5px solid var(--border); background: color-mix(in srgb, var(--bg) 72%, transparent); color: var(--fg); }
-  .g-v-nav:hover { background: var(--surface-2); }
-  .g-v-prev { left: var(--s3); }
-  .g-v-next { right: var(--s3); }
-  .g-v-actions { display: grid; gap: var(--s2); padding: var(--s3) var(--s4); padding-bottom: calc(var(--s4) + env(safe-area-inset-bottom)); }
-  .g-v-btns { display: flex; gap: var(--s3); width: 100%; max-width: 480px; margin: 0 auto; }
-  .g-v-btns .btn-primary { flex: 1; }
-  .g-v-hint { text-align: center; color: var(--muted); font-size: var(--fs-caption); max-width: 480px; margin: 0 auto; }
-  @media (min-width: 720px) {
-    .g-v-top { padding-inline: var(--s5); }
-    .g-v-stage img { max-width: calc(100% - 2 * (var(--h-control) + var(--s5))); }
-    .g-v-prev { left: var(--s4); }
-    .g-v-next { right: var(--s4); }
-  }
 
   .footer-note { max-width: var(--w-read); margin: 0 auto; }
   .footer-note p + p { margin-top: var(--s2); }
