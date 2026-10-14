@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0aa1dd">
-<title>Phuket Jet Ski Club — Crew Weather Board (demo)</title>
+<title>Phuket Jetski Club — Crew Weather Board (demo)</title>
 <style>
   :root{--accent:#0aa1dd;--ink:#0e1b26;--muted:#5b7080;--bg:#eef4f8;--card:#fff;--line:#dbe6ee;
     --ok:#2fa84f;--warn:#f5a623;--bad:#e5484d;--shadow:0 6px 22px rgba(14,40,60,.10);--r:16px}
@@ -55,6 +55,7 @@
   a.back{color:#fff;text-decoration:none;font-size:12.5px;font-weight:700;opacity:.9}
   h2{font-size:19px;margin:2px 0 6px}
   .muted{color:var(--muted);font-size:12.5px;line-height:1.5}
+  .hint{font-size:12px;color:var(--muted);line-height:1.5;margin-top:8px}
 </style>
 </head>
 <body>
@@ -75,38 +76,39 @@
       <button class="scen" data-scen="ok" style="color:var(--ok)" data-i18n="scenOk">🟢 calm</button> ·
       <button class="scen" data-scen="warn" style="color:#a86a00" data-i18n="scenWarn">🟡 borderline</button> ·
       <button class="scen" data-scen="bad" style="color:var(--bad)" data-i18n="scenBad">🔴 storm</button> ·
-      <button class="scen" data-scen="live" style="color:var(--accent)">⟳ live</button>
+      <button class="scen" data-scen="live" style="color:var(--accent)" data-i18n="scenLive">⟳ live</button>
       <style>.scen{background:none;border:0;padding:0;font:inherit;font-weight:700;cursor:pointer}</style>
     </div>
+    <div class="lang" id="dayView"><button data-d="0" class="on" data-i18n="dayToday">Today</button><button data-d="1" data-i18n="dayTomorrow">Tomorrow</button></div>
 
-    <div id="verdict" class="verdict warn"><div class="big">…</div><div class="why">Fetching the forecast for the Sirey → Ao Por corridor…</div></div>
+    <div id="verdict" class="verdict warn"><div class="big">…</div><div class="why">Fetching the forecast for the Sirey → Ao Po corridor…</div></div>
 
     <div class="card">
-      <div class="label" data-i18n="condLabel">Conditions on the Monkey crossing (now)</div>
+      <div class="label" id="condLabel" data-i18n="condLabel">Conditions on the Monkey crossing (now)</div>
       <div class="grid" id="metrics"></div>
     </div>
 
     <div class="card">
-      <div class="label" data-i18n="hoursLabel">Next hours (wave / wind)</div>
+      <div class="label" id="hoursLabel" data-i18n="hoursLabel">Next hours (wave / wind)</div>
       <div class="tl" id="timeline"></div>
     </div>
 
     <div class="card">
-      <div class="label" data-i18n="tideLabel">🌊 Today's tide windows <span style="text-transform:none;letter-spacing:0">— water at the shore (100% predictable, from tide tables)</span></div>
+      <div class="label" id="tideLabel" data-i18n="tideLabel">🌊 Today's tide windows <span style="text-transform:none;letter-spacing:0">— water at the shore (predictable — tide model)</span></div>
       <div id="tideHead" style="font-size:14px;font-weight:700;margin-bottom:10px">…</div>
       <div id="tideGates"></div>
       <div class="hint" data-i18n="tideHint">Levels are relative to mean sea level (MSL). Arrival times are calibrated from real guide reports (Monkey ~10:53 morning / ~15:25 afternoon); other stops provisional. Low water rarely cancels a stop — Monkey lands from the <b>sheltered side</b>, mangroves switch to <b>distant viewing (~50–70 m)</b>. On a tight window, reorder the stops to match the water.</div>
     </div>
 
     <div class="card">
-      <div class="label" data-i18n="crewLabel">Morning summary for the crew (WhatsApp/LINE group)</div>
+      <div class="label" id="crewLabel" data-i18n="crewLabel">Morning summary for the crew (WhatsApp/LINE group)</div>
       <pre class="msg" id="crewMsg">…</pre>
       <button class="btn ghost" id="copyCrew" data-i18n="copyCrew">📋 Copy summary</button>
     </div>
 
     <div class="card">
       <div class="label" data-i18n="briefLabel">Client briefing BEFORE the start (sets expectations → fewer refund disputes)</div>
-      <div class="lang" id="briefLang"><button data-l="en" class="on">EN</button><button data-l="ru">RU</button></div>
+      <div class="lang" id="briefLang"><button data-l="en" class="on">EN</button><button data-l="th">ไทย</button><button data-l="ru">RU</button></div>
       <pre class="msg" id="briefMsg">…</pre>
       <button class="btn ghost" id="copyBrief" data-i18n="copyBrief">📋 Copy briefing</button>
     </div>
@@ -118,63 +120,251 @@
 <script>
 (function(){
 "use strict";
+/* ============================ CONFIG ============================
+   Everything a deployer may need to change lives in this one object.
+
+   API_BASE / MARINE_BASE — weather + marine endpoints. The defaults are Open-Meteo's
+   FREE endpoints, which are licensed for NON-COMMERCIAL use only. For a paying client:
+   subscribe to the Open-Meteo customer API and put a tiny proxy in front of it (e.g. a
+   Cloudflare Worker) that adds the API key server-side, then point both values at that
+   proxy. Never put an API key in this page — it is public. The proxy must accept the
+   same query strings as /v1/forecast and /v1/marine. (See demo/README.md.)
+
+   THRESH — go / caution / no-go limits for the open crossing Ao Po → Monkey Island.
+   PRELIMINARY placeholder values — to be calibrated with the lead guide during the season.
+     wave = significant wave height at the crossing, metres
+     wind = sustained wind at 10 m, knots
+     value >= warn → 🟡 caution (lead guide decides on the water)
+     value >= bad  → 🔴 reroute to the Inside Program (never a cancellation)
+   dashboard.html uses the same numbers — keep both pages in sync.
+
+   SESSIONS — session start times shown in the UI (labels only). Changed on 12.10.2026 from
+   08:20 / 12:30 to 08:30 / 12:45; the actual pier departures (~09:30 / ~14:05) did not change.
+
+   ARRIVE — ABSOLUTE calibrated arrival times at each tide gate, per trip (m = morning, a = afternoon).
+   Source: 179 real guide pings at Monkey, Feb–Apr 2026 (04_direction_B_weather.md v2.2); they were
+   computed there as "session start 08:20 / 12:30 + offset". They are kept absolute so a new session
+   label does not shift them. Monkey is calibrated; the other stops are provisional — refine with the lead. */
+const CONFIG = {
+  API_BASE:    "https://api.open-meteo.com/v1/forecast",
+  MARINE_BASE: "https://marine-api.open-meteo.com/v1/marine",
+  THRESH: { wave:{warn:1.1, bad:1.8}, wind:{warn:15, bad:20} },
+  SESSIONS: { m:"08:30", a:"12:45" },
+  ARRIVE: { monkey:{m:"10:53", a:"15:25"}, rangyai:{m:"10:27", a:"15:50"},
+            mangroves:{m:"11:02", a:"15:20"}, naka:{m:"10:46", a:"15:50"} }
+};
 // East-coast Phuket corridor. Decision point: the open crossing to Monkey Island beyond Grand Marina.
-const SPOT = {name:"Ao Po Grand Marina → Monkey Island (open crossing)", lat:8.092, lon:98.425}; // midpoint of the actual crossing 8.068/98.427 → 8.1158/98.4234
-const THRESH = { wave:{warn:1.1, bad:1.8}, wind:{warn:15, bad:20} }; // config; calibrate with the lead guide during the season
+const SPOT = {lat:8.092, lon:98.425}; // midpoint of the actual crossing 8.068/98.427 → 8.1158/98.4234
+const TZ = "Asia/Bangkok";
+const TRIP_H = [8,16];   // "tomorrow" view: worst hour between 08:00 and 16:00 (both trips on the water)
 const $ = s=>document.querySelector(s);
-let briefLang="en", DATA=null;
+let briefLang="en";
 
 /* ================= i18n =================
-   EN is the default and complete. TH is an empty skeleton (falls back to EN).
-   RU (Russian guides) — keep all Cyrillic strictly inside I18N.ru below. */
+   EN is the default and complete. TH is a machine-drafted version that still needs proofreading
+   by a native speaker (see 14_localization_tasks.md). RU — Russian guides.
+   Keep all Cyrillic/Thai strictly inside I18N below. Values may be functions (runtime text). */
+const SPAN = '<span style="text-transform:none;letter-spacing:0">';
 const I18N = {
   en: {
     brand: "Crew Weather Board · demo",
     navPhoto: "← photo demo", navOps: "ops dashboard", navBot: "LINE bot →",
     frame: "⚓ Not about cancelling — we go out as usual. This is about <b>awareness and preparing the client</b>: will today's open crossing <b>Grand Marina → Monkey Island</b> go ahead, and what to tell clients BEFORE the start.",
     scenLabel: "Demo scenarios:",
-    scenOk: "🟢 calm", scenWarn: "🟡 borderline", scenBad: "🔴 storm",
+    scenOk: "🟢 calm", scenWarn: "🟡 borderline", scenBad: "🔴 storm", scenLive: "⟳ live",
+    dayToday: "Today", dayTomorrow: "Tomorrow",
     condLabel: "Conditions on the Monkey crossing (now)",
+    condLabel1: "Conditions on the Monkey crossing — tomorrow (worst trip hour 08–16)",
     hoursLabel: "Next hours (wave / wind)",
-    tideLabel: "🌊 Today's tide windows <span style=\"text-transform:none;letter-spacing:0\">— water at the shore (100% predictable, from tide tables)</span>",
+    hoursLabel1: "Tomorrow, trip hours (wave / wind)",
+    tideLabel: "🌊 Today's tide windows "+SPAN+"— water at the shore (predictable — tide model)</span>",
+    tideLabel1: "🌊 Tomorrow's tide windows "+SPAN+"— water at the shore (predictable — tide model)</span>",
     tideHint: "Levels are relative to mean sea level (MSL). Arrival times are calibrated from real guide reports (Monkey ~10:53 morning / ~15:25 afternoon); other stops provisional. Low water rarely cancels a stop — Monkey lands from the <b>sheltered side</b>, mangroves switch to <b>distant viewing (~50–70 m)</b>. On a tight window, reorder the stops to match the water.",
     crewLabel: "Morning summary for the crew (WhatsApp/LINE group)",
+    crewLabel1: "Tomorrow's morning summary for the crew (send it the evening before)",
     copyCrew: "📋 Copy summary",
     briefLabel: "Client briefing BEFORE the start (sets expectations → fewer refund disputes)",
     copyBrief: "📋 Copy briefing",
-    copied: "✓ Copied",
-    briefRough: "🌊 Hi! There is noticeable wave and wind today. The tour goes ahead, but the open crossing to Monkey Island may be shortened — it depends on the weather and is decided on the water for safety. You can also see monkeys at the Rang Yai photo stop. Hold on at the turns; we ride calmly in waves. No refund for weather, but you can reschedule to the morning trip (08:20) — just tell your guide in advance. All photos are included 📸",
-    briefGood: "☀️ Hi! The weather is good today — full route (9 islands) including the Monkey Island landing. Hold on at the turns and follow your guide. All ride photos are included 📸"
+    copied: "✓ Copied", copyFail: "✗ copy failed — select the text manually",
+    briefRough: "🌊 Hi! There is noticeable wave and wind today. The tour goes ahead, but the open crossing to Monkey Island may be shortened — it depends on the weather and is decided on the water for safety. You can also see monkeys at the Rang Yai photo stop. Hold on at the turns; we ride calmly in waves. No refund for weather, but you can reschedule to the morning trip ({M}) — just tell your guide in advance. All photos are included 📸",
+    briefGood: "☀️ Hi! The weather is good today — full route (9 islands) including the Monkey Island landing. Hold on at the turns and follow your guide. All ride photos are included 📸",
+    loading: "Fetching the forecast for the Sirey → Ao Po corridor…",
+    loadingLive: "Fetching the live forecast…",
+    badgeLive: "● LIVE Open-Meteo", badgeScen: n=>"demo scenario: "+n, badgeSample: "sample data · live unavailable",
+    spot: "Ao Po Grand Marina → Monkey Island (open crossing)",
+    monkey0: "🐒 Monkey today:", monkey1: "🐒 Monkey tomorrow:",
+    why: (w,p,k,g,r)=>`Swell/wave ~${w} m (period ${p} s), wind ${k} kn (gusts ${g}). ${r?"Rain.":"No rain."}`,
+    why1: "Worst trip hour (08–16): ",
+    route: "Route:",
+    "v.ok.word": "GO", "v.ok.route": "Full route (9 islands)",
+    "v.warn.word": "CAUTION — lead guide decides on the water", "v.warn.route": "Normal route, Monkey Island landing on hold · backup — Rang Yai photo stop",
+    "v.bad.word": "NO — reroute, don't cancel", "v.bad.route": "🚨 Inside Program (sheltered storm route) · report \"no monkey\"",
+    "m.wind": "Wind", "m.gusts": g=>`gusts ${g} kn`, "m.wave": "Wave / swell", "m.swell": (s,p)=>`swell ${s} m · ${p} s`,
+    "m.rain": "Rain", "m.raining": "raining", "m.dry": "dry", "m.vis": "Visibility", "m.visRed": "reduced", "m.visNorm": "normal", "m.na": "n/a",
+    "m.low": "Low tide (low water)", "m.lowSub": (hh,lv)=>`high tide ${hh} (+${lv} m) · per-stop windows below`,
+    "u.kn": "kn", "u.m": "m", "u.mm": "mm", "u.km": "km",
+    tideHead: (lo,lol,hi,hil)=>`Low tide <b>${lo}</b> (${lol} m) · High tide <b>${hi}</b> (+${hil} m)`,
+    tideLive: "● live tide table", tideSynth: "synthetic curve · live tide unavailable",
+    tripM: s=>`Morning trip · ${s}`, tripA: s=>`Afternoon trip · ${s}`, threshold: "threshold",
+    "gate.monkey": "🐒 Monkey Island", "gate.rangyai": "📸 Rang Yai photo stop", "gate.mangroves": "🌿 Mangroves", "gate.naka": "🍜 Naka — parking · lunch",
+    "risk.monkey": "low water → sheltered-side landing, shallower & less comfortable (landing still happens)",
+    "risk.rangyai": "water pulls back from the beach (paid photographers)",
+    "risk.mangroves": "low water → distant view only (~50–70 m); close approach & inner entry need high water",
+    "risk.naka": "parking is limited",
+    "gw.gate.ok": "✓ OK", "gw.gate.warn": "⚠ borderline", "gw.gate.bad": "✗ skip / reorder",
+    "gw.comfort.ok": "✓ easy landing (any side)", "gw.comfort.warn": "⚠ shallow — sheltered side", "gw.comfort.bad": "shallow — sheltered side, less comfortable (still lands)",
+    "gw.approach.ok": "✓ close approach + inner entry", "gw.approach.warn": "⚠ close approach only", "gw.approach.bad": "distant view only (~50–70 m)",
+    crew: o=>`${o.emoji} Morning brief · ${o.date} · Sirey → Ao Po
+Wind ${o.wind} kn (gusts ${o.gust}) · wave ${o.wave} m · ${o.rain?"rain":"no rain"}${o.worst?" · worst hour 08–16":""}
+${o.vEmoji} MONKEY: ${o.word}
+Route: ${o.route}
+🌊 Tide, afternoon trip ${o.sa} — Monkey ${o.gm} (${o.gmLv} m) · mangroves ${o.gg}
+Remind clients at the briefing: reaching Monkey depends on the crossing (waves); the landing itself almost always happens. Backup monkeys — Rang Yai photo stop.`,
+    srcLive: "Data: Open-Meteo Marine + Forecast at the Monkey Island crossing point (live). ",
+    srcScen: "Demo scenario shown (wave/wind only) — press ⟳ live for the live forecast. ",
+    srcSample: "Live data unavailable right now — showing sample data. ",
+    srcTideLive: "Tide: live tide table. ",
+    srcTideSynth: "Tide: synthetic demo curve (offline fallback — not real tide times). ",
+    srcThresh: (w1,w2,k1,k2)=>`Thresholds (wave ${w1} / ${w2} m, wind ${k1} / ${k2} kn): preliminary, calibrating with the lead guide.`
+  },
+  th: {
+    brand: "บอร์ดสภาพอากาศสำหรับทีม · เดโม · 📝 ภาษาไทยฉบับร่าง",
+    navPhoto: "← เดโมรูปภาพ", navOps: "แดชบอร์ดงานประจำวัน", navBot: "บอท LINE →",
+    frame: "⚓ ไม่ได้มีไว้เพื่อยกเลิกทริป — เราออกทะเลตามปกติ หน้านี้ช่วยให้<b>รู้สภาพทะเลล่วงหน้าและเตรียมลูกค้า</b>: วันนี้จะข้ามทะเลเปิด <b>Grand Marina → Monkey Island</b> ได้ไหม และต้องบอกลูกค้าอะไรบ้างก่อนออกเดินทาง",
+    scenLabel: "สถานการณ์จำลอง:",
+    scenOk: "🟢 ทะเลสงบ", scenWarn: "🟡 ก้ำกึ่ง", scenBad: "🔴 พายุ", scenLive: "⟳ ข้อมูลจริง",
+    dayToday: "วันนี้", dayTomorrow: "พรุ่งนี้",
+    condLabel: "สภาพทะเลช่วงข้ามไป Monkey (ตอนนี้)",
+    condLabel1: "สภาพทะเลช่วงข้ามไป Monkey — พรุ่งนี้ (ชั่วโมงที่แย่ที่สุด 08–16)",
+    hoursLabel: "ชั่วโมงถัดไป (คลื่น / ลม)",
+    hoursLabel1: "พรุ่งนี้ ช่วงเวลาทริป (คลื่น / ลม)",
+    tideLabel: "🌊 ช่วงน้ำขึ้นน้ำลงวันนี้ "+SPAN+"— ระดับน้ำที่ชายฝั่ง (คาดการณ์ได้ — แบบจำลองน้ำขึ้นน้ำลง)</span>",
+    tideLabel1: "🌊 ช่วงน้ำขึ้นน้ำลงพรุ่งนี้ "+SPAN+"— ระดับน้ำที่ชายฝั่ง (คาดการณ์ได้ — แบบจำลองน้ำขึ้นน้ำลง)</span>",
+    tideHint: "ระดับน้ำเทียบกับระดับน้ำทะเลปานกลาง (MSL) เวลาถึงแต่ละจุดปรับจากรายงานจริงของไกด์ (Monkey ประมาณ 10:53 รอบเช้า / 15:25 รอบบ่าย) จุดอื่นยังเป็นค่าประมาณ น้ำลงแทบไม่ทำให้ต้องตัดจุดแวะ — ที่ Monkey ให้ขึ้นฝั่ง<b>ด้านที่กำบังคลื่น</b> ส่วนป่าชายเลนเปลี่ยนเป็น<b>ชมจากระยะไกล (~50–70 ม.)</b> ถ้าช่วงน้ำแคบ ให้สลับลำดับจุดแวะให้เข้ากับระดับน้ำ",
+    crewLabel: "สรุปตอนเช้าสำหรับทีม (กลุ่ม WhatsApp/LINE)",
+    crewLabel1: "สรุปตอนเช้าของพรุ่งนี้สำหรับทีม (ส่งได้ตั้งแต่เย็นนี้)",
+    copyCrew: "📋 คัดลอกสรุป",
+    briefLabel: "บรีฟลูกค้าก่อนออกเดินทาง (บอกล่วงหน้า → ลดปัญหาขอคืนเงิน)",
+    copyBrief: "📋 คัดลอกบรีฟ",
+    copied: "✓ คัดลอกแล้ว", copyFail: "✗ คัดลอกไม่ได้ — กรุณาเลือกข้อความเอง",
+    briefRough: "🌊 สวัสดีครับ/ค่ะ! วันนี้คลื่นลมค่อนข้างแรง ทริปยังออกตามปกติ แต่ช่วงข้ามทะเลเปิดไปเกาะลิง (Monkey Island) อาจต้องสั้นลง — ขึ้นอยู่กับสภาพอากาศ และไกด์จะตัดสินใจบนน้ำเพื่อความปลอดภัย ลูกค้ายังดูลิงได้ที่จุดถ่ายรูปเกาะรังใหญ่ (Rang Yai) ช่วงเลี้ยวให้จับให้แน่น เวลามีคลื่นเราจะขับช้าลง ไม่มีการคืนเงินเพราะสภาพอากาศ แต่เลื่อนไปรอบเช้า ({M}) ได้ — แจ้งไกด์ล่วงหน้า รูปถ่ายทั้งหมดรวมในราคาแล้ว 📸",
+    briefGood: "☀️ สวัสดีครับ/ค่ะ! วันนี้อากาศดี ไปครบเส้นทาง (9 เกาะ) รวมขึ้นเกาะลิง (Monkey Island) ช่วงเลี้ยวให้จับให้แน่นและขับตามไกด์ รูปถ่ายทั้งหมดรวมในราคาแล้ว 📸",
+    loading: "กำลังโหลดพยากรณ์ของเส้นทาง Sirey → Ao Po…",
+    loadingLive: "กำลังโหลดพยากรณ์ล่าสุด…",
+    badgeLive: "● ข้อมูลจริง Open-Meteo", badgeScen: n=>"สถานการณ์จำลอง: "+n, badgeSample: "ข้อมูลตัวอย่าง · ตอนนี้ไม่มีข้อมูลจริง",
+    spot: "Ao Po Grand Marina → Monkey Island (ช่วงข้ามทะเลเปิด)",
+    monkey0: "🐒 Monkey วันนี้:", monkey1: "🐒 Monkey พรุ่งนี้:",
+    why: (w,p,k,g,r)=>`คลื่น ~${w} ม. (คาบ ${p} วิ) ลม ${k} นอต (กระโชก ${g}) ${r?"มีฝน":"ไม่มีฝน"}`,
+    why1: "ชั่วโมงที่แย่ที่สุดช่วงทริป (08–16): ",
+    route: "เส้นทาง:",
+    "v.ok.word": "ไปได้", "v.ok.route": "เส้นทางเต็ม (9 เกาะ)",
+    "v.warn.word": "ระวัง — หัวหน้าไกด์ตัดสินใจบนน้ำ", "v.warn.route": "เส้นทางปกติ รอดูก่อนขึ้นเกาะลิง · สำรอง — จุดถ่ายรูป Rang Yai",
+    "v.bad.word": "ไม่ข้าม — เปลี่ยนเส้นทาง ไม่ยกเลิกทริป", "v.bad.route": "🚨 Inside Program (เส้นทางหลบคลื่น) · รายงาน \"no monkey\"",
+    "m.wind": "ลม", "m.gusts": g=>`กระโชก ${g} นอต`, "m.wave": "คลื่น / คลื่นยาว", "m.swell": (s,p)=>`คลื่นยาว ${s} ม. · ${p} วิ`,
+    "m.rain": "ฝน", "m.raining": "ฝนตก", "m.dry": "ไม่มีฝน", "m.vis": "ทัศนวิสัย", "m.visRed": "ลดลง", "m.visNorm": "ปกติ", "m.na": "ไม่มีข้อมูล",
+    "m.low": "น้ำลงต่ำสุด", "m.lowSub": (hh,lv)=>`น้ำขึ้นสูงสุด ${hh} (+${lv} ม.) · ดูแต่ละจุดด้านล่าง`,
+    "u.kn": "นอต", "u.m": "ม.", "u.mm": "มม.", "u.km": "กม.",
+    tideHead: (lo,lol,hi,hil)=>`น้ำลงต่ำสุด <b>${lo}</b> (${lol} ม.) · น้ำขึ้นสูงสุด <b>${hi}</b> (+${hil} ม.)`,
+    tideLive: "● ตารางน้ำจริง", tideSynth: "กราฟจำลอง · ไม่มีข้อมูลน้ำจริง",
+    tripM: s=>`รอบเช้า · ${s}`, tripA: s=>`รอบบ่าย · ${s}`, threshold: "เกณฑ์",
+    "gate.monkey": "🐒 เกาะลิง (Monkey)", "gate.rangyai": "📸 จุดถ่ายรูป Rang Yai", "gate.mangroves": "🌿 ป่าชายเลน", "gate.naka": "🍜 Naka — ที่จอด · อาหารกลางวัน",
+    "risk.monkey": "น้ำลง → ขึ้นฝั่งด้านที่กำบังคลื่น น้ำตื้นและไม่ค่อยสะดวก (ยังขึ้นฝั่งได้)",
+    "risk.rangyai": "น้ำลดห่างจากหาด (จุดช่างภาพ)",
+    "risk.mangroves": "น้ำลง → ชมได้จากระยะไกลเท่านั้น (~50–70 ม.) เข้าใกล้หรือเข้าด้านในต้องรอน้ำขึ้น",
+    "risk.naka": "ที่จอดมีจำกัด",
+    "gw.gate.ok": "✓ ได้", "gw.gate.warn": "⚠ ก้ำกึ่ง", "gw.gate.bad": "✗ ข้ามจุดนี้ / สลับลำดับ",
+    "gw.comfort.ok": "✓ ขึ้นฝั่งง่าย (ด้านไหนก็ได้)", "gw.comfort.warn": "⚠ น้ำตื้น — ขึ้นด้านกำบัง", "gw.comfort.bad": "น้ำตื้น — ขึ้นด้านกำบัง ไม่ค่อยสะดวก (ยังขึ้นได้)",
+    "gw.approach.ok": "✓ เข้าใกล้ + เข้าด้านในได้", "gw.approach.warn": "⚠ เข้าใกล้ได้อย่างเดียว", "gw.approach.bad": "ชมจากระยะไกลเท่านั้น (~50–70 ม.)",
+    crew: o=>`${o.emoji} สรุปตอนเช้า · ${o.date} · Sirey → Ao Po
+ลม ${o.wind} นอต (กระโชก ${o.gust}) · คลื่น ${o.wave} ม. · ${o.rain?"มีฝน":"ไม่มีฝน"}${o.worst?" · ชั่วโมงที่แย่ที่สุด 08–16":""}
+${o.vEmoji} MONKEY: ${o.word}
+เส้นทาง: ${o.route}
+🌊 น้ำ รอบบ่าย ${o.sa} — Monkey ${o.gm} (${o.gmLv} ม.) · ป่าชายเลน ${o.gg}
+ย้ำลูกค้าตอนบรีฟ: จะไปถึง Monkey ได้ไหมขึ้นอยู่กับคลื่นช่วงข้ามทะเล ส่วนการขึ้นเกาะแทบจะได้ขึ้นทุกครั้ง ลิงสำรอง — จุดถ่ายรูป Rang Yai`,
+    srcLive: "ข้อมูล: Open-Meteo Marine + Forecast ที่จุดข้ามไป Monkey Island (ข้อมูลจริง) ",
+    srcScen: "กำลังแสดงสถานการณ์จำลอง (เฉพาะคลื่น/ลม) — กด ⟳ ข้อมูลจริง เพื่อดูพยากรณ์จริง ",
+    srcSample: "ตอนนี้ไม่มีข้อมูลจริง — แสดงข้อมูลตัวอย่าง ",
+    srcTideLive: "น้ำขึ้นน้ำลง: ตารางน้ำจริง ",
+    srcTideSynth: "น้ำขึ้นน้ำลง: กราฟจำลอง (ใช้ตอนออฟไลน์ — ไม่ใช่เวลาน้ำจริง) ",
+    srcThresh: (w1,w2,k1,k2)=>`เกณฑ์ (คลื่น ${w1} / ${w2} ม. ลม ${k1} / ${k2} นอต): ค่าเบื้องต้น กำลังปรับร่วมกับหัวหน้าไกด์`
   },
   ru: {
     brand: "Crew Weather Board · Погодный борт",
     navPhoto: "← фото-демо", navOps: "ops-дашборд", navBot: "LINE-бот →",
     frame: "⚓ Не про отмену — выход в море как обычно. Это про <b>осведомлённость и подготовку клиента</b>: пройдём ли сегодня открытый переход <b>Grand Marina → Monkey Island</b>, и что сказать клиентам ДО старта.",
     scenLabel: "Сценарии для показа:",
-    scenOk: "🟢 штиль", scenWarn: "🟡 на грани", scenBad: "🔴 шторм",
+    scenOk: "🟢 штиль", scenWarn: "🟡 на грани", scenBad: "🔴 шторм", scenLive: "⟳ live",
+    dayToday: "Сегодня", dayTomorrow: "Завтра",
     condLabel: "Условия на переходе к Monkey (сейчас)",
+    condLabel1: "Условия на переходе к Monkey — завтра (худший час рейсов 08–16)",
     hoursLabel: "Ближайшие часы (волна / ветер)",
-    tideLabel: "🌊 Приливные окна дня <span style=\"text-transform:none;letter-spacing:0\">— вода у берега (100% предсказуемо, из таблицы приливов)</span>",
+    hoursLabel1: "Завтра, часы рейсов (волна / ветер)",
+    tideLabel: "🌊 Приливные окна дня "+SPAN+"— вода у берега (предсказуемо — модель приливов)</span>",
+    tideLabel1: "🌊 Приливные окна на завтра "+SPAN+"— вода у берега (предсказуемо — модель приливов)</span>",
     tideHint: "Уровень — к среднему морю (MSL). Время прибытия откалибровано по реальным отчётам гидов (Monkey ~10:53 утро / ~15:25 день); прочие точки — предварительно. Низкая вода редко отменяет точку — на Monkey высадка с <b>подветренной стороны</b>, мангры — <b>осмотр издалека (~50–70 м)</b>. При узком окне — переставить порядок точек под воду.",
     crewLabel: "Утренняя сводка команде (в группу WhatsApp/LINE)",
+    crewLabel1: "Утренняя сводка команде на завтра (отправить с вечера)",
     copyCrew: "📋 Скопировать сводку",
     briefLabel: "Брифинг клиенту ДО старта (ставит ожидания → меньше споров о возврате)",
     copyBrief: "📋 Скопировать брифинг",
-    copied: "✓ Скопировано",
-    briefRough: "🌊 Привет! Сегодня на море заметная волна/ветер. Программа состоится, но открытый участок к Monkey Island может быть укорочен — это зависит от погоды и решается на воде для безопасности. Обезьянок можно увидеть и на острове Rang Yai. Держитесь крепче на поворотах, на волне идём спокойнее. Возврата за погоду нет, но поездку можно перенести на утро — просто скажите вашему гиду заранее. Все фото — включены 📸",
-    briefGood: "☀️ Привет! Погода хорошая, идём полный маршрут (9 островов), включая Monkey Island. На поворотах держитесь крепче, слушайте гида. Все фото с поездки — включены 📸"
-  },
-  th: {} // TODO: Thai translations; falls back to EN
+    copied: "✓ Скопировано", copyFail: "✗ не скопировалось — выделите текст вручную",
+    briefRough: "🌊 Привет! Сегодня на море заметная волна/ветер. Программа состоится, но открытый участок к Monkey Island может быть укорочен — это зависит от погоды и решается на воде для безопасности. Обезьянок можно увидеть и на острове Rang Yai. Держитесь крепче на поворотах, на волне идём спокойнее. Возврата за погоду нет, но поездку можно перенести на утренний рейс ({M}) — просто скажите вашему гиду заранее. Все фото — включены 📸",
+    briefGood: "☀️ Привет! Погода хорошая, идём полный маршрут (9 островов), включая Monkey Island. На поворотах держитесь крепче, слушайте гида. Все фото с поездки — включены 📸",
+    loading: "Загружаем прогноз для коридора Sirey → Ao Po…",
+    loadingLive: "Загружаем живой прогноз…",
+    badgeLive: "● LIVE Open-Meteo", badgeScen: n=>"демо-сценарий: "+n, badgeSample: "пример данных · live недоступен",
+    spot: "Ao Po Grand Marina → Monkey Island (открытый переход)",
+    monkey0: "🐒 Monkey сегодня:", monkey1: "🐒 Monkey завтра:",
+    why: (w,p,k,g,r)=>`Волна/зыбь ~${w} м (период ${p} с), ветер ${k} уз (порывы ${g}). ${r?"Дождь.":"Без дождя."}`,
+    why1: "Худший час рейсов (08–16): ",
+    route: "Маршрут:",
+    "v.ok.word": "ИДЁМ", "v.ok.route": "Полный маршрут (9 островов)",
+    "v.warn.word": "ОСТОРОЖНО — лид решает на воде", "v.warn.route": "Обычный маршрут, высадка на Monkey под вопросом · запасной — фото-стоп Rang Yai",
+    "v.bad.word": "НЕТ — меняем маршрут, не отменяем", "v.bad.route": "🚨 Inside Program (укрытый штормовой маршрут) · рапорт «no monkey»",
+    "m.wind": "Ветер", "m.gusts": g=>`порывы ${g} уз`, "m.wave": "Волна / зыбь", "m.swell": (s,p)=>`зыбь ${s} м · ${p} с`,
+    "m.rain": "Дождь", "m.raining": "идёт дождь", "m.dry": "сухо", "m.vis": "Видимость", "m.visRed": "снижена", "m.visNorm": "норма", "m.na": "н/д",
+    "m.low": "Отлив (малая вода)", "m.lowSub": (hh,lv)=>`полная вода ${hh} (+${lv} м) · окна по точкам ниже`,
+    "u.kn": "уз", "u.m": "м", "u.mm": "мм", "u.km": "км",
+    tideHead: (lo,lol,hi,hil)=>`Отлив <b>${lo}</b> (${lol} м) · Полная вода <b>${hi}</b> (+${hil} м)`,
+    tideLive: "● живая таблица приливов", tideSynth: "синтетическая кривая · живых данных нет",
+    tripM: s=>`Утренний рейс · ${s}`, tripA: s=>`Дневной рейс · ${s}`, threshold: "порог",
+    "gate.monkey": "🐒 Monkey Island", "gate.rangyai": "📸 Фото-стоп Rang Yai", "gate.mangroves": "🌿 Мангры", "gate.naka": "🍜 Naka — стоянка · обед",
+    "risk.monkey": "низкая вода → высадка с подветренной стороны, мельче и менее удобно (высадка всё равно будет)",
+    "risk.rangyai": "вода отходит от пляжа (платные фотографы)",
+    "risk.mangroves": "низкая вода → только осмотр издалека (~50–70 м); близкий подход и заход внутрь — на высокой воде",
+    "risk.naka": "мест для стоянки мало",
+    "gw.gate.ok": "✓ ОК", "gw.gate.warn": "⚠ на грани", "gw.gate.bad": "✗ пропуск / переставить",
+    "gw.comfort.ok": "✓ лёгкая высадка (любая сторона)", "gw.comfort.warn": "⚠ мелко — подветренная сторона", "gw.comfort.bad": "мелко — подветренная сторона, менее удобно (высадка будет)",
+    "gw.approach.ok": "✓ близкий подход + заход внутрь", "gw.approach.warn": "⚠ только близкий подход", "gw.approach.bad": "только издалека (~50–70 м)",
+    crew: o=>`${o.emoji} Утренняя сводка · ${o.date} · Sirey → Ao Po
+Ветер ${o.wind} уз (порывы ${o.gust}) · волна ${o.wave} м · ${o.rain?"дождь":"без дождя"}${o.worst?" · худший час 08–16":""}
+${o.vEmoji} MONKEY: ${o.word}
+Маршрут: ${o.route}
+🌊 Прилив, дневной рейс ${o.sa} — Monkey ${o.gm} (${o.gmLv} м) · мангры ${o.gg}
+Напомнить клиентам на брифинге: дойдём ли до Monkey — зависит от перехода (волна); сама высадка почти всегда состоится. Запасные обезьянки — фото-стоп Rang Yai.`,
+    srcLive: "Данные: Open-Meteo Marine + Forecast в точке перехода к Monkey Island (live). ",
+    srcScen: "Показан демо-сценарий (только волна/ветер) — нажмите ⟳ live для живого прогноза. ",
+    srcSample: "Живые данные сейчас недоступны — показан пример. ",
+    srcTideLive: "Приливы: живая таблица. ",
+    srcTideSynth: "Приливы: синтетическая демо-кривая (офлайн-запасной вариант — не реальное время приливов). ",
+    srcThresh: (w1,w2,k1,k2)=>`Пороги (волна ${w1} / ${w2} м, ветер ${k1} / ${k2} уз): предварительные, калибруются с лидом.`
+  }
 };
-let uiLang = localStorage.getItem("jetops_lang") || "en";
+const LOCALE = {en:"en-GB", th:"th-TH", ru:"ru-RU"};
+// localStorage may be blocked (private mode / storage disabled) — never let it throw during init
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+let uiLang = lsGet("jetops_lang") || "en";
 if(!I18N[uiLang]) uiLang = "en";
-function t(k){ return (I18N[uiLang] && I18N[uiLang][k]) || I18N.en[k] || k; }
+function tl(lang,k){ const d=I18N[lang]; return (d && d[k]!=null) ? d[k] : (I18N.en[k]!=null ? I18N.en[k] : k); }
+function t(k){ const v=tl(uiLang,k); return typeof v==="function" ? v.apply(null, Array.prototype.slice.call(arguments,1)) : v; }
 function applyLang(l){
   uiLang = I18N[l] ? l : "en";
-  try{ localStorage.setItem("jetops_lang", uiLang); }catch(e){}
+  lsSet("jetops_lang", uiLang);
   document.documentElement.lang = uiLang;
-  document.querySelectorAll("[data-i18n]").forEach(el=>{ const v=t(el.dataset.i18n); if(v) el.innerHTML=v; });
+  document.querySelectorAll("[data-i18n]").forEach(el=>{ const v=t(el.dataset.i18n); if(typeof v==="string") el.innerHTML=v; });
   document.querySelectorAll("#uiLang button").forEach(b=>b.classList.toggle("on", b.dataset.l===uiLang));
+  if(DATA) safeRender(); else showLoading("loading");
 }
 document.querySelectorAll("#uiLang button").forEach(b=>b.onclick=()=>applyLang(b.dataset.l));
 /* ============== end i18n ============== */
@@ -182,15 +372,16 @@ document.querySelectorAll("#uiLang button").forEach(b=>b.onclick=()=>applyLang(b
 // ---- fallback (offline demo): a typical borderline monsoon day ----
 const SAMPLE = { live:false, wind:16, gust:22, rain:0.3, vis:11000, wave:1.3, swell:1.1, period:6.4,
   hours:[[9,1.2,15],[10,1.3,16],[11,1.4,18],[12,1.5,19],[13,1.5,20],[14,1.4,19],[15,1.3,18],[16,1.2,16]] };
-// ---- demo scenarios (?wx=ok|warn|bad): show all three states regardless of the live weather ----
+// ---- demo scenarios (?wx=ok|warn|bad): override WAVE/WIND only — the tide stays real when available ----
 const SCENARIOS = {
-  ok:  { live:false, scenario:"🟢 calm", wind:9,  gust:13, rain:0,   vis:24000, wave:0.5, swell:0.4, period:5.2,
+  ok:  { live:false, scen:"ok",   wind:9,  gust:13, rain:0,   vis:24000, wave:0.5, swell:0.4, period:5.2,
          hours:[[9,0.4,8],[10,0.5,9],[11,0.5,10],[12,0.6,11],[13,0.6,11],[14,0.5,10],[15,0.5,9],[16,0.4,9]] },
-  warn:{ live:false, scenario:"🟡 borderline", wind:16, gust:23, rain:0.4, vis:11000, wave:1.3, swell:1.1, period:6.4,
+  warn:{ live:false, scen:"warn", wind:16, gust:23, rain:0.4, vis:11000, wave:1.3, swell:1.1, period:6.4,
          hours:[[9,1.1,14],[10,1.2,15],[11,1.3,17],[12,1.4,18],[13,1.5,19],[14,1.4,18],[15,1.3,17],[16,1.2,16]] },
-  bad: { live:false, scenario:"🔴 storm", wind:24, gust:34, rain:4.2, vis:4500,  wave:2.1, swell:1.8, period:7.8,
+  bad: { live:false, scen:"bad",  wind:24, gust:34, rain:4.2, vis:4500,  wave:2.1, swell:1.8, period:7.8,
          hours:[[9,1.9,22],[10,2.0,23],[11,2.2,25],[12,2.3,26],[13,2.2,25],[14,2.1,24],[15,2.0,23],[16,1.9,22]] }
 };
+const SCEN_KEY = {ok:"scenOk", warn:"scenWarn", bad:"scenBad"};
 const WX_OVERRIDE = new URLSearchParams(location.search).get("wx");
 
 /* ---- tide gates (calibrated from real guide reports, Feb–Apr 2026, and lead-guide input):
@@ -199,23 +390,32 @@ const WX_OVERRIDE = new URLSearchParams(location.search).get("wx");
    always available; low water only blocks close approach / going inside. Rang Yai photo
    stop / Naka lunch — genuine reorder gates. Arrival times per wave from 179 real Monkey
    pings (morning ~10:53, afternoon ~15:25); other stops provisional, refine with the lead. */
-const DEP={m:8*60+20, a:12*60+30}; // trip departures: morning trip 08:20, afternoon trip 12:30
-// arrM/arrA = minutes after departure to reach the stop, per wave.
+const hm=s=>{const p=String(s).split(":");return (+p[0])*60+(+p[1]);}; // "10:53" → minutes of the day
+// Arrival time at each stop per trip = CONFIG.ARRIVE (absolute). Names/risks/status words → I18N (gate.*, risk.*, gw.*).
 const TIDE_GATES=[
-  {name:"🐒 Monkey Island",       kind:"comfort",  risk:"low water → sheltered-side landing, shallower & less comfortable (landing still happens)", thr:-0.30, arrM:153, arrA:175},
-  {name:"📸 Rang Yai photo stop", kind:"gate",     risk:"water pulls back from the beach (paid photographers)",                                      thr:-0.40, arrM:127, arrA:200},
-  {name:"🌿 Mangroves",           kind:"approach", risk:"low water → distant view only (~50–70 m); close approach & inner entry need high water",     thr:+0.30, arrM:162, arrA:170},
-  {name:"🍜 Naka — parking · lunch", kind:"gate",  risk:"parking is limited",                                                                        thr:-0.40, arrM:146, arrA:200}
+  {id:"monkey",    kind:"comfort",  thr:-0.30},
+  {id:"rangyai",   kind:"gate",     thr:-0.40},
+  {id:"mangroves", kind:"approach", thr:+0.30},
+  {id:"naka",      kind:"gate",     thr:-0.40}
 ];
-// status words per gate kind — Monkey/mangroves never read as a hard "skip".
-const GATE_WORDS={
-  gate:    {ok:"✓ OK",                          warn:"⚠ borderline",                bad:"✗ skip / reorder"},
-  comfort: {ok:"✓ easy landing (any side)",     warn:"⚠ shallow — sheltered side",  bad:"shallow — sheltered side, less comfortable (still lands)"},
-  approach:{ok:"✓ close approach + inner entry", warn:"⚠ close approach only",       bad:"distant view only (~50–70 m)"}
-};
-let TIDE=null; // {live, series:[{h,lv}×24]}
-function synthTide(){ // offline/scenario: semidiurnal cycle, low water around 12:12
-  const s=[]; for(let h=0;h<24;h++) s.push({h, lv:+(0.35+1.15*Math.cos(2*Math.PI*(h-6)/12.42)).toFixed(2)});
+
+/* ---- state ---- */
+let LIVE=null;  // {wx:[today|null, tomorrow|null], tide:[today|null, tomorrow|null], days:[iso, iso]}
+let SCEN=(WX_OVERRIDE && SCENARIOS[WX_OVERRIDE]) ? WX_OVERRIDE : null;
+let DAY=0;      // 0 = today (now), 1 = tomorrow (trip hours) — the evening brief for the next morning
+let DATA=null, TIDE=null; // what is on screen
+
+function bkkDay(off){ // "YYYY-MM-DD" in Bangkok, today + off days
+  const base=new Date().toLocaleDateString("en-CA",{timeZone:TZ});
+  const d=new Date(base+"T00:00:00Z"); d.setUTCDate(d.getUTCDate()+off);
+  return d.toISOString().slice(0,10);
+}
+function fmtDay(iso){
+  try{ return new Date(iso+"T12:00:00Z").toLocaleDateString(LOCALE[uiLang]||"en-GB",{timeZone:"UTC",weekday:"short",day:"numeric",month:"short"}); }
+  catch(e){ return iso; }
+}
+function synthTide(day){ // OFFLINE FALLBACK ONLY (labelled): semidiurnal cycle, shifted ~50 min per day
+  const s=[]; for(let h=0;h<24;h++) s.push({h, lv:+(0.35+1.15*Math.cos(2*Math.PI*(h-6-0.84*(day||0))/12.42)).toFixed(2)});
   return {live:false, series:s};
 }
 function tideAt(min){ // level at a given moment (minutes of the day), linear interpolation
@@ -225,115 +425,184 @@ function tideAt(min){ // level at a given moment (minutes of the day), linear in
 }
 function fmtM(min){return String(Math.floor(min/60)).padStart(2,"0")+":"+String(Math.round(min%60)).padStart(2,"0");}
 
+function verdictCls(wave, wind){
+  const T=CONFIG.THRESH;
+  if(wave>=T.wave.bad || wind>=T.wind.bad) return "bad";
+  if(wave>=T.wave.warn || wind>=T.wind.warn) return "warn";
+  return "ok";
+}
 function verdict(wave, wind){
-  if(wave>=THRESH.wave.bad || wind>=THRESH.wind.bad)
-    return {cls:"bad", emoji:"🔴", word:"NO — reroute, don't cancel", route:"🚨 Inside Program (sheltered storm route) · report \"no monkey\""};
-  if(wave>=THRESH.wave.warn || wind>=THRESH.wind.warn)
-    return {cls:"warn", emoji:"🟡", word:"CAUTION — lead guide decides on the water", route:"Normal route, Monkey Island landing on hold · backup — Rang Yai photo stop"};
-  return {cls:"ok", emoji:"🟢", word:"GO", route:"Full route (9 islands)"};
+  const cls=verdictCls(wave,wind);
+  return {cls, emoji:{bad:"🔴",warn:"🟡",ok:"🟢"}[cls], word:t("v."+cls+".word"), route:t("v."+cls+".route")};
 }
-function dotColor(wave,wind){var v=verdict(wave,wind);return v.cls==="bad"?"#e5484d":v.cls==="warn"?"#f5a623":"#2fa84f";}
+function dotColor(wave,wind){const c=verdictCls(wave,wind);return c==="bad"?"#e5484d":c==="warn"?"#f5a623":"#2fa84f";}
 
-async function loadLive(){
-  try{
-    const f = `https://api.open-meteo.com/v1/forecast?latitude=${SPOT.lat}&longitude=${SPOT.lon}&current=wind_speed_10m,wind_gusts_10m,precipitation,weather_code&hourly=wind_speed_10m,wind_gusts_10m,precipitation,visibility&wind_speed_unit=kn&timezone=Asia%2FBangkok&forecast_days=1`;
-    const m = `https://marine-api.open-meteo.com/v1/marine?latitude=${SPOT.lat}&longitude=${SPOT.lon}&hourly=wave_height,wave_period,swell_wave_height,sea_level_height_msl&timezone=Asia%2FBangkok&forecast_days=1`;
-    const [F,M] = await Promise.all([fetch(f).then(r=>r.json()), fetch(m).then(r=>r.json())]);
-    const t = F.current.time;
-    let fi = F.hourly.time.indexOf(t); if(fi<0) fi=0;
-    let mi = M.hourly.time.indexOf(t); if(mi<0) mi=fi;
-    const hours=[];
-    for(let i=fi;i<Math.min(fi+8,F.hourly.time.length);i++){
-      hours.push([ parseInt(F.hourly.time[i].slice(11,13),10), M.hourly.wave_height[i], Math.round(F.hourly.wind_speed_10m[i]) ]);
-    }
-    DATA = { live:true, wind:Math.round(F.current.wind_speed_10m), gust:Math.round(F.current.wind_gusts_10m),
-      rain:F.current.precipitation, vis:F.hourly.visibility[fi], wave:M.hourly.wave_height[mi],
-      swell:M.hourly.swell_wave_height[mi], period:M.hourly.wave_period[mi], hours };
-    TIDE = (M.hourly.sea_level_height_msl||[]).length
-      ? {live:true, series:M.hourly.time.slice(0,24).map((t,i)=>({h:parseInt(t.slice(11,13),10), lv:M.hourly.sea_level_height_msl[i]}))}
-      : synthTide();
-  }catch(e){ DATA = SAMPLE; TIDE = synthTide(); }
-  render();
+const FETCH_MS=8000;
+function fetchJSON(url){
+  const opt={}; if(typeof AbortSignal!=="undefined"&&typeof AbortSignal.timeout==="function") opt.signal=AbortSignal.timeout(FETCH_MS);
+  return fetch(url,opt).then(r=>{ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); });
 }
-function load(){
-  if(WX_OVERRIDE && SCENARIOS[WX_OVERRIDE]){ DATA=SCENARIOS[WX_OVERRIDE]; TIDE=synthTide(); render(); return; }
-  loadLive();
+const num=v=>(typeof v==="number"&&isFinite(v))?v:null;
+// Open-Meteo `current.time` is 15-minutely (e.g. 14:15) while `hourly.time` is on the hour —
+// match on the hour; if the hour is not in the series pick the nearest one.
+function hourIndex(times,tm){
+  if(!Array.isArray(times)||!times.length||typeof tm!=="string") return -1;
+  const key=tm.slice(0,13);
+  let i=times.findIndex(x=>String(x).slice(0,13)===key);
+  if(i>=0) return i;
+  const ms=Date.parse(tm); if(isNaN(ms)) return -1;
+  let best=-1,bd=Infinity;
+  times.forEach((x,k)=>{const d=Math.abs(Date.parse(x)-ms); if(!isNaN(d)&&d<bd){bd=d;best=k;}});
+  return best;
+}
+// tide: hourly sea level for today (0–23) and tomorrow (24–47); a day with any gap → null → synthetic fallback
+function parseTide(M){
+  const tm=M&&M.hourly&&M.hourly.time, sl=M&&M.hourly&&M.hourly.sea_level_height_msl;
+  if(!Array.isArray(tm)||!Array.isArray(sl)) return [null,null];
+  return [0,1].map(d=>{
+    const a=d*24, sub=sl.slice(a,a+24);
+    if(sub.length<24||!sub.every(v=>num(v)!==null)) return null;
+    return {live:true, series:tm.slice(a,a+24).map((x,i)=>({h:parseInt(String(x).slice(11,13),10), lv:sub[i]}))};
+  });
+}
+// today: the current hour + the next 8 hours
+function parseNow(F,M){
+  const tm=F.current.time;
+  const fi=hourIndex(F.hourly.time,tm), mi=hourIndex(M.hourly.time,tm);
+  if(fi<0||mi<0) throw new Error("no matching hour");
+  const wave=num(M.hourly.wave_height[mi]);
+  if(wave===null) throw new Error("wave_height is null"); // marine model has no value here → honest sample fallback
+  const hours=[];
+  for(let i=fi;i<Math.min(fi+8,F.hourly.time.length);i++){
+    hours.push([ parseInt(F.hourly.time[i].slice(11,13),10), num(M.hourly.wave_height[i-fi+mi]), Math.round(num(F.hourly.wind_speed_10m[i])||0) ]);
+  }
+  return { live:true, wind:Math.round(num(F.current.wind_speed_10m)||0), gust:Math.round(num(F.current.wind_gusts_10m)||0),
+    rain:num(F.current.precipitation)||0, vis:num(F.hourly.visibility[fi]), wave,
+    swell:num(M.hourly.swell_wave_height[mi]), period:num(M.hourly.wave_period[mi])||0, hours };
+}
+// tomorrow: worst hour of the trip window (TRIP_H) — conservative on purpose
+function parseTomorrow(F,M){
+  const idx=[]; for(let h=TRIP_H[0];h<=TRIP_H[1];h++) idx.push(24+h);
+  if(F.hourly.time.length<=idx[idx.length-1] || M.hourly.time.length<=idx[idx.length-1]) throw new Error("no tomorrow");
+  const W=idx.map(i=>num(M.hourly.wave_height[i]));
+  if(W.every(v=>v===null)) throw new Error("tomorrow wave_height is null");
+  const mx=a=>a.reduce((m,v)=>v!==null&&v>m?v:m,0);
+  const winds=idx.map(i=>num(F.hourly.wind_speed_10m[i])), gusts=idx.map(i=>num(F.hourly.wind_gusts_10m[i]));
+  const rains=idx.map(i=>num(F.hourly.precipitation[i])), vis=idx.map(i=>num(F.hourly.visibility[i])).filter(v=>v!==null);
+  const wave=mx(W), wi=idx[W.indexOf(wave)];
+  return { live:true, tomorrow:true, wind:Math.round(mx(winds)), gust:Math.round(mx(gusts)), rain:mx(rains),
+    vis:vis.length?Math.min.apply(null,vis):null, wave,
+    swell:num(M.hourly.swell_wave_height[wi]), period:num(M.hourly.wave_period[wi])||0,
+    hours:idx.map((i,k)=>[i-24, W[k], Math.round(winds[k]||0)]) };
+}
+async function fetchLive(){
+  const q=`latitude=${SPOT.lat}&longitude=${SPOT.lon}&timezone=Asia%2FBangkok&forecast_days=2`;
+  const f=`${CONFIG.API_BASE}?${q}&current=wind_speed_10m,wind_gusts_10m,precipitation,weather_code&hourly=wind_speed_10m,wind_gusts_10m,precipitation,visibility&wind_speed_unit=kn`;
+  const m=`${CONFIG.MARINE_BASE}?${q}&hourly=wave_height,wave_period,swell_wave_height,sea_level_height_msl`;
+  // independent requests: a failed forecast must not hide a good tide table (and vice versa)
+  const [F,M]=await Promise.all([fetchJSON(f).catch(()=>null), fetchJSON(m).catch(()=>null)]);
+  const out={wx:[null,null], tide:[null,null], days:[bkkDay(0),bkkDay(1)]};
+  if(M){ try{ out.tide=parseTide(M); }catch(e){}
+    try{ const tm=M.hourly.time; if(tm&&tm[24]) out.days=[String(tm[0]).slice(0,10), String(tm[24]).slice(0,10)]; }catch(e){} }
+  if(F&&M){ try{ out.wx[0]=parseNow(F,M); }catch(e){} try{ out.wx[1]=parseTomorrow(F,M); }catch(e){} }
+  return out;
+}
+function select(){
+  DATA = SCEN ? SCENARIOS[SCEN] : ((LIVE && LIVE.wx[DAY]) || SAMPLE);
+  TIDE = (LIVE && LIVE.tide[DAY]) || synthTide(DAY);
+}
+function showLoading(key){
+  const vd=$("#verdict"); vd.className="verdict warn";
+  vd.innerHTML=`<div class="big">…</div><div class="why">${t(key)}</div>`;
+}
+async function load(key){
+  showLoading(key||"loading");
+  try{ LIVE=await fetchLive(); }catch(e){ LIVE=null; }
+  safeRender();
+}
+function safeRender(){
+  select();
+  try{ render(); }catch(e){ LIVE=null; select(); render(); } // never leave the page stuck on "…"
 }
 
 function render(){
-  const d=DATA, v=verdict(d.wave, d.wind);
+  const d=DATA, v=verdict(d.wave, d.wind), m=t("u.m"), kn=t("u.kn");
   $("#dataBadge").outerHTML = d.live
-    ? `<span class="badge live" id="dataBadge">● LIVE Open-Meteo</span>`
-    : `<span class="badge demo" id="dataBadge">${d.scenario?("demo scenario: "+d.scenario):"offline demo data"}</span>`;
-  $("#spot").textContent = SPOT.name;
+    ? `<span class="badge live" id="dataBadge">${t("badgeLive")}</span>`
+    : `<span class="badge demo" id="dataBadge">${d.scen?t("badgeScen",t(SCEN_KEY[d.scen])):t("badgeSample")}</span>`;
+  $("#spot").textContent = t("spot");
+  document.querySelectorAll("#dayView button").forEach(b=>b.classList.toggle("on", +b.dataset.d===DAY));
+  $("#condLabel").innerHTML=t(DAY?"condLabel1":"condLabel");
+  $("#hoursLabel").innerHTML=t(DAY?"hoursLabel1":"hoursLabel");
+  $("#tideLabel").innerHTML=t(DAY?"tideLabel1":"tideLabel");
+  $("#crewLabel").innerHTML=t(DAY?"crewLabel1":"crewLabel");
+  const rain=d.rain>0.2;
   const vd=$("#verdict"); vd.className="verdict "+v.cls;
-  vd.innerHTML = `<div class="big">🐒 Monkey today: ${v.emoji} ${v.word}</div>
-    <div class="why">Swell/wave ~${d.wave.toFixed(1)} m (period ${Math.round(d.period)} s), wind ${d.wind} kn (gusts ${d.gust}). ${d.rain>0.2?'Rain.':'No rain.'}</div>
-    <div class="route">Route: ${v.route}</div>`;
+  vd.innerHTML = `<div class="big">${t(DAY?"monkey1":"monkey0")} ${v.emoji} ${v.word}</div>
+    <div class="why">${DAY?t("why1"):""}${t("why", d.wave.toFixed(1), Math.round(d.period), d.wind, d.gust, rain)}</div>
+    <div class="route">${t("route")} ${v.route}</div>`;
   $("#metrics").innerHTML = `
-    <div class="metric"><div class="k">Wind</div><div class="v">${d.wind} <span class="s">kn</span></div><div class="s">gusts ${d.gust} kn</div></div>
-    <div class="metric"><div class="k">Wave / swell</div><div class="v">${d.wave.toFixed(1)} <span class="s">m</span></div><div class="s">swell ${(+d.swell||0).toFixed(1)} m · ${Math.round(d.period)} s</div></div>
-    <div class="metric"><div class="k">Rain</div><div class="v">${(+d.rain||0).toFixed(1)} <span class="s">mm</span></div><div class="s">${d.rain>0.2?'raining':'dry'}</div></div>
-    <div class="metric"><div class="k">Visibility</div><div class="v">${Math.round((d.vis||0)/1000)} <span class="s">km</span></div><div class="s">${(d.vis||0)<6000?'reduced':'normal'}</div></div>
-    <div class="metric tide"><div class="k">Low tide (low water)</div><div class="v" id="tideTileV" style="font-size:18px">…</div><div class="s" id="tideTileS">…</div></div>`;
+    <div class="metric"><div class="k">${t("m.wind")}</div><div class="v">${d.wind} <span class="s">${kn}</span></div><div class="s">${t("m.gusts",d.gust)}</div></div>
+    <div class="metric"><div class="k">${t("m.wave")}</div><div class="v">${d.wave.toFixed(1)} <span class="s">${m}</span></div><div class="s">${t("m.swell",(+d.swell||0).toFixed(1),Math.round(d.period))}</div></div>
+    <div class="metric"><div class="k">${t("m.rain")}</div><div class="v">${(+d.rain||0).toFixed(1)} <span class="s">${t("u.mm")}</span></div><div class="s">${rain?t("m.raining"):t("m.dry")}</div></div>
+    <div class="metric"><div class="k">${t("m.vis")}</div><div class="v">${d.vis==null?"–":Math.round(d.vis/1000)} <span class="s">${t("u.km")}</span></div><div class="s">${d.vis==null?t("m.na"):(d.vis<6000?t("m.visRed"):t("m.visNorm"))}</div></div>
+    <div class="metric tide"><div class="k">${t("m.low")}</div><div class="v" id="tideTileV" style="font-size:18px">…</div><div class="s" id="tideTileS">…</div></div>`;
   renderTide();
-  $("#timeline").innerHTML = d.hours.map(h=>`<div class="h"><div class="t">${String(h[0]).padStart(2,'0')}:00</div><div class="w">${(+h[1]).toFixed(1)}m</div><div class="g">${h[2]} kn</div><div class="dot" style="background:${dotColor(h[1],h[2])}"></div></div>`).join("");
-  // crew message
-  if(!TIDE) TIDE=synthTide();
+  $("#timeline").innerHTML = d.hours.map(h=>`<div class="h"><div class="t">${String(h[0]).padStart(2,'0')}:00</div><div class="w">${h[1]==null?"–":(+h[1]).toFixed(1)+m}</div><div class="g">${h[2]} ${kn}</div><div class="dot" style="background:${dotColor(h[1]==null?0:h[1],h[2])}"></div></div>`).join("");
+  // crew message (UI language)
   const gm=gateStatus("a",TIDE_GATES[0]), gg=gateStatus("a",TIDE_GATES[2]); // afternoon trip: Monkey Island landing + mangroves
-  $("#crewMsg").textContent =
-`☀️ Morning brief · Sirey → Ao Por
-Wind ${d.wind} kn (gusts ${d.gust}) · wave ${d.wave.toFixed(1)} m · ${d.rain>0.2?'rain':'no rain'}
-${v.emoji} MONKEY: ${v.word}
-Route: ${v.route}
-🌊 Tide, afternoon trip 12:30 — Monkey ${gm.word} (${gm.lv.toFixed(1)} m) · mangroves ${gg.word}
-Remind clients at the briefing: reaching Monkey depends on the crossing (waves); the landing itself almost always happens. Backup monkeys — Rang Yai photo stop.`;
+  const iso = DAY ? ((LIVE&&LIVE.days&&LIVE.days[1])||bkkDay(1)) : ((LIVE&&LIVE.days&&LIVE.days[0])||bkkDay(0));
+  $("#crewMsg").textContent = t("crew", {emoji:v.cls==='bad'?'🌧️':v.cls==='warn'?'🌤️':'☀️', date:fmtDay(iso),
+    wind:d.wind, gust:d.gust, wave:d.wave.toFixed(1), rain, worst:!!DAY, vEmoji:v.emoji, word:v.word, route:v.route,
+    gm:gm.word, gmLv:gm.lv.toFixed(1), gg:gg.word, sa:CONFIG.SESSIONS.a});
   renderBrief();
-  $("#src").innerHTML = (d.live?"Data: Open-Meteo Marine + Forecast at the Monkey Island crossing point (live). ":"Open this page online to load LIVE data. ")+"Wave/wind thresholds are config — calibrated with the lead guide during the season.";
+  const T=CONFIG.THRESH;
+  $("#src").innerHTML = (d.scen?t("srcScen"):d.live?t("srcLive"):t("srcSample"))
+    + (TIDE.live?t("srcTideLive"):t("srcTideSynth"))
+    + "<br><b>"+t("srcThresh",T.wave.warn,T.wave.bad,T.wind.warn,T.wind.bad)+"</b>";
 }
 
 function gateStatus(w,g){ // trip ("m"/"a") × gate → {t,lv,cls,word}
-  const t=DEP[w]+(w==="m"?g.arrM:g.arrA), lv=tideAt(t);
+  const tm=hm(CONFIG.ARRIVE[g.id][w]), lv=tideAt(tm);
   const cls=lv>=g.thr+0.2?"ok":lv>=g.thr?"warn":"bad";
-  const word=(GATE_WORDS[g.kind]||GATE_WORDS.gate)[cls];
-  return {t,lv,cls,word};
+  return {t:tm,lv,cls,word:t("gw."+g.kind+"."+cls)};
 }
-const TG_COLOR={ok:"var(--ok)",warn:"#a86a00",bad:"var(--red)"};
+const TG_COLOR={ok:"var(--ok)",warn:"#a86a00",bad:"var(--bad)"};
 function renderTide(){
-  if(!TIDE) TIDE=synthTide();
-  const s=TIDE.series;
+  const s=TIDE.series, m=t("u.m");
   let lo=s[5],hi=s[5];
   for(let h=5;h<=21;h++){const p=s[h];if(p.lv<lo.lv)lo=p;if(p.lv>hi.lv)hi=p;}
   const hh=n=>String(n).padStart(2,"0")+":00";
-  $("#tideHead").innerHTML=`Low tide <b>${hh(lo.h)}</b> (${lo.lv.toFixed(1)} m) · High tide <b>${hh(hi.h)}</b> (+${hi.lv.toFixed(1)} m) <span class="badge ${TIDE.live?"live":"demo"}" style="margin-left:6px">${TIDE.live?"● live tide table":"demo curve"}</span>`;
-  const head=`<tr style="color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.4px"><td style="padding:4px"></td><td style="padding:4px">Morning trip · 08:20</td><td style="padding:4px">Afternoon trip · 12:30</td></tr>`;
+  $("#tideHead").innerHTML=`${t("tideHead",hh(lo.h),lo.lv.toFixed(1),hh(hi.h),hi.lv.toFixed(1))} <span class="badge ${TIDE.live?"live":"demo"}" style="margin-left:6px">${TIDE.live?t("tideLive"):t("tideSynth")}</span>`;
+  const head=`<tr style="color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.4px"><td style="padding:4px"></td><td style="padding:4px">${t("tripM",CONFIG.SESSIONS.m)}</td><td style="padding:4px">${t("tripA",CONFIG.SESSIONS.a)}</td></tr>`;
   const rows=TIDE_GATES.map(g=>{
     const cells=["m","a"].map(w=>{const r=gateStatus(w,g);
-      return `<td style="padding:7px 4px;border-top:1px solid var(--line)"><span style="color:var(--muted);font-size:11px">${fmtM(r.t)}</span> · ${r.lv.toFixed(1)} m<br><b style="color:${TG_COLOR[r.cls]}">${r.word}</b></td>`;}).join("");
-    return `<tr><td style="padding:7px 4px;border-top:1px solid var(--line)"><b style="font-size:12.5px">${g.name}</b><div style="color:var(--muted);font-size:10.5px">${g.risk} · threshold ${g.thr>0?"+":""}${g.thr} m</div></td>${cells}</tr>`;
+      return `<td style="padding:7px 4px;border-top:1px solid var(--line)"><span style="color:var(--muted);font-size:11px">${fmtM(r.t)}</span> · ${r.lv.toFixed(1)} ${m}<br><b style="color:${TG_COLOR[r.cls]}">${r.word}</b></td>`;}).join("");
+    return `<tr><td style="padding:7px 4px;border-top:1px solid var(--line)"><b style="font-size:12.5px">${t("gate."+g.id)}</b><div style="color:var(--muted);font-size:10.5px">${t("risk."+g.id)} · ${t("threshold")} ${g.thr>0?"+":""}${g.thr} ${m}</div></td>${cells}</tr>`;
   }).join("");
   $("#tideGates").innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12.5px">${head}${rows}</table>`;
-  const vt=$("#tideTileV"); if(vt){vt.textContent=`${hh(lo.h)} · ${lo.lv.toFixed(1)} m`; $("#tideTileS").textContent=`high tide ${hh(hi.h)} (+${hi.lv.toFixed(1)} m) · per-stop windows below`;}
+  const vt=$("#tideTileV"); if(vt){vt.textContent=`${hh(lo.h)} · ${lo.lv.toFixed(1)} ${m}`; $("#tideTileS").textContent=t("m.lowSub",hh(hi.h),hi.lv.toFixed(1));}
 }
-function renderBrief(){
-  const d=DATA, v=verdict(d.wave,d.wind);
-  const rough = v.cls!=="ok";
-  const dict = (I18N[briefLang] && I18N[briefLang].briefRough) ? I18N[briefLang] : I18N.en;
-  $("#briefMsg").textContent = rough ? dict.briefRough : dict.briefGood;
+function renderBrief(){ // the client briefing has its own language (EN/TH/RU), independent of the UI
+  const rough = verdictCls(DATA.wave,DATA.wind)!=="ok";
+  $("#briefMsg").textContent = tl(briefLang, rough ? "briefRough" : "briefGood").replace("{M}", CONFIG.SESSIONS.m);
 }
 function copy(txt, btn){
-  const done=()=>{const o=btn.textContent;btn.textContent=t("copied");setTimeout(()=>btn.textContent=o,1400);};
-  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,done);}
-  else{const ta=document.createElement("textarea");ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(e){}ta.remove();done();}
+  const show=ok=>{const o=btn.textContent;btn.textContent=ok?t("copied"):t("copyFail");setTimeout(()=>btn.textContent=o,1600);};
+  const fallback=()=>{try{const ta=document.createElement("textarea");ta.value=txt;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();const ok=document.execCommand("copy");ta.remove();show(!!ok);}catch(e){show(false);}};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(()=>show(true),fallback);}
+  else fallback();
 }
-document.querySelectorAll("#briefLang button").forEach(b=>b.onclick=()=>{briefLang=b.dataset.l;document.querySelectorAll("#briefLang button").forEach(x=>x.classList.toggle("on",x===b));renderBrief();});
+document.querySelectorAll("#briefLang button").forEach(b=>b.onclick=()=>{briefLang=b.dataset.l;document.querySelectorAll("#briefLang button").forEach(x=>x.classList.toggle("on",x===b));if(DATA)renderBrief();});
+document.querySelectorAll("#dayView button").forEach(b=>b.onclick=()=>{DAY=+b.dataset.d;if(DATA)safeRender();});
+// scenarios replace wave/wind only; the (live) tide table stays as loaded
 document.querySelectorAll(".scen").forEach(b=>b.onclick=()=>{const k=b.dataset.scen;
-  if(k==="live"){DATA=null;$("#verdict").className="verdict warn";$("#verdict").innerHTML="<div class='big'>…</div><div class='why'>Fetching the live forecast…</div>";loadLive();}
-  else{DATA=SCENARIOS[k];render();}});
+  if(k==="live"){SCEN=null;DATA=null;load("loadingLive");}
+  else{SCEN=k;if(LIVE||DATA)safeRender();}});
 $("#copyCrew").onclick=e=>copy($("#crewMsg").textContent, e.target);
 $("#copyBrief").onclick=e=>copy($("#briefMsg").textContent, e.target);
 applyLang(uiLang);
-load();
+load("loading"); // always fetch: even in a scenario (?wx=…) the real tide table is used when available
 })();
 </script>
 </body>

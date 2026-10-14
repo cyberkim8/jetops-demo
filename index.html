@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0aa1dd">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>JetSki Phuket — Photo Delivery (Build 1 demo)</title>
+<title>Phuket Jetski Club — Photo Delivery (Build 1 demo)</title>
 <style>
   :root{
     --accent:#0aa1dd; --accent2:#f5a623; --ink:#0e1b26; --muted:#5b7080;
@@ -51,8 +51,9 @@
   .numrow{display:flex;align-items:center;gap:10px}
   .numrow button{width:44px;height:44px;border-radius:12px;border:1.5px solid var(--line);background:#fff;
     font-size:22px;font-weight:800;color:var(--accent);cursor:pointer}
-  .numrow input{width:88px;height:44px;text-align:center;font-size:22px;font-weight:800;border:1.5px solid var(--line);
-    border-radius:12px;color:var(--ink)}
+  .numrow input{width:104px;height:44px;text-align:center;font-size:20px;font-weight:800;border:1.5px solid var(--line);
+    border-radius:12px;color:var(--ink);text-transform:uppercase;letter-spacing:.5px}
+  .draft{font-size:12px;line-height:1.5;background:#fff5e2;border:1px solid #ffe1a8;color:#a86a00;border-radius:10px;padding:8px 10px;margin:-6px 0 14px}
   .btn{display:block;width:100%;border:0;border-radius:13px;padding:15px;font-size:16px;font-weight:800;
     cursor:pointer;transition:.15s;text-align:center}
   .btn:active{transform:scale(.98)}
@@ -116,7 +117,7 @@
   <header class="top">
     <div class="brand">
       <img class="logo" src="assets/logo.png" alt="Phuket Jetski Club" style="width:auto;height:28px;background:#fff;padding:4px 8px;border-radius:8px;box-sizing:content-box">
-      <span id="brandName"><small>Photo delivery · Build 1 demo</small></span>
+      <span id="brandName"><small data-i18n="brand_small">Photo delivery · Build 1 demo</small></span>
     </div>
     <div class="tabs">
       <button data-view="home" class="active" data-i18n="tab_about">ℹ️ About</button>
@@ -128,20 +129,25 @@
   <main>
     <!-- ============ HOME / ABOUT THE DEMO ============ -->
     <section id="view-home" class="on">
-      <h2>Demo: photos in minutes, not 1–3 days</h2>
-      <p class="sub">Build 1 — instant HD pipeline. Photos stay <b>free</b>. Try the two tabs above: <b>Guide</b> uploads photos → <b>Client</b> sees them in the gallery right away, by jet ski number.</p>
+      <div class="lang" id="hLang">
+        <button data-lang="en" class="on">EN</button>
+        <button data-lang="th">ไทย</button>
+        <button data-lang="ru">RU</button>
+      </div>
+      <h2 data-i18n="home_h2">Demo: photos in minutes, not 1–3 days</h2>
+      <p class="sub" data-i18n="home_sub">Build 1 — instant HD pipeline. Photos stay <b>free</b>. Try the two tabs above: <b>Guide</b> uploads photos → <b>Client</b> sees them in the gallery right away, by jet ski number.</p>
 
       <div class="card">
-        <div class="label">What this fixes</div>
+        <div class="label" data-i18n="fix_lbl">What this fixes</div>
         <div class="beforeafter">
-          <div class="ba now"><h4>Now</h4>guide → WhatsApp → admin → manual upload to Google Drive. <b>1–3 days</b> delay, WhatsApp lowers quality, everything depends on one person.</div>
-          <div class="ba new"><h4>Build 1</h4>guide → uploader → auto-check → gallery. <b>Minutes</b>, original HD, no admin bottleneck.</div>
+          <div class="ba now" data-i18n="now_ba"><h4>Now</h4>guide → WhatsApp → admin → manual upload to Google Drive. <b>1–3 days</b> delay, WhatsApp lowers quality, everything depends on one person.</div>
+          <div class="ba new" data-i18n="new_ba"><h4>Build 1</h4>guide → uploader → auto-check → gallery. <b>Minutes</b>, original HD, no admin bottleneck.</div>
         </div>
       </div>
 
       <div class="card">
-        <div class="label">What this demo shows</div>
-        <div class="kv">
+        <div class="label" data-i18n="shows_lbl">What this demo shows</div>
+        <div class="kv" data-i18n="shows_kv">
           • <b>Guide:</b> simple Thai uploader (2–3 taps: trip + color + number), sends original photos from iPhone.<br>
           • <b>Auto-check:</b> trip / color / photo count / quality — no manual sorting.<br>
           • <b>Client:</b> same shared QR → picks day / trip / color team → enters the <b>machine number</b> (visible on the jet ski in every shot) → sees their photos.<br>
@@ -150,38 +156,38 @@
       </div>
 
       <div class="card" style="text-align:center">
-        <div class="label" style="text-align:left">Customer wristband → one shared QR</div>
+        <div class="label" style="text-align:left" data-i18n="qr_lbl">Customer wristband → one shared QR</div>
         <img class="qr" id="homeQr" alt="QR">
-        <div class="hint">In real use the QR opens the client gallery. In this demo, use the buttons below.</div>
+        <div class="hint" data-i18n="qr_hint">In real use the QR opens the client gallery. In this demo, use the buttons below.</div>
         <div class="rolebtns" style="margin-top:12px">
-          <button class="btn primary" data-goto="guide">📸 I am a guide — upload</button>
-          <button class="btn ghost" data-goto="client">🏖️ I am a client — my photos</button>
+          <button class="btn primary" data-goto="guide" data-i18n="go_guide">📸 I am a guide — upload</button>
+          <button class="btn ghost" data-goto="client" data-i18n="go_client">🏖️ I am a client — my photos</button>
         </div>
       </div>
 
       <div class="card">
-        <div class="label">🌦️ Module B — Weather board (demo)</div>
-        <div class="hint" style="margin-top:0">Local forecast for the Sirey → Monkey Island route + a clear go / borderline / no-go verdict + a ready briefing for the client. Live Open-Meteo data.</div>
-        <a class="btn accent2 sm" href="weather.html" style="margin-top:11px;text-decoration:none">Open weather board →</a>
+        <div class="label" data-i18n="modB_lbl">🌦️ Module B — Weather board (demo)</div>
+        <div class="hint" style="margin-top:0" data-i18n="modB_p">Local forecast for the Sirey → Monkey Island route + a clear go / borderline / no-go verdict + a ready briefing for the client. Live Open-Meteo data.</div>
+        <a class="btn accent2 sm" href="weather.html" style="margin-top:11px;text-decoration:none" data-i18n="modB_btn">Open weather board →</a>
       </div>
 
       <div class="card">
-        <div class="label">🖥️ Module D — Ops Dashboard (demo)</div>
-        <div class="hint" style="margin-top:0">Live operations board for the office: route map with groups, event feed from work chats, mechanics board, photo compliance, shifts, automatic day report. A simulated day built from real chat patterns.</div>
-        <a class="btn primary sm" href="dashboard.html" style="margin-top:11px;text-decoration:none;color:#fff">Open ops dashboard →</a>
+        <div class="label" data-i18n="modD_lbl">🖥️ Module D — Ops Dashboard (demo)</div>
+        <div class="hint" style="margin-top:0" data-i18n="modD_p">Live operations board for the office: route map with groups, event feed from work chats, mechanics board, photo compliance, shifts, automatic day report. A simulated day built from real chat patterns.</div>
+        <a class="btn primary sm" href="dashboard.html" style="margin-top:11px;text-decoration:none;color:#fff" data-i18n="modD_btn">Open ops dashboard →</a>
       </div>
 
       <div class="card">
-        <div class="label">🤖 Module D — LINE Ops Bot (showcase)</div>
-        <div class="hint" style="margin-top:0">The bot reads work LINE groups: message → event → auto-alert when there is a problem → evening report for the office and mechanics. Real output from working code.</div>
-        <a class="btn ghost sm" href="bot.html" style="margin-top:11px;text-decoration:none;display:block;text-align:center">Open bot showcase →</a>
+        <div class="label" data-i18n="bot_lbl">🤖 Module D — LINE Ops Bot (showcase)</div>
+        <div class="hint" style="margin-top:0" data-i18n="bot_p">The bot reads work LINE groups: message → event → auto-alert when there is a problem → evening report for the office and mechanics. Real output from working code.</div>
+        <a class="btn ghost sm" href="bot.html" style="margin-top:11px;text-decoration:none;display:block;text-align:center" data-i18n="bot_btn">Open bot showcase →</a>
       </div>
 
       <div class="card">
-        <div class="label">Notes</div>
+        <div class="label" data-i18n="notes_lbl">Notes</div>
         <div class="hint" style="margin-top:0">
-          Placeholder photos are generated (with the machine number visible on the jet ski) — real photos will replace them. Demo data is stored locally in your browser. You can also upload <b>real photos from your phone</b> ("Pick photos"). Number OCR and AI face search are teasers here — in production they are Build 1 / Build 2.
-          <br><br><button class="btn ghost sm" id="resetBtn">↺ Reset demo data</button>
+          <span data-i18n="notes_p">Placeholder photos are generated (with the machine number visible on the jet ski) — real photos will replace them. Demo data is stored locally in your browser. You can also upload <b>real photos from your phone</b> ("Pick photos"). Number OCR and AI face search are teasers here — in production they are Build 1 / Build 2.</span>
+          <br><br><button class="btn ghost sm" id="resetBtn" data-i18n="reset_btn">↺ Reset demo data</button>
         </div>
       </div>
     </section>
@@ -190,6 +196,7 @@
     <section id="view-guide">
       <h2>อัปโหลดรูปภาพ <span style="font-size:13px;color:var(--muted);font-weight:600">(Guide · upload)</span></h2>
       <p class="sub">เลือกรอบ ทีมสี และหมายเลขเจ็ตสกี แล้วอัปโหลดรูป — เข้าแกลเลอรีทันที<br><span style="font-size:12px">Trip → color → machine number → photos. The client sees them right away.</span></p>
+      <div class="draft">📝 ฉบับร่าง — ข้อความภาษาไทยอยู่ระหว่างการตรวจทาน · Draft — Thai wording under review</div>
 
       <div class="card">
         <div class="label">รอบ / Trip — <span id="gDate"></span></div>
@@ -203,7 +210,7 @@
         <div class="label">หมายเลขเจ็ตสกี / Machine number</div>
         <div class="numrow">
           <button id="gMinus">−</button>
-          <input id="gSki" type="number" value="7" inputmode="numeric">
+          <input id="gSki" type="text" value="K7" maxlength="6" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="K7">
           <button id="gPlus">+</button>
           <span class="hint" id="gSkiHint" style="margin:0 0 0 6px"></span>
         </div>
@@ -238,7 +245,7 @@
         <div class="pillrow" id="cColor"></div>
         <div class="label" id="cLblSki" style="margin-top:14px">Your jet ski number</div>
         <div class="numrow">
-          <input id="cSki" type="number" placeholder="#" inputmode="numeric">
+          <input id="cSki" type="text" placeholder="K7" maxlength="6" autocapitalize="characters" autocomplete="off" spellcheck="false">
           <button class="btn ghost sm" id="cAll" style="width:auto;padding:11px 14px">Show all group</button>
         </div>
         <button class="btn accent2 sm" id="cAI" style="margin-top:12px">✨ <span id="cAILbl">AI: find all photos of me (selfie)</span></button>
@@ -253,14 +260,13 @@
     </section>
   </main>
 
-  <div class="footnote">Demo · JetSki Phuket Photo Delivery · Build 1 — placeholder data, stored locally</div>
+  <div class="footnote" data-i18n="footnote">Demo · Phuket Jetski Club · Photo Delivery · Build 1 — placeholder data, stored locally</div>
 </div>
 
 <div id="toast"></div>
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
 
-<!-- real photos (gitignored; absent on GitHub → falls back to placeholders) -->
-<script src="sample_photos/manifest.js"></script>
+<!-- real sample photos (sample_photos/manifest.js) are gitignored and loaded dynamically, local hosts only — see INIT -->
 <script>
 (function(){
 "use strict";
@@ -268,55 +274,76 @@
 /* ---------- CONFIG (replace with the client's brand) ---------- */
 const BRAND = { name:"PHUKET JETSKI CLUB", logo:"🌊", accent:"#0aa1dd" };
 const SESSIONS = [
-  {key:"morning",   th:"รอบเช้า", en:"Morning 08:20"},
-  {key:"afternoon", th:"รอบบ่าย", en:"Afternoon 12:30"}
+  {key:"morning",   th:"รอบเช้า 08:30", en:"Morning 08:30"},   // session start times since 12.10.2026 (were 08:20 / 12:30)
+  {key:"afternoon", th:"รอบบ่าย 12:45", en:"Afternoon 12:45"}
 ];
+// a demo subset of the client's wristband colours (💛 Yellow 💜 Purple 💙 Blue 🩷 Pink 🧡 Orange 💚 Green) — the real
+// roster uses more colours (season 2026: 10–11); add them here when needed
 const COLORS = [
-  {key:"red",   hex:"#e5484d", th:"แดง",     en:"Red",   range:[1,7]},
-  {key:"blue",  hex:"#0091d5", th:"น้ำเงิน", en:"Blue",  range:[8,14]},
-  {key:"green", hex:"#2fa84f", th:"เขียว",   en:"Green", range:[15,21]}
+  {key:"yellow", hex:"#f5c518", fg:"#3d2600", emoji:"💛", th:"เหลือง", en:"Yellow"},
+  {key:"purple", hex:"#8e5bd8", emoji:"💜", th:"ม่วง",    en:"Purple"},
+  {key:"blue",   hex:"#3f8ef7", emoji:"💙", th:"น้ำเงิน", en:"Blue"},
+  {key:"pink",   hex:"#ef7fb3", emoji:"🩷", th:"ชมพู",    en:"Pink"},
+  {key:"orange", hex:"#f08c2e", emoji:"🧡", th:"ส้ม",     en:"Orange"},
+  {key:"green",  hex:"#3ddc78", fg:"#0b3d1e", emoji:"💚", th:"เขียว",   en:"Green"}
 ];
+// machine numbers are alphanumeric (K7, H100, Y62, P11 …) — the letter is the fleet series, not the team
+const SAMPLE_SKIS = {
+  yellow:["Y62","Y7","K12"], purple:["P11","P4","H41"], blue:["K7","K9","K10","K11"],
+  pink:["K2","K3","H29"], orange:["K24","H7","Y20"], green:["K15","P8","H66"]
+};
+const LEGACY_COLOR = {red:"pink"}; // older manifests used a 3-team scheme (red/blue/green)
 const STOPS = ["Coconut Is.","Rang Yai","Rang Noi","Naka Yai","Monkey Is."]; // real route islands (east coast)
-const KEY = "jetski_demo_v3";
+const KEY = "jetski_demo_v4"; // v4: colour teams below + alphanumeric machines (old v3 data is simply ignored)
 const todayStr = new Date().toLocaleDateString("en-CA"); // local date, not UTC (Bangkok mornings are still "yesterday" in UTC)
 
 /* ---------- STATE ---------- */
 let _id=0;
-let state = load();
+// localStorage may be blocked (private mode / storage disabled) — never let it throw
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function lsRemove(k){ try{ localStorage.removeItem(k); }catch(e){} }
+let state = null; // filled in boot() (after the optional local manifest has loaded)
 let ui = { view:"home", lang:"en",
-  g:{session:"afternoon", color:"blue", ski:9},
+  g:{session:"afternoon", color:"blue", ski:"K7"},
   c:{session:"morning", color:"blue", ski:null, ai:false} };
 
 function load(){
   // re-seed when the day changes: otherwise after midnight the "today" gallery is empty
-  try{ const s=JSON.parse(localStorage.getItem(KEY)); if(s&&s.photos&&s.seededAt===todayStr) return s; }catch(e){}
+  try{ const s=JSON.parse(lsGet(KEY)); if(s&&s.photos&&s.seededAt===todayStr) return s; }catch(e){}
   return seed();
 }
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
-function seed(){
-  // real sample photos (from sample_photos/manifest.js if present) override placeholders for their ski
+function save(){ lsSet(KEY, JSON.stringify(state)); }
+function normSki(v){ return String(v==null?"":v).toUpperCase().replace(/[\s#]/g,"").slice(0,6); }
+// real sample photos from sample_photos/manifest.js (if present) — normalised to the colour-team / alphanumeric scheme.
+// Backward compatible: legacy colors map via LEGACY_COLOR, numeric machines become K-series (9 → K9).
+function manifestPhotos(){
   const real = Array.isArray(window.DEMO_PHOTOS) ? window.DEMO_PHOTOS : [];
-  const realKeys = new Set(real.map(r=>(r.session||"morning")+"|"+r.color+"|"+r.ski));
+  return real.filter(r=>r&&r.file).map(r=>{
+    const color = colorOf(r.color) ? r.color : (LEGACY_COLOR[r.color] || "blue");
+    const ski = /^\d+$/.test(String(r.ski)) ? "K"+String(r.ski) : normSki(r.ski);
+    return {session:r.session||"morning", color, ski, stop:r.stop||STOPS[0], file:r.file};
+  });
+}
+function seed(){
+  // real sample photos override placeholders for their (session|color|machine)
+  const real = manifestPhotos();
+  const realKeys = new Set(real.map(r=>r.session+"|"+r.color+"|"+r.ski));
   const photos=[];
   // seed MORNING only (afternoon starts empty → guide fills it live)
   COLORS.forEach(c=>{
-    for(let ski=c.range[0]; ski<=c.range[1]; ski++){
-      if(realKeys.has("morning|"+c.key+"|"+ski)) continue; // covered by real photos
-      STOPS.forEach((stop,si)=>{
-        for(let n=0;n<2;n++){
-          photos.push(mk({day:todayStr,session:"morning",color:c.key,ski,stop}));
-        }
-      });
-    }
+    (SAMPLE_SKIS[c.key]||[]).forEach(ski=>{
+      if(realKeys.has("morning|"+c.key+"|"+ski)) return; // covered by real photos
+      STOPS.forEach(stop=>{ for(let n=0;n<2;n++) photos.push(mk({day:todayStr,session:"morning",color:c.key,ski,stop})); });
+    });
   });
-  real.forEach(r=>photos.push(mk({day:todayStr,session:r.session||"morning",color:r.color,ski:r.ski,stop:r.stop||STOPS[0],src:"sample_photos/"+encodeURIComponent(r.file)})));
+  real.forEach(r=>photos.push(mk({day:todayStr,session:r.session,color:r.color,ski:r.ski,stop:r.stop,src:"sample_photos/"+encodeURIComponent(r.file)})));
   const s={photos, seededAt:todayStr};
-  try{ localStorage.setItem(KEY, JSON.stringify(s)); }catch(e){}
+  lsSet(KEY, JSON.stringify(s));
   return s;
 }
 function mk(o){ return Object.assign({id:"p"+(Date.now().toString(36))+(_id++)+Math.floor(Math.random()*1e4)}, o); }
 function colorOf(k){ return COLORS.find(c=>c.key===k); }
-function skiColor(ski){ const c=COLORS.find(c=>ski>=c.range[0]&&ski<=c.range[1]); return c?c.key:null; }
 
 /* ---------- SVG placeholder photo (machine number visible on the jet ski) ---------- */
 function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
@@ -352,7 +379,7 @@ function svgFor(p,opts){
 <path d='M78 40 q18 6 30 2' stroke='#dff1fb' stroke-width='4' fill='none' opacity='.8' stroke-linecap='round'/>
 </g>
 <rect x='8' y='${H-26}' width='auto' height='18' rx='9' fill='#0e1b26' opacity='.55'/>
-<text x='14' y='${H-13}' font-family='Arial' font-size='11' fill='#fff'>📍 ${p.stop} · ${(colorOf(p.color)||{}).en||''} #${p.ski}</text>
+<text x='14' y='${H-13}' font-family='Arial' font-size='11' fill='#fff'>📍 ${p.stop} · ${(colorOf(p.color)||{}).en||''} ${p.ski}</text>
 ${wm?`<text x='${W/2}' y='${H/2}' font-family='Arial' font-size='22' font-weight='bold' fill='#ffffff' opacity='.28' text-anchor='middle' transform='rotate(-18 ${W/2} ${H/2})'>${BRAND.name}</text>`:''}
 </svg>`;
   return "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
@@ -374,8 +401,10 @@ function qrSvg(){
 }
 
 /* ---------- i18n ----------
-   EN is complete. TH is empty for now — missing keys fall back to EN.
-   Switch language with the EN | ไทย | RU buttons; choice persists in localStorage. */
+   EN is complete: strings for the About tab / header / footer are read from the markup
+   ([data-i18n]) at start-up, the rest is below. TH is a machine-drafted version that still
+   needs proofreading by a native speaker (see 14_localization_tasks.md); RU — Russian guests.
+   Switch language with the EN | ไทย | RU buttons; choice persists in localStorage (shared by all demo pages). */
 const LANG_KEY = "jetops_lang";
 const I18N = {
   en:{
@@ -383,7 +412,7 @@ const I18N = {
     title:"Your ride photos 🏖️", sub:"Scanned your wristband? Pick your trip and color team, then enter your jet ski number.",
     round:"Trip", colour:"Color team", ski:"Your jet ski number", all:"Show all group",
     ai:"AI: find all photos of me (selfie)", send:"Send gallery link to my phone",
-    count:(n,ski)=> ski? `${n} photo(s) of jet ski #${ski}` : `${n} photo(s) in this group`,
+    count:(n,ski)=> ski? `${n} photo(s) of jet ski ${ski}` : `${n} photo(s) in this group`,
     emptyGroup:"No photos in this trip/color yet.\nIn the real flow they appear seconds after the guide uploads — open the Guide tab and upload to see it.",
     emptySki:"No photos for that number here.\nCheck the machine number on your wristband, or tap “Show all group”.",
     hd:"Full HD · no watermark after download", dl:"Download",
@@ -391,23 +420,85 @@ const I18N = {
     premAi:`<span class="badge prem">✨ Premium · Build 2</span><h3 style="margin-top:12px">AI face search</h3><p>Customer takes a selfie → the system finds <b>all their photos</b> across the whole group and day, even from other riders' shots. A premium add-on — base photos stay free.</p><button class="btn accent2" id="ok">Got it</button>`,
     premSend:`<span class="badge prem">📲 Build 2</span><h3 style="margin-top:12px">Send link + capture contact</h3><p>Customer drops their LINE/WhatsApp/email — the gallery is sent <b>instantly</b>, while they're still on site. That restores contact and the window for the enhanced upsell.</p><button class="btn primary" id="ok">Ok</button>`
   },
+  th:{
+    tab_about:"ℹ️ เกี่ยวกับ", tab_guide:"📸 ไกด์", tab_client:"🏖️ ลูกค้า",
+    brand_small:"ส่งรูปให้ลูกค้า · เดโม Build 1 · 📝 ภาษาไทยฉบับร่าง",
+    home_h2:"เดโม: ได้รูปภายในไม่กี่นาที ไม่ต้องรอ 1–3 วัน",
+    home_sub:"Build 1 — ระบบส่งรูป HD ทันที รูปยัง<b>ฟรี</b>เหมือนเดิม ลองสองแท็บด้านบน: <b>ไกด์</b> อัปโหลดรูป → <b>ลูกค้า</b> เห็นรูปในแกลเลอรีทันที ค้นด้วยหมายเลขเจ็ตสกี",
+    fix_lbl:"แก้ปัญหาอะไร",
+    now_ba:"<h4>ตอนนี้</h4>ไกด์ → WhatsApp → แอดมิน → อัปโหลดขึ้น Google Drive เอง ล่าช้า <b>1–3 วัน</b> WhatsApp ลดคุณภาพรูป และทุกอย่างขึ้นอยู่กับคนคนเดียว",
+    new_ba:"<h4>Build 1</h4>ไกด์ → ระบบอัปโหลด → ตรวจอัตโนมัติ → แกลเลอรี ใช้เวลา<b>ไม่กี่นาที</b> ได้รูป HD ต้นฉบับ แอดมินไม่ต้องทำเอง",
+    shows_lbl:"เดโมนี้แสดงอะไร",
+    shows_kv:"• <b>ไกด์:</b> หน้าอัปโหลดภาษาไทยแบบง่าย (2–3 แตะ: รอบ + สี + หมายเลข) ส่งรูปต้นฉบับจาก iPhone<br>• <b>ตรวจอัตโนมัติ:</b> รอบ / สี / จำนวนรูป / คุณภาพ — ไม่ต้องคัดแยกเอง<br>• <b>ลูกค้า:</b> สแกน QR เดียวกัน → เลือกวัน / รอบ / ทีมสี → ใส่<b>หมายเลขเจ็ตสกี</b> (เห็นบนเจ็ตสกีในทุกรูป) → เห็นรูปของตัวเอง<br>• <b>✨ ค้นหารูปด้วยใบหน้า (AI)</b> — ตัวอย่างฟีเจอร์พรีเมียม (Build 2)",
+    qr_lbl:"สายรัดข้อมือลูกค้า → QR เดียวกันทั้งหมด",
+    qr_hint:"ในการใช้งานจริง QR จะเปิดแกลเลอรีของลูกค้า ในเดโมนี้ให้ใช้ปุ่มด้านล่าง",
+    go_guide:"📸 ฉันเป็นไกด์ — อัปโหลด", go_client:"🏖️ ฉันเป็นลูกค้า — รูปของฉัน",
+    modB_lbl:"🌦️ โมดูล B — บอร์ดสภาพอากาศ (เดโม)",
+    modB_p:"พยากรณ์เฉพาะเส้นทาง Sirey → Monkey Island + สรุปชัดเจน ไปได้ / ก้ำกึ่ง / ไม่ข้าม + ข้อความบรีฟลูกค้าพร้อมใช้ ข้อมูลจริงจาก Open-Meteo",
+    modB_btn:"เปิดบอร์ดสภาพอากาศ →",
+    modD_lbl:"🖥️ โมดูล D — แดชบอร์ดงานประจำวัน (เดโม)",
+    modD_p:"บอร์ดงานแบบสดสำหรับออฟฟิศ: แผนที่เส้นทางพร้อมทีม ฟีดเหตุการณ์จากแชทงาน บอร์ดช่าง ความครบของรูป กะงาน และรายงานประจำวันอัตโนมัติ เป็นการจำลองหนึ่งวันจากรูปแบบแชทจริง",
+    modD_btn:"เปิดแดชบอร์ด →",
+    bot_lbl:"🤖 โมดูล D — บอท LINE (ตัวอย่าง)",
+    bot_p:"บอทอ่านกลุ่ม LINE ของทีม: ข้อความ → เหตุการณ์ → แจ้งเตือนอัตโนมัติเมื่อมีปัญหา → รายงานตอนเย็นให้ออฟฟิศและช่าง เป็นผลลัพธ์จริงจากโค้ดที่ใช้งานได้",
+    bot_btn:"เปิดตัวอย่างบอท →",
+    notes_lbl:"หมายเหตุ",
+    notes_p:"รูปตัวอย่างสร้างขึ้นอัตโนมัติ (เห็นหมายเลขเจ็ตสกีในรูป) — จะเปลี่ยนเป็นรูปจริงภายหลัง ข้อมูลเดโมเก็บไว้ในเบราว์เซอร์ของคุณเท่านั้น คุณอัปโหลด<b>รูปจริงจากมือถือ</b>ได้ด้วย (“เลือกรูปจากเครื่อง”) การอ่านหมายเลข (OCR) และการค้นหาด้วยใบหน้า (AI) ในเดโมนี้เป็นเพียงตัวอย่าง — ในระบบจริงอยู่ใน Build 1 / Build 2",
+    reset_btn:"↺ รีเซ็ตข้อมูลเดโม",
+    footnote:"เดโม · Phuket Jetski Club · ส่งรูปให้ลูกค้า · Build 1 — ข้อมูลตัวอย่าง เก็บไว้ในเครื่อง",
+    title:"รูปจากทริปของคุณ 🏖️", sub:"สแกนสายรัดข้อมือแล้วใช่ไหม? เลือกรอบและทีมสี แล้วใส่หมายเลขเจ็ตสกีของคุณ",
+    round:"รอบ", colour:"ทีมสี", ski:"หมายเลขเจ็ตสกีของคุณ", all:"ดูทั้งกลุ่ม",
+    ai:"AI: หารูปทั้งหมดของฉัน (เซลฟี่)", send:"ส่งลิงก์แกลเลอรีเข้ามือถือ",
+    count:(n,ski)=> ski? `เจ็ตสกี ${ski}: ${n} รูป` : `ในกลุ่มนี้มี ${n} รูป`,
+    emptyGroup:"รอบ/สีนี้ยังไม่มีรูป\nในการใช้งานจริง รูปจะขึ้นภายในไม่กี่วินาทีหลังไกด์อัปโหลด — ลองเปิดแท็บไกด์แล้วอัปโหลดดู",
+    emptySki:"ไม่มีรูปของหมายเลขนี้\nตรวจหมายเลขเจ็ตสกีบนสายรัดข้อมือ หรือกด “ดูทั้งกลุ่ม”",
+    hd:"Full HD · ไม่มีลายน้ำเมื่อดาวน์โหลด", dl:"ดาวน์โหลด",
+    dlToast:"⬇️ เริ่มดาวน์โหลดแล้ว (เดโม)", resetToast:"↺ รีเซ็ตข้อมูลเดโมแล้ว",
+    premAi:`<span class="badge prem">✨ พรีเมียม · Build 2</span><h3 style="margin-top:12px">ค้นหารูปด้วยใบหน้า (AI)</h3><p>ลูกค้าถ่ายเซลฟี่ → ระบบหา<b>รูปทั้งหมดของลูกค้า</b>จากทั้งกลุ่มและทั้งวัน รวมถึงรูปที่ติดอยู่ในรูปของคนอื่น เป็นบริการเสริมแบบพรีเมียม — รูปพื้นฐานยังฟรีเหมือนเดิม</p><button class="btn accent2" id="ok">เข้าใจแล้ว</button>`,
+    premSend:`<span class="badge prem">📲 Build 2</span><h3 style="margin-top:12px">ส่งลิงก์ + เก็บช่องทางติดต่อ</h3><p>ลูกค้าใส่ LINE/WhatsApp/อีเมล — ระบบส่งแกลเลอรีให้<b>ทันที</b> ขณะที่ลูกค้ายังอยู่ที่ท่า ทำให้มีช่องทางติดต่อกลับ และมีโอกาสเสนอรูปแบบพิเศษเพิ่ม</p><button class="btn primary" id="ok">ตกลง</button>`
+  },
   ru:{
     tab_about:"ℹ️ О демо", tab_guide:"📸 Гид", tab_client:"🏖️ Клиент",
-    lbl_morning:"Утро 08:20", lbl_afternoon:"День 12:30",
-    lbl_red:"Красный", lbl_blue:"Синий", lbl_green:"Зелёный",
+    brand_small:"Выдача фото · демо Билд 1",
+    home_h2:"Демо: фото за минуты, а не за 1–3 дня",
+    home_sub:"Билд 1 — мгновенный HD-пайплайн. Фото остаются <b>бесплатными</b>. Попробуйте две вкладки выше: <b>Гид</b> загружает фото → <b>Клиент</b> сразу видит их в галерее по номеру гидроцикла.",
+    fix_lbl:"Что это исправляет",
+    now_ba:"<h4>Сейчас</h4>гид → WhatsApp → админ → ручная загрузка в Google Drive. Задержка <b>1–3 дня</b>, WhatsApp снижает качество, всё держится на одном человеке.",
+    new_ba:"<h4>Билд 1</h4>гид → аплоадер → авто-проверка → галерея. <b>Минуты</b>, оригинальное HD, админ больше не узкое место.",
+    shows_lbl:"Что показывает демо",
+    shows_kv:"• <b>Гид:</b> простой тайский аплоадер (2–3 тапа: рейс + цвет + номер), отправляет оригиналы фото с iPhone.<br>• <b>Авто-проверка:</b> рейс / цвет / количество фото / качество — без ручной сортировки.<br>• <b>Клиент:</b> тот же общий QR → выбирает день / рейс / цвет команды → вводит <b>номер гидроцикла</b> (он виден на гидроцикле в каждом кадре) → видит свои фото.<br>• <b>✨ AI-поиск по лицу</b> — тизер премиум-функции (Билд 2).",
+    qr_lbl:"Браслет клиента → один общий QR",
+    qr_hint:"В реальной работе QR открывает галерею клиента. В демо используйте кнопки ниже.",
+    go_guide:"📸 Я гид — загрузить", go_client:"🏖️ Я клиент — мои фото",
+    modB_lbl:"🌦️ Модуль B — Погодный борт (демо)",
+    modB_p:"Локальный прогноз для маршрута Sirey → Monkey Island + понятный вердикт «идём / на грани / не идём» + готовый брифинг для клиента. Живые данные Open-Meteo.",
+    modB_btn:"Открыть погодный борт →",
+    modD_lbl:"🖥️ Модуль D — Ops-дашборд (демо)",
+    modD_p:"Живая операционная доска для офиса: карта маршрута с группами, лента событий из рабочих чатов, доска механиков, фото-комплаенс, смены, автоматический отчёт дня. Симулированный день на реальных паттернах чата.",
+    modD_btn:"Открыть ops-дашборд →",
+    bot_lbl:"🤖 Модуль D — LINE-бот (витрина)",
+    bot_p:"Бот читает рабочие LINE-группы: сообщение → событие → авто-алерт при проблеме → вечерний отчёт офису и механикам. Реальный вывод работающего кода.",
+    bot_btn:"Открыть витрину бота →",
+    notes_lbl:"Примечания",
+    notes_p:"Фото-заглушки генерируются (номер машины виден на гидроцикле) — их заменят реальные фото. Данные демо хранятся локально в вашем браузере. Можно загрузить и <b>реальные фото с телефона</b> («Выбрать реальные фото»). OCR номера и AI-поиск по лицу здесь — тизеры; в проде это Билд 1 / Билд 2.",
+    reset_btn:"↺ Сбросить демо-данные",
+    footnote:"Демо · Phuket Jetski Club · Выдача фото · Билд 1 — данные-заглушки, хранятся локально",
+    lbl_morning:"Утро 08:30", lbl_afternoon:"День 12:45",
+    lbl_yellow:"Жёлтый", lbl_purple:"Фиолетовый", lbl_blue:"Синий", lbl_pink:"Розовый", lbl_orange:"Оранжевый", lbl_green:"Зелёный",
     title:"Ваши фото с катания 🏖️", sub:"Отсканировали браслет? Выберите рейс и цвет команды, затем введите номер гидроцикла.",
     round:"Рейс", colour:"Цвет команды", ski:"Ваш номер гидроцикла", all:"Показать всю группу",
     ai:"AI: найти все фото со мной (селфи)", send:"Прислать ссылку на галерею на телефон",
-    count:(n,ski)=> ski? `${n} фото гидроцикла №${ski}` : `${n} фото в этой группе`,
+    count:(n,ski)=> ski? `${n} фото гидроцикла ${ski}` : `${n} фото в этой группе`,
     emptyGroup:"В этом рейсе/цвете пока нет фото.\nВ реальном потоке они появляются через секунды после загрузки гидом — откройте вкладку «Гид» и загрузите.",
     emptySki:"Нет фото по этому номеру.\nПроверьте номер на браслете или нажмите «Показать всю группу».",
     hd:"Полное HD · без водяного знака после скачивания", dl:"Скачать",
     dlToast:"⬇️ Скачивание начато (демо)", resetToast:"↺ Демо-данные сброшены",
     premAi:`<span class="badge prem">✨ Премиум · Билд 2</span><h3 style="margin-top:12px">AI-поиск по лицу</h3><p>Клиент делает селфи → система находит <b>все его фото</b> по всей группе и дню, даже с чужих кадров. Это премиум-продукт (продаётся отдельно, база остаётся бесплатной).</p><button class="btn accent2" id="ok">Понятно</button>`,
     premSend:`<span class="badge prem">📲 Билд 2</span><h3 style="margin-top:12px">Ссылка + контакт</h3><p>Здесь клиент оставляет LINE/WhatsApp/email — галерея уходит ему <b>сразу</b>, пока он ещё на месте. Так восстанавливается контакт и окно для enhanced-апселла.</p><button class="btn primary" id="ok">Ок</button>`
-  },
-  th:{} // Thai translations pending — every key falls back to EN
+  }
 };
+// EN defaults for the static markup (About tab, header, footer) come from the HTML itself — one source of truth
+document.querySelectorAll("[data-i18n]").forEach(el=>{ const k=el.dataset.i18n; if(I18N.en[k]==null) I18N.en[k]=el.innerHTML.trim(); });
 function t(k){ const d=I18N[ui.lang]||{}; return (d[k]!=null) ? d[k] : I18N.en[k]; }
 function pillLabel(it,lang){
   if(it[lang]!=null) return it[lang];                       // label stored on the item (th/en)
@@ -416,15 +507,17 @@ function pillLabel(it,lang){
 }
 function applyLang(lang){
   ui.lang = I18N[lang] ? lang : "en";
-  try{ localStorage.setItem(LANG_KEY, ui.lang); }catch(e){}
-  $$("#cLang button").forEach(b=>b.classList.toggle("on",b.dataset.lang===ui.lang));
-  $$("[data-i18n]").forEach(el=>{ const v=t(el.dataset.i18n); if(v!=null) el.textContent=v; });
+  lsSet(LANG_KEY, ui.lang);
+  document.documentElement.lang = ui.lang;
+  $$(".lang button").forEach(b=>b.classList.toggle("on",b.dataset.lang===ui.lang));
+  $$("[data-i18n]").forEach(el=>{ const v=t(el.dataset.i18n); if(typeof v==="string") el.innerHTML=v; }); // our own dictionary strings only
   if(ui.view==="client") renderClient();
 }
 
 /* ---------- RENDER ---------- */
 const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
 function setView(v){
+  if(!state) state=load();
   ui.view=v;
   $$(".tabs button").forEach(b=>b.classList.toggle("active",b.dataset.view===v));
   $$("main section").forEach(s=>s.classList.remove("on"));
@@ -438,9 +531,9 @@ function pills(container,items,selKey,onPick,opts){
   items.forEach(it=>{
     const b=document.createElement("button");
     b.className="pill"+(opts.color?" color":"")+(it.key===selKey?" sel":"");
-    if(opts.color){ b.innerHTML=`<span class='dot' style='background:${it.hex}'></span>${pillLabel(it,opts.lang)}`; }
+    if(opts.color){ b.innerHTML=`<span class='dot' style='background:${it.hex}'></span>${it.emoji?it.emoji+" ":""}${pillLabel(it,opts.lang)}`; }
     else b.textContent = pillLabel(it,opts.lang);
-    if(it.key===selKey&&opts.color) b.style.background=it.hex, b.style.borderColor=it.hex;
+    if(it.key===selKey&&opts.color){ b.style.background=it.hex; b.style.borderColor=it.hex; b.style.color=it.fg||"#fff"; }
     b.onclick=()=>onPick(it.key);
     container.appendChild(b);
   });
@@ -450,20 +543,21 @@ function pills(container,items,selKey,onPick,opts){
 function renderGuide(){
   $("#gDate").textContent = todayStr;
   pills($("#gSession"), SESSIONS, ui.g.session, k=>{ui.g.session=k;renderGuide();}, {lang:"th"});
-  pills($("#gColor"), COLORS, ui.g.color, k=>{ui.g.color=k; const c=colorOf(k); ui.g.ski=c.range[0]+1; renderGuide();}, {color:true,lang:"th"});
+  pills($("#gColor"), COLORS, ui.g.color, k=>{ui.g.color=k; renderGuide();}, {color:true,lang:"th"});
   $("#gSki").value = ui.g.ski;
   const c=colorOf(ui.g.color);
-  $("#gSkiHint").textContent = `(${c.en} ${c.range[0]}–${c.range[1]})`;
+  $("#gSkiHint").textContent = `${c.en} · e.g. ${(SAMPLE_SKIS[c.key]||[]).slice(0,3).join(" · ")}`;
   const n = state.photos.filter(p=>p.day===todayStr).length;
   $("#gTodayCount").innerHTML = `วันนี้อัปโหลดแล้ว / Uploaded today: <b>${n}</b> — ผ่านคุณ ไม่ต้องผ่านแอดมิน / no admin, no WhatsApp, original quality.`;
 }
-function clampSki(){ let v=parseInt($("#gSki").value||"0",10); if(isNaN(v)||v<1)v=1; if(v>99)v=99; ui.g.ski=v; $("#gSki").value=v;
-  const ck=skiColor(v); if(ck&&ck!==ui.g.color){ui.g.color=ck; pills($("#gColor"),COLORS,ui.g.color,k=>{ui.g.color=k;renderGuide();},{color:true,lang:"th"});}
-}
+function clampSki(){ let v=normSki($("#gSki").value); if(!/^[A-Z0-9]{1,6}$/.test(v)) v=ui.g.ski||"K7"; ui.g.ski=v; $("#gSki").value=v; }
+// − / + step the numeric part of the machine number (K7 → K8); letters (fleet series) stay
+function stepSki(d){ clampSki(); const m=/^([A-Z]*)(\d+)$/.exec(ui.g.ski); if(!m) return;
+  const n=Math.min(999,Math.max(1,parseInt(m[2],10)+d)); ui.g.ski=m[1]+n; $("#gSki").value=ui.g.ski; }
 function runAutoCheck(count, done){
   const card=$("#gCheckCard"), box=$("#gChecks"); card.style.display="block";
   const c=colorOf(ui.g.color), sess=SESSIONS.find(s=>s.key===ui.g.session);
-  const items=[`รอบ/รหัสสี: ${sess.th} · ${c.th} #${ui.g.ski}`,`จำนวนรูป / Photos: ${count}`,`คุณภาพ/รูปแบบ / Quality·format: OK`,`บันทึกเข้าแกลเลอรี / Saved to gallery`];
+  const items=[`รอบ/รหัสสี: ${sess.th} · ${c.th} ${ui.g.ski}`,`จำนวนรูป / Photos: ${count}`,`คุณภาพ/รูปแบบ / Quality·format: OK`,`บันทึกเข้าแกลเลอรี / Saved to gallery`];
   box.innerHTML=""; const rows=items.map(txt=>{const d=document.createElement("div");d.className="checkline";d.innerHTML=`<span class='bx'>…</span><span>${txt}</span>`;box.appendChild(d);return d;});
   let i=0; (function step(){ if(i<rows.length){ rows[i].classList.add("ok"); rows[i].querySelector(".bx").textContent="✓"; i++; setTimeout(step,340);} else setTimeout(done,260); })();
 }
@@ -490,7 +584,7 @@ function pickReal(files){
 /* ----- CLIENT ----- */
 function renderClient(){
   const L=ui.lang;
-  $$("#cLang button").forEach(b=>b.classList.toggle("on",b.dataset.lang===L));
+  $$(".lang button").forEach(b=>b.classList.toggle("on",b.dataset.lang===L));
   $("#cTitle").textContent=t("title"); $("#cSub").textContent=t("sub");
   $("#cLblSession").textContent=t("round"); $("#cLblColor").textContent=t("colour"); $("#cLblSki").textContent=t("ski");
   $("#cAll").textContent=t("all"); $("#cAILbl").textContent=t("ai"); $("#cSendLbl").textContent=t("send");
@@ -503,8 +597,9 @@ function renderGrid(){
   const L=ui.lang, grid=$("#cGrid"), empty=$("#cEmpty");
   let list=state.photos.filter(p=>p.day===todayStr && p.session===ui.c.session && p.color===ui.c.color);
   const groupCount=list.length;
-  if(ui.c.ski!=null && ui.c.ski!=="" && !ui.c.all){ list=list.filter(p=>String(p.ski)===String(ui.c.ski)); }
-  $("#cCount").innerHTML = t("count")(list.length, (ui.c.all?null:(ui.c.ski||null)));
+  const want=normSki(ui.c.ski); // case-insensitive: "k7" / "K 7" / "#K7" all match K7
+  if(want && !ui.c.all){ list=list.filter(p=>normSki(p.ski)===want); }
+  $("#cCount").innerHTML = t("count")(list.length, ((ui.c.all||!want)?null:want));
   grid.innerHTML="";
   if(!list.length){
     grid.classList.add("hidden"); empty.classList.remove("hidden");
@@ -514,7 +609,7 @@ function renderGrid(){
   grid.classList.remove("hidden"); empty.classList.add("hidden");
   list.slice(0,60).forEach(p=>{
     const d=document.createElement("div"); d.className="ph";
-    d.innerHTML=`<img loading="lazy" src="${photoSrc(p,true)}" alt=""><span class="tag">#${p.ski}</span>`;
+    d.innerHTML=`<img loading="lazy" src="${photoSrc(p,true)}" alt=""><span class="tag">${p.ski}</span>`;
     d.onclick=()=>lightbox(p); grid.appendChild(d);
   });
 }
@@ -529,11 +624,16 @@ function lightbox(p){
   $("#dlBtn").onclick=()=>download(p);
   $("#closeBtn").onclick=closeSheet;
 }
+function extOf(p){ // real photos keep their real extension; only generated placeholders are .svg
+  if(!p.src) return "svg";
+  const m=/^data:image\/(png|jpe?g|webp|heic|gif)/i.exec(p.src) || /\.(png|jpe?g|webp|heic|gif)(\?|$)/i.exec(p.src);
+  return m ? m[1].toLowerCase().replace("jpeg","jpg") : "jpg";
+}
 function download(p){
   const a=document.createElement("a");
   if(p.src){ a.href=p.src; }
   else{ const svg=decodeURIComponent(svgFor(p,{wm:false}).replace("data:image/svg+xml;charset=utf-8,","")); const blob=new Blob([svg],{type:"image/svg+xml"}); a.href=URL.createObjectURL(blob); }
-  a.download=`${BRAND.name.replace(/\s+/g,"_")}_${p.color}_ski${p.ski}_${p.stop.replace(/\s+/g,"")}.svg`;
+  a.download=`${BRAND.name.replace(/\s+/g,"_")}_${p.color}_${p.ski}_${p.stop.replace(/\s+/g,"")}.${extOf(p)}`;
   document.body.appendChild(a); a.click(); a.remove();
   toast(t("dlToast"));
 }
@@ -552,8 +652,8 @@ function premiumSheet(kind){
 /* ---------- WIRE ---------- */
 $$(".tabs button").forEach(b=>b.onclick=()=>setView(b.dataset.view));
 $$("[data-goto]").forEach(b=>b.onclick=()=>setView(b.dataset.goto));
-$("#gMinus").onclick=()=>{ui.g.ski=Math.max(1,ui.g.ski-1);$("#gSki").value=ui.g.ski;clampSki();};
-$("#gPlus").onclick=()=>{ui.g.ski=Math.min(99,ui.g.ski+1);$("#gSki").value=ui.g.ski;clampSki();};
+$("#gMinus").onclick=()=>stepSki(-1);
+$("#gPlus").onclick=()=>stepSki(+1);
 $("#gSki").onchange=clampSki;
 $("#gAddDemo").onclick=addDemoBatch;
 $("#gPickReal").onclick=()=>$("#gFile").click();
@@ -562,15 +662,29 @@ $("#cSki").oninput=e=>{ ui.c.ski=e.target.value===""?null:e.target.value; ui.c.a
 $("#cAll").onclick=()=>{ ui.c.all=true; renderGrid(); };
 $("#cAI").onclick=()=>premiumSheet("ai");
 $("#cSend").onclick=()=>premiumSheet("send");
-$$("#cLang button").forEach(b=>b.onclick=()=>applyLang(b.dataset.lang));
-$("#resetBtn").onclick=()=>{ localStorage.removeItem(KEY); state=seed(); toast(t("resetToast")); if(ui.view!=="home"){renderGuide();renderClient();} };
+$$(".lang button").forEach(b=>b.onclick=()=>applyLang(b.dataset.lang));
+$("#resetBtn").onclick=()=>{ lsRemove(KEY); state=seed(); toast(t("resetToast")); if(ui.view!=="home"){renderGuide();renderClient();} };
 
 /* ---------- INIT ---------- */
 // brand logo is an image in the header (assets/logo.png)
 $("#homeQr").src = qrSvg();
 document.documentElement.style.setProperty("--accent", BRAND.accent);
-applyLang((function(){ try{ return localStorage.getItem(LANG_KEY); }catch(e){} return null; })() || "en");
-setView("home");
+let booted=false;
+function boot(){
+  if(booted) return; booted=true;
+  state = load();
+  applyLang(lsGet(LANG_KEY) || "en");
+  setView("home");
+}
+// Real sample photos (sample_photos/manifest.js) are gitignored and exist only on a local machine.
+// On a public host (GitHub Pages etc.) the file is never requested → no 404 in the console;
+// locally it is loaded dynamically and a missing file is simply ignored (placeholders are used).
+const LOCAL_HOST = location.protocol==="file:" || /^(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)$/.test(location.hostname);
+if(LOCAL_HOST){
+  const sc=document.createElement("script"); sc.src="sample_photos/manifest.js"; sc.async=true;
+  sc.onload=boot; sc.onerror=boot; document.head.appendChild(sc);
+  setTimeout(boot, 3000); // safety net: never wait on the manifest forever
+}else boot();
 })();
 </script>
 </body>
